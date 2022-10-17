@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudy-sky-software/pulumi-provider-framework/pkg/provider/state"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/pkg/state"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 
@@ -24,7 +26,7 @@ const (
 	jsonMimeType     = "application/json"
 )
 
-func (p *renderProvider) executeGet(
+func (p *restProvider) executeGet(
 	ctx context.Context,
 	typeToken string,
 	inputs resource.PropertyMap) ([]byte, error) {
@@ -93,7 +95,7 @@ func (p *renderProvider) executeGet(
 	return body, nil
 }
 
-func (p *renderProvider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
+func (p *restProvider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
 	route, _, err := p.router.FindRoute(httpReq)
 	if err != nil {
 		return errors.Wrap(err, "finding route from router")
@@ -147,7 +149,7 @@ func (p *renderProvider) validateRequest(ctx context.Context, httpReq *http.Requ
 	return nil
 }
 
-func (p *renderProvider) getPathParamsMap(resourceTypeToken, apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
+func (p *restProvider) getPathParamsMap(resourceTypeToken, apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
 	pathParams := make(map[string]string)
 
 	var parameters openapi3.Parameters
@@ -215,7 +217,7 @@ func (p *renderProvider) getPathParamsMap(resourceTypeToken, apiPath, requestMet
 	return pathParams, nil
 }
 
-func (p *renderProvider) replacePathParams(path string, pathParams map[string]string) string {
+func (p *restProvider) replacePathParams(path string, pathParams map[string]string) string {
 	for k, v := range pathParams {
 		path = strings.ReplaceAll(path, fmt.Sprintf("{%s}", k), v)
 	}
@@ -223,7 +225,7 @@ func (p *renderProvider) replacePathParams(path string, pathParams map[string]st
 	return path
 }
 
-func (p *renderProvider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {
+func (p *restProvider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {
 	replaces := make([]string, 0)
 	diffs := make([]string, 0)
 

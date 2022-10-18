@@ -112,7 +112,7 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 	}, nil
 }
 
-func getResourceTypeToken(u string) string {
+func GetResourceTypeToken(u string) string {
 	urn := resource.URN(u)
 	return urn.Type().String()
 }
@@ -248,7 +248,7 @@ func (p *restProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 	logging.V(4).Infof("DELETES: %v", diff.Deletes)
 	logging.V(4).Infof("UPDATES: %v", diff.Updates)
 
-	resourceTypeToken := getResourceTypeToken(req.GetUrn())
+	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
@@ -296,7 +296,7 @@ func (p *restProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 	}
 
-	resourceTypeToken := getResourceTypeToken(req.GetUrn())
+	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
@@ -407,7 +407,7 @@ func (p *restProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 	}
 
-	resourceTypeToken := getResourceTypeToken(req.GetUrn())
+	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
@@ -533,7 +533,7 @@ func (p *restProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 		return nil, errors.Wrap(err, "unmarshal news as propertymap")
 	}
 
-	resourceTypeToken := getResourceTypeToken(req.GetUrn())
+	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
@@ -644,7 +644,7 @@ func (p *restProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 	}
 
-	resourceTypeToken := getResourceTypeToken(req.GetUrn())
+	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 
 	preResponse, preErr := p.providerCallback.OnPreDelete(ctx, req)
 	if preErr != nil || preResponse != nil {

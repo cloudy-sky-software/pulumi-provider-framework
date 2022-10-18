@@ -58,7 +58,7 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 	return dialer.DialContext
 }
 
-func makeProvider(host *provider.HostClient, name, version string, pulumiSchemaBytes, openapiDocBytes, metadataBytes []byte) (pulumirpc.ResourceProviderServer, error) {
+func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaBytes, openapiDocBytes, metadataBytes []byte, callback callback.RestProviderCallback) (pulumirpc.ResourceProviderServer, error) {
 	openapiDoc := providerOpenAPI.GetOpenAPISpec(openapiDocBytes)
 
 	router, err := gorillamux.NewRouter(openapiDoc)
@@ -107,6 +107,8 @@ func makeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 		metadata:   metadata,
 		router:     router,
 		httpClient: httpClient,
+
+		providerCallback: callback,
 	}, nil
 }
 
@@ -147,7 +149,14 @@ func (p *restProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffReques
 
 // Configure configures the resource provider with "globals" that control its behavior.
 func (p *restProvider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
-	return p.providerCallback.OnConfigure(ctx, req)
+	resp, err := p.providerCallback.OnConfigure(ctx, req)
+	if err != nil || resp != nil {
+		return nil, err
+	}
+
+	return &pulumirpc.ConfigureResponse{
+		AcceptSecrets: true,
+	}, nil
 }
 
 // Invoke dynamically executes a built-in function in the provider.

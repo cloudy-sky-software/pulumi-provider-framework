@@ -64,7 +64,7 @@ func makeTestProvider(ctx context.Context, t *testing.T) pulumirpc.ResourceProvi
 	pSchemaBytes := readFileFromProviderResourceDir(t, "schema.json")
 	metadataBytes := readFileFromProviderResourceDir(t, "metadata.json")
 
-	p, err := makeProvider(nil, "", "", pSchemaBytes, openapiBytes, metadataBytes)
+	p, err := MakeProvider(nil, "", "", pSchemaBytes, openapiBytes, metadataBytes, providerCallback)
 
 	if err != nil {
 		t.Fatalf("Could not create a provider instance: %v", err)

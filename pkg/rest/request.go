@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -76,7 +75,7 @@ func (p *restProvider) executeGet(
 	}
 
 	if httpResp.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(httpResp.Body)
+		body, err := io.ReadAll(httpResp.Body)
 		if err != nil {
 			return nil, errors.Wrap(err, "http request failed and the error response could not be read")
 		}
@@ -85,7 +84,7 @@ func (p *restProvider) executeGet(
 		return nil, errors.Errorf("http request failed (status: %s): %s", httpResp.Status, string(body))
 	}
 
-	body, err := ioutil.ReadAll(httpResp.Body)
+	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading response body")
 	}
@@ -139,7 +138,7 @@ func (p *restProvider) validateRequest(ctx context.Context, httpReq *http.Reques
 	// body might have changed due to default properties getting
 	// added to it.
 	clonedReq := httpReq.Clone(ctx)
-	clonedBody, _ := ioutil.ReadAll(clonedReq.Body)
+	clonedBody, _ := io.ReadAll(clonedReq.Body)
 	newContentLength := int64(len(clonedBody))
 	logging.V(3).Infof("REQUEST CONTENT LENGTH: current: %d, new: %d", httpReq.ContentLength, newContentLength)
 	httpReq.ContentLength = newContentLength

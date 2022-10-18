@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 
 	pbempty "github.com/golang/protobuf/ptypes/empty"
@@ -11,8 +13,10 @@ import (
 
 type RestProviderCallback interface {
 	OnConfigure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error)
+
 	OnInvoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error)
-	OnDiff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error)
+
+	OnDiff(ctx context.Context, req *pulumirpc.DiffRequest, resourceTypeToken string, diff *resource.ObjectDiff, jsonReq *openapi3.MediaType) (*pulumirpc.DiffResponse, error)
 
 	OnPreCreate(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error)
 	OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs map[string]interface{}) error

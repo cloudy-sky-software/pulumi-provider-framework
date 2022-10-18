@@ -228,16 +228,16 @@ func (p *restProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 	}
 
 	logging.V(3).Infof("Calculating diff: olds: %v; news: %v", olds, news)
-	d := olds.Diff(news)
-	if d == nil || !d.AnyChanges() {
+	diff := olds.Diff(news)
+	if diff == nil || !diff.AnyChanges() {
 		logging.V(3).Infof("Diff: no changes for %s", req.GetUrn())
 		return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
 	}
 
 	logging.V(3).Info("Detected some changes...")
-	logging.V(4).Infof("ADDS: %v", d.Adds)
-	logging.V(4).Infof("DELETES: %v", d.Deletes)
-	logging.V(4).Infof("UPDATES: %v", d.Updates)
+	logging.V(4).Infof("ADDS: %v", diff.Adds)
+	logging.V(4).Infof("DELETES: %v", diff.Deletes)
+	logging.V(4).Infof("UPDATES: %v", diff.Updates)
 
 	resourceTypeToken := getResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
@@ -258,16 +258,13 @@ func (p *restProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 	changes := pulumirpc.DiffResponse_DIFF_SOME
 	jsonReq := patchOp.RequestBody.Value.Content[jsonMimeType]
 
-	if len(jsonReq.Schema.Value.AnyOf) > 0 {
-		// HACK! Taking a shortcut to handle service type-specific updates.
-		switch resourceTypeToken {
-		case "render:services:StaticSite":
-			replaces, diffs = p.determineDiffsAndReplacements(d, p.openapiDoc.Components.Schemas["patchStaticSite"].Value.Properties)
-		case "render:services:WebService":
-			replaces, diffs = p.determineDiffsAndReplacements(d, p.openapiDoc.Components.Schemas["patchWebService"].Value.Properties)
-		}
-	} else if len(jsonReq.Schema.Value.Properties) != 0 {
-		replaces, diffs = p.determineDiffsAndReplacements(d, jsonReq.Schema.Value.Properties)
+	diffResp, callbackErr := p.providerCallback.OnDiff(ctx, req, resourceTypeToken, diff, jsonReq)
+	if callbackErr != nil || diffResp != nil {
+		return diffResp, callbackErr
+	}
+
+	if len(jsonReq.Schema.Value.Properties) != 0 {
+		replaces, diffs = p.determineDiffsAndReplacements(diff, jsonReq.Schema.Value.Properties)
 	} else {
 		changes = pulumirpc.DiffResponse_DIFF_UNKNOWN
 	}

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudy-sky-software/pulumi-provider-framework/pkg/state"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"

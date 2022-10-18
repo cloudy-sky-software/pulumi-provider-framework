@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cloudy-sky-software/pulumi-provider-framework/pkg/state"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
 	"github.com/cloudy-sky-software/pulumi-render/provider/pkg/openapi"
 

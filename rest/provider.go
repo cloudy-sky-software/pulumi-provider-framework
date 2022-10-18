@@ -28,8 +28,8 @@ import (
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
-	providerGen "github.com/cloudy-sky-software/pulumi-render/provider/pkg/gen"
-	providerOpenAPI "github.com/cloudy-sky-software/pulumi-render/provider/pkg/openapi"
+	providerGen "github.com/cloudy-sky-software/pulschema/pkg/gen"
+	providerOpenAPI "github.com/cloudy-sky-software/pulschema/pkg/openapi"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

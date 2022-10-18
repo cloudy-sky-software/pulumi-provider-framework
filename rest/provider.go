@@ -42,17 +42,17 @@ type restProvider struct {
 	name    string
 	version string
 
-	HttpClient *http.Client
-	OpenAPIDoc openapi3.T
-	Schema     pschema.PackageSpec
-
-	baseURL  string
 	metadata providerGen.ProviderMetadata
 	router   routers.Router
 
 	apiKey string
 
 	providerCallback callback.RestProviderCallback
+
+	BaseURL    string
+	HttpClient *http.Client
+	OpenAPIDoc openapi3.T
+	Schema     pschema.PackageSpec
 }
 
 func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
@@ -103,7 +103,7 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 		name:       name,
 		version:    version,
 		Schema:     pulumiSchema,
-		baseURL:    openapiDoc.Servers[0].URL,
+		BaseURL:    openapiDoc.Servers[0].URL,
 		OpenAPIDoc: *openapiDoc,
 		metadata:   metadata,
 		router:     router,
@@ -548,7 +548,7 @@ func (p *restProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 
 	logging.V(3).Infof("REQUEST BODY: %s", string(b))
 	buf := bytes.NewBuffer(b)
-	httpReq, err := http.NewRequestWithContext(ctx, method, p.baseURL+httpEndpointPath, buf)
+	httpReq, err := http.NewRequestWithContext(ctx, method, p.BaseURL+httpEndpointPath, buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
@@ -651,7 +651,7 @@ func (p *restProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 	}
 
 	httpEndpointPath := *crudMap.D
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, p.baseURL+httpEndpointPath, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, p.BaseURL+httpEndpointPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}

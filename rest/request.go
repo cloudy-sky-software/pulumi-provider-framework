@@ -29,7 +29,7 @@ func (p *restProvider) CreateGetRequest(
 	ctx context.Context,
 	httpEndpointPath string,
 	inputs resource.PropertyMap) (*http.Request, error) {
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.baseURL+httpEndpointPath, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.BaseURL+httpEndpointPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
@@ -65,7 +65,7 @@ func (p *restProvider) CreatePostRequest(ctx context.Context, httpEndpointPath s
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	buf := bytes.NewBuffer(reqBody)
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.baseURL+httpEndpointPath, buf)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.BaseURL+httpEndpointPath, buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}

@@ -3,7 +3,6 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 go 1.19
 
 require (
-	github.com/cloudy-sky-software/pulumi-render/provider v0.0.0-20221016163133-a0a61adeb247
 	github.com/getkin/kin-openapi v0.106.0
 	github.com/golang/protobuf v1.5.2
 	github.com/pkg/errors v0.9.1
@@ -14,6 +13,7 @@ require (
 )
 
 require (
+	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 )

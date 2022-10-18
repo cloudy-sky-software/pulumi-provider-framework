@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
-	"github.com/cloudy-sky-software/pulumi-render/provider/pkg/openapi"
+	"github.com/cloudy-sky-software/pulschema/pkg/openapi"
 
 	"github.com/stretchr/testify/assert"
 

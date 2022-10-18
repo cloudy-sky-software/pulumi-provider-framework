@@ -41,15 +41,16 @@ type restProvider struct {
 	host    *provider.HostClient
 	name    string
 	version string
-	schema  pschema.PackageSpec
 
-	baseURL    string
-	openapiDoc openapi3.T
-	metadata   providerGen.ProviderMetadata
-	router     routers.Router
+	HttpClient *http.Client
+	OpenAPIDoc openapi3.T
+	Schema     pschema.PackageSpec
 
-	httpClient *http.Client
-	apiKey     string
+	baseURL  string
+	metadata providerGen.ProviderMetadata
+	router   routers.Router
+
+	apiKey string
 
 	providerCallback callback.RestProviderCallback
 }
@@ -101,12 +102,12 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 		host:       host,
 		name:       name,
 		version:    version,
-		schema:     pulumiSchema,
+		Schema:     pulumiSchema,
 		baseURL:    openapiDoc.Servers[0].URL,
-		openapiDoc: *openapiDoc,
+		OpenAPIDoc: *openapiDoc,
 		metadata:   metadata,
 		router:     router,
-		httpClient: httpClient,
+		HttpClient: httpClient,
 
 		providerCallback: callback,
 	}, nil
@@ -184,7 +185,7 @@ func (p *restProvider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest)
 	}
 
 	// Read the resource.
-	httpResp, err := p.httpClient.Do(httpReq)
+	httpResp, err := p.HttpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -293,7 +294,7 @@ func (p *restProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 		return nil, errors.Errorf("resource update endpoint is unknown for %s", resourceTypeToken)
 	}
 
-	patchOp := p.openapiDoc.Paths[*crudMap.U].Patch
+	patchOp := p.OpenAPIDoc.Paths[*crudMap.U].Patch
 	if patchOp == nil {
 		return nil, errors.Errorf("openapi doc does not have patch endpoint definition for the path %s", *crudMap.U)
 	}
@@ -359,7 +360,7 @@ func (p *restProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 	}
 
 	// Create the resource.
-	httpResp, err := p.httpClient.Do(httpReq)
+	httpResp, err := p.HttpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -441,7 +442,7 @@ func (p *restProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 	}
 
 	// Read the resource.
-	httpResp, err := p.httpClient.Do(httpReq)
+	httpResp, err := p.HttpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -582,7 +583,7 @@ func (p *restProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 	}
 
 	// Update the resource.
-	httpResp, err := p.httpClient.Do(httpReq)
+	httpResp, err := p.HttpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -680,7 +681,7 @@ func (p *restProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
 
 	// Delete the resource.
-	httpResp, err := p.httpClient.Do(httpReq)
+	httpResp, err := p.HttpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -708,7 +709,7 @@ func (p *restProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirp
 
 // GetSchema returns the JSON-serialized schema for the provider.
 func (p *restProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
-	b, err := json.Marshal(p.schema)
+	b, err := json.Marshal(p.Schema)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the schema")
 	}

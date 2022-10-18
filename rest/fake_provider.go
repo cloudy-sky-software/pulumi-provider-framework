@@ -30,8 +30,8 @@ func (p *fakeProviderCallback) OnDiff(ctx context.Context, req *pulumirpc.DiffRe
 	return nil, nil
 }
 
-func (p *fakeProviderCallback) OnPreCreate(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
-	return nil, nil
+func (p *fakeProviderCallback) OnPreCreate(ctx context.Context, req *pulumirpc.CreateRequest, http *http.Request) error {
+	return nil
 }
 
 func (p *fakeProviderCallback) OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs map[string]interface{}) error {
@@ -50,7 +50,7 @@ func (p *fakeProviderCallback) OnPreUpdate(ctx context.Context, req *pulumirpc.U
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, outputs map[string]interface{}) error {
+func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs map[string]interface{}) error {
 	return nil
 }
 

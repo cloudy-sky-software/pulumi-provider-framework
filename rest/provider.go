@@ -168,13 +168,48 @@ func (p *restProvider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest)
 	}
 
 	invokeTypeToken := req.GetTok()
-
-	body, err := p.executeGet(ctx, invokeTypeToken, args)
-	if err != nil {
-		return nil, errors.Wrap(err, "executing get request for invoke")
+	crudMap, ok := p.metadata.ResourceCRUDMap[invokeTypeToken]
+	if !ok {
+		return nil, errors.Errorf("unknown resource type %s", invokeTypeToken)
+	}
+	if crudMap.R == nil {
+		return nil, errors.Errorf("resource read endpoint is unknown for %s", invokeTypeToken)
 	}
 
+	httpEndpointPath := *crudMap.R
+
+	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, args)
+	if err != nil {
+		return nil, errors.Wrapf(err, "creating get request (type token: %s)", invokeTypeToken)
+	}
+
+	// Read the resource.
+	httpResp, err := p.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "executing http request")
+	}
+
+	if httpResp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(httpResp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "http request failed and the error response could not be read")
+		}
+
+		httpResp.Body.Close()
+		return nil, errors.Errorf("http request failed (status: %s): %s", httpResp.Status, string(body))
+	}
+
+	body, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "reading response body")
+	}
+
+	httpResp.Body.Close()
+
 	var obj resource.PropertyMap
+	// TODO: Is this too specific for this lib?
+	// Should this be pushed downstream to the actual provider
+	// implementation?
 	if strings.Contains(invokeTypeToken, ":list") {
 		var outputs []interface{}
 		if err := json.Unmarshal(body, &outputs); err != nil {
@@ -313,39 +348,15 @@ func (p *restProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 		return nil, errors.Wrap(err, "marshaling inputs")
 	}
 
-	buf := bytes.NewBuffer(b)
-	logging.V(3).Infof("REQUEST BODY: %s", string(b))
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.baseURL+httpEndpointPath, buf)
+	httpReq, err := p.CreatePostRequest(ctx, httpEndpointPath, b, inputs)
 	if err != nil {
-		return nil, errors.Wrap(err, "initializing request")
+		return nil, errors.Wrapf(err, "creating post request (type token: %s)", resourceTypeToken)
 	}
 
-	logging.V(3).Infof("URL: %s", httpReq.URL.String())
-
-	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", fmt.Sprintf("%s %s", authSchemePrefix, p.apiKey))
-	httpReq.Header.Add("Accept", jsonMimeType)
-	httpReq.Header.Add("Content-Type", jsonMimeType)
-
-	hasPathParams := strings.Contains(httpEndpointPath, "{")
-	var pathParams map[string]string
-	// If the endpoint has path params, peek into the OpenAPI doc
-	// for the param names.
-	if hasPathParams {
-		var err error
-		pathParams, err = p.getPathParamsMap(resourceTypeToken, httpEndpointPath, http.MethodPost, inputs)
-		if err != nil {
-			return nil, errors.Wrap(err, "getting path params")
-		}
+	preCreateErr := p.providerCallback.OnPreCreate(ctx, req, httpReq)
+	if preCreateErr != nil {
+		return nil, preCreateErr
 	}
-
-	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
-		return nil, errors.Wrap(err, "validate http request")
-	}
-
-	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
-
-	logging.V(3).Info("Executing create resource request")
 
 	// Create the resource.
 	httpResp, err := p.httpClient.Do(httpReq)
@@ -419,34 +430,10 @@ func (p *restProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 
 	httpEndpointPath := *crudMap.R
 
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.baseURL+httpEndpointPath, nil)
+	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, oldState)
 	if err != nil {
-		return nil, errors.Wrap(err, "initializing request")
+		return nil, errors.Wrapf(err, "creating get request (type token: %s)", resourceTypeToken)
 	}
-
-	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", fmt.Sprintf("%s %s", authSchemePrefix, p.apiKey))
-	httpReq.Header.Add("Accept", jsonMimeType)
-	httpReq.Header.Add("Content-Type", jsonMimeType)
-
-	hasPathParams := strings.Contains(httpEndpointPath, "{")
-	var pathParams map[string]string
-	// If the endpoint has path params, peek into the OpenAPI doc
-	// for the param names.
-	if hasPathParams {
-		var err error
-
-		pathParams, err = p.getPathParamsMap(resourceTypeToken, httpEndpointPath, http.MethodGet, oldState)
-		if err != nil {
-			return nil, errors.Wrap(err, "getting path params")
-		}
-	}
-
-	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
-		return nil, errors.Wrap(err, "validate http request")
-	}
-
-	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
 
 	preReadErr := p.providerCallback.OnPreRead(ctx, req, httpReq)
 	if preReadErr != nil {
@@ -577,9 +564,9 @@ func (p *restProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 	if hasPathParams {
 		var err error
 
-		pathParams, err = p.getPathParamsMap(resourceTypeToken, httpEndpointPath, method, oldState)
+		pathParams, err = p.getPathParamsMap(httpEndpointPath, method, oldState)
 		if err != nil {
-			return nil, errors.Wrap(err, "getting path params")
+			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
 		}
 	}
 
@@ -627,7 +614,7 @@ func (p *restProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
 
-	postUpdateErr := p.providerCallback.OnPostUpdate(ctx, req, outputs)
+	postUpdateErr := p.providerCallback.OnPostUpdate(ctx, req, *httpReq, outputs)
 	if postUpdateErr != nil {
 		return nil, postUpdateErr
 	}
@@ -680,9 +667,9 @@ func (p *restProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 	if hasPathParams {
 		var err error
 
-		pathParams, err = p.getPathParamsMap(resourceTypeToken, httpEndpointPath, http.MethodDelete, inputs)
+		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodDelete, inputs)
 		if err != nil {
-			return nil, errors.Wrap(err, "getting path params")
+			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
 		}
 	}
 

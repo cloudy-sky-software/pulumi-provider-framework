@@ -25,20 +25,10 @@ const (
 	jsonMimeType     = "application/json"
 )
 
-func (p *restProvider) executeGet(
+func (p *restProvider) CreateGetRequest(
 	ctx context.Context,
-	typeToken string,
-	inputs resource.PropertyMap) ([]byte, error) {
-	crudMap, ok := p.metadata.ResourceCRUDMap[typeToken]
-	if !ok {
-		return nil, errors.Errorf("unknown resource type %s", typeToken)
-	}
-	if crudMap.R == nil {
-		return nil, errors.Errorf("resource read endpoint is unknown for %s", typeToken)
-	}
-
-	httpEndpointPath := *crudMap.R
-
+	httpEndpointPath string,
+	inputs resource.PropertyMap) (*http.Request, error) {
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.baseURL+httpEndpointPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
@@ -56,7 +46,7 @@ func (p *restProvider) executeGet(
 	if hasPathParams {
 		var err error
 
-		pathParams, err = p.getPathParamsMap(typeToken, httpEndpointPath, http.MethodGet, inputs)
+		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodGet, inputs)
 		if err != nil {
 			return nil, errors.Wrap(err, "getting path params")
 		}
@@ -68,30 +58,46 @@ func (p *restProvider) executeGet(
 
 	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
 
-	// Read the resource.
-	httpResp, err := p.httpClient.Do(httpReq)
+	return httpReq, nil
+}
+
+func (p *restProvider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
+
+	buf := bytes.NewBuffer(reqBody)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.baseURL+httpEndpointPath, buf)
 	if err != nil {
-		return nil, errors.Wrap(err, "executing http request")
+		return nil, errors.Wrap(err, "initializing request")
 	}
 
-	if httpResp.StatusCode != http.StatusOK {
-		body, err := io.ReadAll(httpResp.Body)
+	logging.V(3).Infof("URL: %s", httpReq.URL.String())
+
+	// Set the API key in the auth header.
+	httpReq.Header.Add("Authorization", fmt.Sprintf("%s %s", authSchemePrefix, p.apiKey))
+	httpReq.Header.Add("Accept", jsonMimeType)
+	httpReq.Header.Add("Content-Type", jsonMimeType)
+
+	hasPathParams := strings.Contains(httpEndpointPath, "{")
+	var pathParams map[string]string
+	// If the endpoint has path params, peek into the OpenAPI doc
+	// for the param names.
+	if hasPathParams {
+		var err error
+		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodPost, inputs)
 		if err != nil {
-			return nil, errors.Wrap(err, "http request failed and the error response could not be read")
+			return nil, errors.Wrap(err, "getting path params")
 		}
-
-		httpResp.Body.Close()
-		return nil, errors.Errorf("http request failed (status: %s): %s", httpResp.Status, string(body))
 	}
 
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "reading response body")
+	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
+		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	httpResp.Body.Close()
+	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
 
-	return body, nil
+	logging.V(3).Info("Executing create resource request")
+
+	return httpReq, nil
 }
 
 func (p *restProvider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
@@ -148,7 +154,7 @@ func (p *restProvider) validateRequest(ctx context.Context, httpReq *http.Reques
 	return nil
 }
 
-func (p *restProvider) getPathParamsMap(resourceTypeToken, apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
+func (p *restProvider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
 	pathParams := make(map[string]string)
 
 	var parameters openapi3.Parameters
@@ -206,7 +212,7 @@ func (p *restProvider) getPathParamsMap(resourceTypeToken, apiPath, requestMetho
 
 	numPathParams := len(pathParams)
 	if numPathParams == 0 {
-		return nil, errors.Errorf("did not find any path parameters in the openapi doc for %s", resourceTypeToken)
+		return nil, errors.New("did not find any path parameters in the openapi doc for")
 	}
 
 	if numPathParams != count {

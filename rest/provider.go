@@ -112,6 +112,7 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 	}, nil
 }
 
+// GetResourceTypeToken returns the type token from a resource URN string.
 func GetResourceTypeToken(u string) string {
 	urn := resource.URN(u)
 	return urn.Type().String()

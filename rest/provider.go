@@ -37,7 +37,10 @@ import (
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 )
 
-type restProvider struct {
+// RestProvider implements Pulumi's `ResourceProviderServer` interface.
+// The implemented methods assume that the cloud provider supports RESTful
+// APIs that speak only `application/json` content-type.
+type RestProvider struct {
 	host    *provider.HostClient
 	name    string
 	version string
@@ -98,7 +101,7 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 	}
 
 	// Return the new provider
-	return &restProvider{
+	return &RestProvider{
 		host:       host,
 		name:       name,
 		version:    version,
@@ -120,7 +123,7 @@ func GetResourceTypeToken(u string) string {
 }
 
 // Attach sends the engine address to an already running plugin.
-func (p *restProvider) Attach(context context.Context, req *pulumirpc.PluginAttach) (*pbempty.Empty, error) {
+func (p *RestProvider) Attach(context context.Context, req *pulumirpc.PluginAttach) (*pbempty.Empty, error) {
 	host, err := provider.NewHostClient(req.GetAddress())
 	if err != nil {
 		return nil, err
@@ -130,27 +133,27 @@ func (p *restProvider) Attach(context context.Context, req *pulumirpc.PluginAtta
 }
 
 // Call dynamically executes a method in the provider associated with a component resource.
-func (p *restProvider) Call(ctx context.Context, req *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
+func (p *RestProvider) Call(ctx context.Context, req *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "call is not yet implemented")
 }
 
 // Construct creates a new component resource.
-func (p *restProvider) Construct(ctx context.Context, req *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
+func (p *RestProvider) Construct(ctx context.Context, req *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "construct is not yet implemented")
 }
 
 // CheckConfig validates the configuration for this provider.
-func (p *restProvider) CheckConfig(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (p *RestProvider) CheckConfig(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	return &pulumirpc.CheckResponse{Inputs: req.GetNews()}, nil
 }
 
 // DiffConfig diffs the configuration for this provider.
-func (p *restProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (p *RestProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	return &pulumirpc.DiffResponse{}, nil
 }
 
 // Configure configures the resource provider with "globals" that control its behavior.
-func (p *restProvider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
+func (p *RestProvider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
 	resp, err := p.providerCallback.OnConfigure(ctx, req)
 	if err != nil || resp != nil {
 		return nil, err
@@ -162,7 +165,7 @@ func (p *restProvider) Configure(ctx context.Context, req *pulumirpc.ConfigureRe
 }
 
 // Invoke dynamically executes a built-in function in the provider.
-func (p *restProvider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error) {
+func (p *RestProvider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error) {
 	args, err := plugin.UnmarshalProperties(req.Args, state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
@@ -241,7 +244,7 @@ func (p *restProvider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest)
 
 // StreamInvoke dynamically executes a built-in function in the provider. The result is streamed
 // back as a series of messages.
-func (p *restProvider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumirpc.ResourceProvider_StreamInvokeServer) error {
+func (p *RestProvider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumirpc.ResourceProvider_StreamInvokeServer) error {
 	tok := req.GetTok()
 	return fmt.Errorf("unknown StreamInvoke token '%s'", tok)
 }
@@ -252,12 +255,12 @@ func (p *restProvider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumir
 // representation of the properties as present in the program inputs. Though this rule is not
 // required for correctness, violations thereof can negatively impact the end-user experience, as
 // the provider inputs are used for detecting and rendering diffs.
-func (p *restProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (p *RestProvider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	return &pulumirpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
 }
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
-func (p *restProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (p *RestProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	oldState, err := plugin.UnmarshalProperties(req.GetOlds(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, err
@@ -325,7 +328,7 @@ func (p *restProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 }
 
 // Create allocates a new instance of the provided resource and returns its unique ID afterwards.
-func (p *restProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
+func (p *RestProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
 	logging.V(3).Infof("Create: %s", req.GetUrn())
 
 	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
@@ -414,7 +417,7 @@ func (p *restProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 }
 
 // Read the current live state associated with a resource.
-func (p *restProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
+func (p *RestProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
 	oldState, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
@@ -511,7 +514,7 @@ func (p *restProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 }
 
 // Update updates an existing resource with new values.
-func (p *restProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
+func (p *RestProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
 	oldState, err := plugin.UnmarshalProperties(req.Olds, state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal olds as propertymap")
@@ -627,7 +630,7 @@ func (p *restProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 
 // Delete tears down an existing resource with the given ID. If it fails, the resource is assumed
 // to still exist.
-func (p *restProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
+func (p *RestProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
 	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
@@ -701,14 +704,14 @@ func (p *restProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 }
 
 // GetPluginInfo returns generic information about this plugin, like its version.
-func (p *restProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirpc.PluginInfo, error) {
+func (p *RestProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirpc.PluginInfo, error) {
 	return &pulumirpc.PluginInfo{
 		Version: p.version,
 	}, nil
 }
 
 // GetSchema returns the JSON-serialized schema for the provider.
-func (p *restProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
+func (p *RestProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
 	b, err := json.Marshal(p.Schema)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the schema")
@@ -724,6 +727,6 @@ func (p *restProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRe
 // reutrn a creation error or an initialization error). Since Cancel is advisory and non-blocking,
 // it is up to the host to decide how long to wait after Cancel is called before (e.g.)
 // hard-closing any gRPC connection.
-func (p *restProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
+func (p *RestProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
 	return &pbempty.Empty{}, nil
 }

@@ -25,7 +25,7 @@ const (
 	jsonMimeType     = "application/json"
 )
 
-func (p *restProvider) CreateGetRequest(
+func (p *RestProvider) CreateGetRequest(
 	ctx context.Context,
 	httpEndpointPath string,
 	inputs resource.PropertyMap) (*http.Request, error) {
@@ -61,7 +61,7 @@ func (p *restProvider) CreateGetRequest(
 	return httpReq, nil
 }
 
-func (p *restProvider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+func (p *RestProvider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	buf := bytes.NewBuffer(reqBody)
@@ -100,7 +100,7 @@ func (p *restProvider) CreatePostRequest(ctx context.Context, httpEndpointPath s
 	return httpReq, nil
 }
 
-func (p *restProvider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
+func (p *RestProvider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
 	route, _, err := p.router.FindRoute(httpReq)
 	if err != nil {
 		return errors.Wrap(err, "finding route from router")
@@ -154,7 +154,7 @@ func (p *restProvider) validateRequest(ctx context.Context, httpReq *http.Reques
 	return nil
 }
 
-func (p *restProvider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
+func (p *RestProvider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
 	pathParams := make(map[string]string)
 
 	var parameters openapi3.Parameters
@@ -222,7 +222,7 @@ func (p *restProvider) getPathParamsMap(apiPath, requestMethod string, propertie
 	return pathParams, nil
 }
 
-func (p *restProvider) replacePathParams(path string, pathParams map[string]string) string {
+func (p *RestProvider) replacePathParams(path string, pathParams map[string]string) string {
 	for k, v := range pathParams {
 		path = strings.ReplaceAll(path, fmt.Sprintf("{%s}", k), v)
 	}
@@ -230,7 +230,7 @@ func (p *restProvider) replacePathParams(path string, pathParams map[string]stri
 	return path
 }
 
-func (p *restProvider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {
+func (p *RestProvider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {
 	replaces := make([]string, 0)
 	diffs := make([]string, 0)
 

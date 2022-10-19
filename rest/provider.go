@@ -48,14 +48,14 @@ type RestProvider struct {
 	metadata providerGen.ProviderMetadata
 	router   routers.Router
 
-	apiKey string
-
 	providerCallback callback.RestProviderCallback
 
-	BaseURL    string
-	HttpClient *http.Client
-	OpenAPIDoc openapi3.T
-	Schema     pschema.PackageSpec
+	// These fields should have a getter method for downstream
+	// providers to be able to manually handle certain operations.
+	baseURL    string
+	httpClient *http.Client
+	openAPIDoc openapi3.T
+	schema     pschema.PackageSpec
 }
 
 func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
@@ -105,12 +105,12 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 		host:       host,
 		name:       name,
 		version:    version,
-		Schema:     pulumiSchema,
-		BaseURL:    openapiDoc.Servers[0].URL,
-		OpenAPIDoc: *openapiDoc,
+		schema:     pulumiSchema,
+		baseURL:    openapiDoc.Servers[0].URL,
+		openAPIDoc: *openapiDoc,
 		metadata:   metadata,
 		router:     router,
-		HttpClient: httpClient,
+		httpClient: httpClient,
 
 		providerCallback: callback,
 	}, nil
@@ -188,7 +188,7 @@ func (p *RestProvider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest)
 	}
 
 	// Read the resource.
-	httpResp, err := p.HttpClient.Do(httpReq)
+	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -297,7 +297,7 @@ func (p *RestProvider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*p
 		return nil, errors.Errorf("resource update endpoint is unknown for %s", resourceTypeToken)
 	}
 
-	patchOp := p.OpenAPIDoc.Paths[*crudMap.U].Patch
+	patchOp := p.openAPIDoc.Paths[*crudMap.U].Patch
 	if patchOp == nil {
 		return nil, errors.Errorf("openapi doc does not have patch endpoint definition for the path %s", *crudMap.U)
 	}
@@ -363,7 +363,7 @@ func (p *RestProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 	}
 
 	// Create the resource.
-	httpResp, err := p.HttpClient.Do(httpReq)
+	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -445,7 +445,7 @@ func (p *RestProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 	}
 
 	// Read the resource.
-	httpResp, err := p.HttpClient.Do(httpReq)
+	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -551,13 +551,13 @@ func (p *RestProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 
 	logging.V(3).Infof("REQUEST BODY: %s", string(b))
 	buf := bytes.NewBuffer(b)
-	httpReq, err := http.NewRequestWithContext(ctx, method, p.BaseURL+httpEndpointPath, buf)
+	httpReq, err := http.NewRequestWithContext(ctx, method, p.baseURL+httpEndpointPath, buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
 
 	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", fmt.Sprintf("%s %s", authSchemePrefix, p.apiKey))
+	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -586,7 +586,7 @@ func (p *RestProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 	}
 
 	// Update the resource.
-	httpResp, err := p.HttpClient.Do(httpReq)
+	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -654,13 +654,13 @@ func (p *RestProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 	}
 
 	httpEndpointPath := *crudMap.D
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, p.BaseURL+httpEndpointPath, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, p.baseURL+httpEndpointPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
 
 	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", fmt.Sprintf("%s %s", authSchemePrefix, p.apiKey))
+	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -684,7 +684,7 @@ func (p *RestProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
 
 	// Delete the resource.
-	httpResp, err := p.HttpClient.Do(httpReq)
+	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
 	}
@@ -712,7 +712,7 @@ func (p *RestProvider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirp
 
 // GetSchema returns the JSON-serialized schema for the provider.
 func (p *RestProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
-	b, err := json.Marshal(p.Schema)
+	b, err := json.Marshal(p.schema)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the schema")
 	}
@@ -729,4 +729,20 @@ func (p *RestProvider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRe
 // hard-closing any gRPC connection.
 func (p *RestProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty, error) {
 	return &pbempty.Empty{}, nil
+}
+
+func (p *RestProvider) GetOpenAPIDoc() openapi3.T {
+	return p.openAPIDoc
+}
+
+func (p *RestProvider) GetSchemaSpec() pschema.PackageSpec {
+	return p.schema
+}
+
+func (p *RestProvider) GetBaseURL() string {
+	return p.baseURL
+}
+
+func (p *RestProvider) GetHttpClient() *http.Client {
+	return p.httpClient
 }

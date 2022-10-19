@@ -12,6 +12,8 @@ import (
 )
 
 type RestProviderCallback interface {
+	GetAuthorizationHeader() string
+
 	OnConfigure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error)
 
 	OnInvoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error)

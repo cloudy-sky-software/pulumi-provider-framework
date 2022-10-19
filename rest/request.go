@@ -29,13 +29,13 @@ func (p *RestProvider) CreateGetRequest(
 	ctx context.Context,
 	httpEndpointPath string,
 	inputs resource.PropertyMap) (*http.Request, error) {
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.BaseURL+httpEndpointPath, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.baseURL+httpEndpointPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
 
 	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", p.apiKey))
+	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -65,7 +65,7 @@ func (p *RestProvider) CreatePostRequest(ctx context.Context, httpEndpointPath s
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	buf := bytes.NewBuffer(reqBody)
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.BaseURL+httpEndpointPath, buf)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.baseURL+httpEndpointPath, buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
@@ -73,7 +73,7 @@ func (p *RestProvider) CreatePostRequest(ctx context.Context, httpEndpointPath s
 	logging.V(3).Infof("URL: %s", httpReq.URL.String())
 
 	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", fmt.Sprintf("%s %s", authSchemePrefix, p.apiKey))
+	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -161,15 +161,15 @@ func (p *RestProvider) getPathParamsMap(apiPath, requestMethod string, propertie
 
 	switch requestMethod {
 	case http.MethodGet:
-		parameters = p.OpenAPIDoc.Paths[apiPath].Get.Parameters
+		parameters = p.openAPIDoc.Paths[apiPath].Get.Parameters
 	case http.MethodPost:
-		parameters = p.OpenAPIDoc.Paths[apiPath].Post.Parameters
+		parameters = p.openAPIDoc.Paths[apiPath].Post.Parameters
 	case http.MethodPatch:
-		parameters = p.OpenAPIDoc.Paths[apiPath].Patch.Parameters
+		parameters = p.openAPIDoc.Paths[apiPath].Patch.Parameters
 	case http.MethodPut:
-		parameters = p.OpenAPIDoc.Paths[apiPath].Put.Parameters
+		parameters = p.openAPIDoc.Paths[apiPath].Put.Parameters
 	case http.MethodDelete:
-		parameters = p.OpenAPIDoc.Paths[apiPath].Delete.Parameters
+		parameters = p.openAPIDoc.Paths[apiPath].Delete.Parameters
 	default:
 		return pathParams, nil
 	}

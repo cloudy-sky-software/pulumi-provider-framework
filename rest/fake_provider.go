@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
@@ -16,6 +17,10 @@ import (
 )
 
 type fakeProviderCallback struct {
+}
+
+func (p *fakeProviderCallback) GetAuthorizationHeader() string {
+	return fmt.Sprintf("%s fake-token", authSchemePrefix)
 }
 
 func (p *fakeProviderCallback) OnConfigure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {

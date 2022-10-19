@@ -390,7 +390,8 @@ func (p *RestProvider) Create(ctx context.Context, req *pulumirpc.CreateRequest)
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
 
-	postCreateErr := p.providerCallback.OnPostCreate(ctx, req, outputs)
+	var postCreateErr error
+	outputs, postCreateErr = p.providerCallback.OnPostCreate(ctx, req, outputs)
 	if postCreateErr != nil {
 		// TODO: returning a nil CreateResponse will mean that Pulumi will consider
 		// this resource to not have been created. We should use the outputs we
@@ -483,7 +484,8 @@ func (p *RestProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
 	}
 
-	postReadErr := p.providerCallback.OnPostRead(ctx, req, outputs)
+	var postReadErr error
+	outputs, postReadErr = p.providerCallback.OnPostRead(ctx, req, outputs)
 	if postReadErr != nil {
 		return nil, postReadErr
 	}
@@ -611,14 +613,15 @@ func (p *RestProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
 
+	var postUpdateErr error
+	outputs, postUpdateErr = p.providerCallback.OnPostUpdate(ctx, req, *httpReq, outputs)
+	if postUpdateErr != nil {
+		return nil, postUpdateErr
+	}
+
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputs, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
-	}
-
-	postUpdateErr := p.providerCallback.OnPostUpdate(ctx, req, *httpReq, outputs)
-	if postUpdateErr != nil {
-		return nil, postUpdateErr
 	}
 
 	return &pulumirpc.UpdateResponse{

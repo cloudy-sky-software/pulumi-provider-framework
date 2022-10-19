@@ -39,24 +39,24 @@ func (p *fakeProviderCallback) OnPreCreate(ctx context.Context, req *pulumirpc.C
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs map[string]interface{}) error {
-	return nil
+func (p *fakeProviderCallback) OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs map[string]interface{}) (map[string]interface{}, error) {
+	return outputs, nil
 }
 
 func (p *fakeProviderCallback) OnPreRead(ctx context.Context, req *pulumirpc.ReadRequest, httpReq *http.Request) error {
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostRead(ctx context.Context, req *pulumirpc.ReadRequest, outputs map[string]interface{}) error {
-	return nil
+func (p *fakeProviderCallback) OnPostRead(ctx context.Context, req *pulumirpc.ReadRequest, outputs map[string]interface{}) (map[string]interface{}, error) {
+	return outputs, nil
 }
 
 func (p *fakeProviderCallback) OnPreUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq *http.Request) error {
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs map[string]interface{}) error {
-	return nil
+func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs map[string]interface{}) (map[string]interface{}, error) {
+	return outputs, nil
 }
 
 func (p *fakeProviderCallback) OnPreDelete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {

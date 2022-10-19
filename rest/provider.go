@@ -26,7 +26,6 @@ import (
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
-	providerLib "github.com/cloudy-sky-software/pulumi-provider-framework/provider"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
 	providerGen "github.com/cloudy-sky-software/pulschema/pkg/gen"
@@ -56,8 +55,6 @@ type RestProvider struct {
 	openAPIDoc openapi3.T
 	schema     pschema.PackageSpec
 }
-
-var _ providerLib.ProviderHandler = &RestProvider{}
 
 func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
 	return dialer.DialContext

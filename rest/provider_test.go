@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	providerLib "github.com/cloudy-sky-software/pulumi-provider-framework/provider"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
 	"github.com/cloudy-sky-software/pulschema/pkg/openapi"
@@ -18,6 +19,9 @@ import (
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
+
+var _ providerLib.ProviderHandler = &RestProvider{}
+var _ RestRequest = &RestProvider{}
 
 const testCreateJSONPayload = `{
     "autoDeploy": "yes",

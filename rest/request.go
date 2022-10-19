@@ -25,6 +25,15 @@ const (
 	jsonMimeType     = "application/json"
 )
 
+type RestRequest interface {
+	CreateGetRequest(
+		ctx context.Context,
+		httpEndpointPath string,
+		inputs resource.PropertyMap) (*http.Request, error)
+
+	CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
+}
+
 func (p *RestProvider) CreateGetRequest(
 	ctx context.Context,
 	httpEndpointPath string,

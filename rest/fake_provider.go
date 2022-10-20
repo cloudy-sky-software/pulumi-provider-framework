@@ -9,8 +9,6 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 
-	pbempty "github.com/golang/protobuf/ptypes/empty"
-
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
@@ -59,12 +57,12 @@ func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.
 	return outputs, nil
 }
 
-func (p *fakeProviderCallback) OnPreDelete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
-	return nil, nil
+func (p *fakeProviderCallback) OnPreDelete(ctx context.Context, req *pulumirpc.DeleteRequest, httpReq *http.Request) error {
+	return nil
 }
 
-func (p *fakeProviderCallback) OnPostDelete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
-	return nil, nil
+func (p *fakeProviderCallback) OnPostDelete(ctx context.Context, req *pulumirpc.DeleteRequest) error {
+	return nil
 }
 
 var providerCallback callback.RestProviderCallback = &fakeProviderCallback{}

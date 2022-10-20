@@ -438,6 +438,9 @@ func (p *RestProvider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*p
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", resourceTypeToken)
 	}
 
+	// TODO: At this point the request is already validated and path params
+	// have been replaced. If the user modifies the request now, there is a
+	// chance for it to fail. Should we just revalidate the request after this?
 	preReadErr := p.providerCallback.OnPreRead(ctx, req, httpReq)
 	if preReadErr != nil {
 		return nil, preReadErr
@@ -574,16 +577,16 @@ func (p *RestProvider) Update(ctx context.Context, req *pulumirpc.UpdateRequest)
 		}
 	}
 
+	preUpdateErr := p.providerCallback.OnPreUpdate(ctx, req, httpReq)
+	if preUpdateErr != nil {
+		return nil, preUpdateErr
+	}
+
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
 	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
-
-	preUpdateErr := p.providerCallback.OnPreUpdate(ctx, req, httpReq)
-	if preUpdateErr != nil {
-		return nil, preUpdateErr
-	}
 
 	// Update the resource.
 	httpResp, err := p.httpClient.Do(httpReq)
@@ -639,11 +642,6 @@ func (p *RestProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 
 	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 
-	preResponse, preErr := p.providerCallback.OnPreDelete(ctx, req)
-	if preErr != nil || preResponse != nil {
-		return preResponse, preErr
-	}
-
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
@@ -678,6 +676,11 @@ func (p *RestProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 		}
 	}
 
+	preErr := p.providerCallback.OnPreDelete(ctx, req, httpReq)
+	if preErr != nil {
+		return nil, preErr
+	}
+
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
 		return nil, errors.Wrap(err, "validate http request")
 	}
@@ -696,9 +699,9 @@ func (p *RestProvider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest)
 
 	httpResp.Body.Close()
 
-	postDeleteResp, postDeleteErr := p.providerCallback.OnPostDelete(ctx, req)
-	if postDeleteErr != nil || postDeleteResp != nil {
-		return postDeleteResp, postDeleteErr
+	postDeleteErr := p.providerCallback.OnPostDelete(ctx, req)
+	if postDeleteErr != nil {
+		return nil, postDeleteErr
 	}
 
 	return &pbempty.Empty{}, nil

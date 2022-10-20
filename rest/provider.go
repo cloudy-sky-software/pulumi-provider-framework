@@ -154,7 +154,7 @@ func (p *RestProvider) DiffConfig(ctx context.Context, req *pulumirpc.DiffReques
 func (p *RestProvider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
 	resp, err := p.providerCallback.OnConfigure(ctx, req)
 	if err != nil || resp != nil {
-		return nil, err
+		return resp, err
 	}
 
 	return &pulumirpc.ConfigureResponse{

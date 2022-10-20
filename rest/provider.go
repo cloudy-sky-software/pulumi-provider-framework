@@ -48,7 +48,7 @@ type RestProvider struct {
 	metadata providerGen.ProviderMetadata
 	router   routers.Router
 
-	providerCallback callback.RestProviderCallback
+	providerCallback callback.ProviderCallback
 
 	baseURL    string
 	httpClient *http.Client
@@ -60,7 +60,7 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 	return dialer.DialContext
 }
 
-func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaBytes, openapiDocBytes, metadataBytes []byte, callback callback.RestProviderCallback) (pulumirpc.ResourceProviderServer, error) {
+func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaBytes, openapiDocBytes, metadataBytes []byte, callback callback.ProviderCallback) (pulumirpc.ResourceProviderServer, error) {
 	openapiDoc := providerOpenAPI.GetOpenAPISpec(openapiDocBytes)
 
 	router, err := gorillamux.NewRouter(openapiDoc)

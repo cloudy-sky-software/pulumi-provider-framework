@@ -5,11 +5,12 @@ import (
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
 
-type RestProviderCallback interface {
+type ProviderCallback interface {
 	// GetAuthorizationHeader returns the value of the Authorization header
 	// used in all calls to the REST API.
 	GetAuthorizationHeader() string

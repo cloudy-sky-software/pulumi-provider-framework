@@ -65,4 +65,4 @@ func (p *fakeProviderCallback) OnPostDelete(ctx context.Context, req *pulumirpc.
 	return nil
 }
 
-var providerCallback callback.RestProviderCallback = &fakeProviderCallback{}
+var providerCallback callback.ProviderCallback = &fakeProviderCallback{}

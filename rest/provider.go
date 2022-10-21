@@ -26,10 +26,10 @@ import (
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
-	providerGen "github.com/cloudy-sky-software/pulschema/pkg/gen"
-	providerOpenAPI "github.com/cloudy-sky-software/pulschema/pkg/openapi"
+	providerGen "github.com/cloudy-sky-software/pulschema/pkg"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -61,7 +61,7 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 }
 
 func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaBytes, openapiDocBytes, metadataBytes []byte, callback callback.ProviderCallback) (pulumirpc.ResourceProviderServer, error) {
-	openapiDoc := providerOpenAPI.GetOpenAPISpec(openapiDocBytes)
+	openapiDoc := openapi.GetOpenAPISpec(openapiDocBytes)
 
 	router, err := gorillamux.NewRouter(openapiDoc)
 	if err != nil {

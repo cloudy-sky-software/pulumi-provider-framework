@@ -7,10 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
 	providerLib "github.com/cloudy-sky-software/pulumi-provider-framework/provider"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
-
-	"github.com/cloudy-sky-software/pulschema/pkg/openapi"
 
 	"github.com/stretchr/testify/assert"
 

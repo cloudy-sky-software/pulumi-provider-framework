@@ -176,7 +176,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.117 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.34 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.12 // indirect
-	github.com/cloudy-sky-software/pulschema v0.0.0-20221018032305-88dedf5a7aae
+	github.com/cloudy-sky-software/pulschema v0.0.0-20221021012800-ce0b4d2cbf35
 	github.com/gofrs/uuid v4.3.0+incompatible // indirect
 	github.com/googleapis/gax-go/v2 v2.6.0 // indirect
 	github.com/hashicorp/go-hclog v1.3.1 // indirect

@@ -386,6 +386,8 @@ github.com/cloudflare/circl v1.2.0 h1:NheeISPSUcYftKlfrLuOo4T62FkmD4t4jviLfFFYae
 github.com/cloudflare/circl v1.2.0/go.mod h1:Ch2UgYr6ti2KTtlejELlROl0YIYj7SLjAC8M+INXlMk=
 github.com/cloudy-sky-software/pulschema v0.0.0-20221018032305-88dedf5a7aae h1:BXjxybVHYB3eBCiX3jmghmR9t2enecnmn97qd7pe6c8=
 github.com/cloudy-sky-software/pulschema v0.0.0-20221018032305-88dedf5a7aae/go.mod h1:dyjEb7KxXGSaUedLLz13mqN38DrN2CRBwoZklogGWMo=
+github.com/cloudy-sky-software/pulschema v0.0.0-20221021012800-ce0b4d2cbf35 h1:IOPfpW4C9hLl/qulWsVmckAvliDE9U9VmRQkWI7eATg=
+github.com/cloudy-sky-software/pulschema v0.0.0-20221021012800-ce0b4d2cbf35/go.mod h1:7Y5SOxDVhQ+lb1JWZDTx09W9lg88gjksphAkA0kup5I=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=

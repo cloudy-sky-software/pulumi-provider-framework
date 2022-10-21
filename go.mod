@@ -3,6 +3,7 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 go 1.18
 
 require (
+	github.com/cloudy-sky-software/pulschema v0.0.0-20221021012800-ce0b4d2cbf35
 	github.com/getkin/kin-openapi v0.106.0
 	github.com/golang/protobuf v1.5.2
 	github.com/pkg/errors v0.9.1
@@ -31,7 +32,6 @@ require (
 	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
-	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
@@ -176,7 +176,6 @@ require (
 	github.com/aws/aws-sdk-go v1.44.117 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.34 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.12 // indirect
-	github.com/cloudy-sky-software/pulschema v0.0.0-20221021012800-ce0b4d2cbf35
 	github.com/gofrs/uuid v4.3.0+incompatible // indirect
 	github.com/googleapis/gax-go/v2 v2.6.0 // indirect
 	github.com/hashicorp/go-hclog v1.3.1 // indirect

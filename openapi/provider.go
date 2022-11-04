@@ -1,4 +1,4 @@
-package provider
+package openapi
 
 import (
 	"net/http"
@@ -8,7 +8,8 @@ import (
 	pschema "github.com/pulumi/pulumi/pkg/v3/codegen/schema"
 )
 
-type ProviderHandler interface {
+// Handler is an interface implemented by resource provider servers.
+type Handler interface {
 	GetOpenAPIDoc() openapi3.T
 	GetSchemaSpec() pschema.PackageSpec
 	GetBaseURL() string

@@ -25,11 +25,12 @@ type ProviderCallback interface {
 	// Return a non-nil response to override the default behavior.
 	OnDiff(ctx context.Context, req *pulumirpc.DiffRequest, resourceTypeToken string, diff *resource.ObjectDiff, jsonReq *openapi3.MediaType) (*pulumirpc.DiffResponse, error)
 
-	// OnePreCreate is a hook for modifying the HTTP request
+	// OnPreCreate is a hook for modifying the HTTP request
 	// to be made for the create request.
 	// Return a non-nil error to fail the request.
 	OnPreCreate(ctx context.Context, req *pulumirpc.CreateRequest, httpReq *http.Request) error
-	// OnePostCreate is a hook for modifying the outputs.
+
+	// OnPostCreate is a hook for modifying the outputs.
 	// Implementations must return an outputs map,
 	// which can either be the same as the one that
 	// was provided to it or modified in some way.

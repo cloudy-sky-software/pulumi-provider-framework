@@ -25,7 +25,9 @@ const (
 	jsonMimeType     = "application/json"
 )
 
-type RestRequest interface {
+// Request interface is implemented by REST-based providers that perform
+// CRUD operations using RESTful APIs.
+type Request interface {
 	CreateGetRequest(
 		ctx context.Context,
 		httpEndpointPath string,
@@ -34,7 +36,8 @@ type RestRequest interface {
 	CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 }
 
-func (p *RestProvider) CreateGetRequest(
+// CreateGetRequest returns a validated GET HTTP request for the provided inputs map.
+func (p *Provider) CreateGetRequest(
 	ctx context.Context,
 	httpEndpointPath string,
 	inputs resource.PropertyMap) (*http.Request, error) {
@@ -70,7 +73,9 @@ func (p *RestProvider) CreateGetRequest(
 	return httpReq, nil
 }
 
-func (p *RestProvider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+// CreatePostRequest returns a validated POST HTTP request for the
+// provided inputs map.
+func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	buf := bytes.NewBuffer(reqBody)
@@ -109,7 +114,7 @@ func (p *RestProvider) CreatePostRequest(ctx context.Context, httpEndpointPath s
 	return httpReq, nil
 }
 
-func (p *RestProvider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
+func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
 	route, _, err := p.router.FindRoute(httpReq)
 	if err != nil {
 		return errors.Wrap(err, "finding route from router")
@@ -163,7 +168,7 @@ func (p *RestProvider) validateRequest(ctx context.Context, httpReq *http.Reques
 	return nil
 }
 
-func (p *RestProvider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
+func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
 	pathParams := make(map[string]string)
 
 	var parameters openapi3.Parameters
@@ -231,7 +236,7 @@ func (p *RestProvider) getPathParamsMap(apiPath, requestMethod string, propertie
 	return pathParams, nil
 }
 
-func (p *RestProvider) replacePathParams(path string, pathParams map[string]string) string {
+func (p *Provider) replacePathParams(path string, pathParams map[string]string) string {
 	for k, v := range pathParams {
 		path = strings.ReplaceAll(path, fmt.Sprintf("{%s}", k), v)
 	}
@@ -239,7 +244,7 @@ func (p *RestProvider) replacePathParams(path string, pathParams map[string]stri
 	return path
 }
 
-func (p *RestProvider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {
+func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {
 	replaces := make([]string, 0)
 	diffs := make([]string, 0)
 

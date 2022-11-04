@@ -8,9 +8,13 @@ import (
 
 const stateKeyInputs = "__inputs"
 
+// DefaultMarshalOpts is the default options used when marshaling inputs.
 var DefaultMarshalOpts = plugin.MarshalOptions{KeepUnknowns: true, KeepSecrets: true, SkipNulls: true}
+
+// DefaultUnmarshalOpts is the default options used during unmarshaling outputs.
 var DefaultUnmarshalOpts = plugin.MarshalOptions{KeepUnknowns: true, KeepSecrets: true, SkipNulls: true}
 
+// GetResourceState stores the provided inputs in the outputs map for later retrieval.
 func GetResourceState(outputs map[string]interface{}, inputs resource.PropertyMap) resource.PropertyMap {
 	state := resource.NewPropertyMapFromMap(outputs)
 	// Capture the inputs as they were during the creation of the resource
@@ -19,6 +23,7 @@ func GetResourceState(outputs map[string]interface{}, inputs resource.PropertyMa
 	return state
 }
 
+// GetOldInputs returns the previously-stored inputs map from an outputs map.
 func GetOldInputs(state resource.PropertyMap) resource.PropertyMap {
 	if v, ok := state[stateKeyInputs]; ok {
 		return v.SecretValue().Element.ObjectValue()
@@ -27,6 +32,8 @@ func GetOldInputs(state resource.PropertyMap) resource.PropertyMap {
 	return nil
 }
 
+// ApplyDiffFromCloudProvider returns a property map by overlaying the diff
+// between new and old inputs.
 func ApplyDiffFromCloudProvider(newProps resource.PropertyMap, oldProps resource.PropertyMap) resource.PropertyMap {
 	diff := oldProps.Diff(newProps)
 	if diff == nil {

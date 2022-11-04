@@ -8,7 +8,7 @@ import (
 	pschema "github.com/pulumi/pulumi/pkg/v3/codegen/schema"
 )
 
-// Handler is an interface implemented by resource provider servers.
+// Handler is an interface implemented by OpenAPI-based resource providers.
 type Handler interface {
 	GetOpenAPIDoc() openapi3.T
 	GetSchemaSpec() pschema.PackageSpec

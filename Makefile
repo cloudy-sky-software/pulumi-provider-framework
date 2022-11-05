@@ -3,3 +3,6 @@ ensure::
 
 lint::
 	golangci-lint run -c .golangci.yml --timeout 10m
+
+test::
+	go test -v ./...

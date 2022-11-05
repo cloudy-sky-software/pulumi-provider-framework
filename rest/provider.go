@@ -748,6 +748,6 @@ func (p *Provider) GetBaseURL() string {
 	return p.baseURL
 }
 
-func (p *Provider) GetHttpClient() *http.Client {
+func (p *Provider) GetHTTPClient() *http.Client {
 	return p.httpClient
 }

@@ -423,6 +423,10 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 	}
 
+	// Add the id property to the state map since our HTTP request creation will
+	// look for it in the inputs map.
+	oldState["id"] = resource.NewPropertyValue(req.GetId())
+
 	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {

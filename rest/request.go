@@ -199,7 +199,7 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 
 		count++
 		paramName := param.Value.Name
-		logging.V(3).Infof("Looking for path param %q in resource inputs", paramName)
+		logging.V(3).Infof("Looking for path param %q in resource inputs %v", paramName, properties)
 		property, ok := properties[resource.PropertyKey(paramName)]
 		// If the path param is not in the properties, check if
 		// we have the old inputs, if we are dealing with the state

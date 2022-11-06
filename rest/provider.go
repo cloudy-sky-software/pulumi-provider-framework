@@ -304,15 +304,15 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	var replaces []string
 	var diffs []string
 	changes := pulumirpc.DiffResponse_DIFF_SOME
-	jsonReq := patchOp.RequestBody.Value.Content[jsonMimeType]
+	patchReqSchema := patchOp.RequestBody.Value.Content[jsonMimeType]
 
-	diffResp, callbackErr := p.providerCallback.OnDiff(ctx, req, resourceTypeToken, diff, jsonReq)
+	diffResp, callbackErr := p.providerCallback.OnDiff(ctx, req, resourceTypeToken, diff, patchReqSchema)
 	if callbackErr != nil || diffResp != nil {
 		return diffResp, callbackErr
 	}
 
-	if len(jsonReq.Schema.Value.Properties) != 0 {
-		replaces, diffs = p.determineDiffsAndReplacements(diff, jsonReq.Schema.Value.Properties)
+	if len(patchReqSchema.Schema.Value.Properties) != 0 {
+		replaces, diffs = p.determineDiffsAndReplacements(diff, patchReqSchema.Schema.Value.Properties)
 	} else {
 		changes = pulumirpc.DiffResponse_DIFF_UNKNOWN
 	}
@@ -490,6 +490,9 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		// cloud provider.
 		newState := resource.NewPropertyMapFromMap(outputs)
 		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
+		// Filter out read-only properties from the inputs.
+		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
+		inputs = openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, inputs)
 	}
 
 	var postReadErr error

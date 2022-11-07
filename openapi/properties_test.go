@@ -27,8 +27,10 @@ func TestFilterReadOnlyProperties(t *testing.T) {
 		"createdAt":    "2012-11-06T00:00:00",
 		"updatedAt":    "2012-11-06T00:00:00",
 		"serviceDetails": map[string]interface{}{
-			"publishPath": "public",
-			"url":         "https://someurl.onrender.com",
+			"buildCommand":               "make render-build",
+			"publishPath":                "public",
+			"pullRequestPreviewsEnabled": "yes",
+			"url":                        "https://someurl.onrender.com",
 		},
 	})
 
@@ -37,10 +39,18 @@ func TestFilterReadOnlyProperties(t *testing.T) {
 	inputs = FilterReadOnlyProperties(ctx, *doc.Paths["/services"].Post.RequestBody.Value.Content.Get("application/json").Schema.Value, inputs)
 
 	assert.NotNil(t, inputs)
-	assert.NotContains(t, inputs, "id")
-	assert.NotContains(t, inputs, "createdAt")
-	assert.NotContains(t, inputs, "updatedAt")
-	assert.NotContains(t, inputs, "serviceDetails")
+
+	inputsMap := inputs.Mappable()
+	assert.NotContains(t, inputsMap, "id")
+	assert.NotContains(t, inputsMap, "createdAt")
+	assert.NotContains(t, inputsMap, "updatedAt")
+	assert.Contains(t, inputsMap, "serviceDetails")
+
 	assert.True(t, inputs["serviceDetails"].IsObject())
-	assert.NotContains(t, inputs["serviceDetails"].ObjectValue(), "url")
+	serviceDetails := inputs["serviceDetails"].ObjectValue().Mappable()
+
+	assert.NotContains(t, serviceDetails, "url")
+	assert.Contains(t, serviceDetails, "buildCommand")
+	assert.Contains(t, serviceDetails, "publishPath")
+	assert.Contains(t, serviceDetails, "pullRequestPreviewsEnabled")
 }

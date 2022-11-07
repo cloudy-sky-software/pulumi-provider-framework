@@ -10,9 +10,7 @@ import (
 
 // FilterReadOnlyProperties recursively removes properties from the inputs map
 // that are marked as read-only in the OpenAPI doc.
-func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs resource.PropertyMap) resource.PropertyMap {
-	filtered := resource.NewPropertyMapFromMap(map[string]interface{}{})
-
+func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs resource.PropertyMap) {
 	for k, v := range inputs {
 		var propSchema *openapi3.SchemaRef
 		propKey := string(k)
@@ -20,6 +18,7 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 		// Don't add the id property to the inputs since it is always provider-assigned
 		// and is considered read-only always.
 		if propKey == "id" {
+			delete(inputs, k)
 			continue
 		}
 
@@ -47,7 +46,7 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 						propSchema, found = schemaRef.Value.Properties[propKey]
 						if found {
 							if v.IsObject() {
-								filtered[k] = resource.NewPropertyValue(FilterReadOnlyProperties(ctx, *propSchema.Value, v.ObjectValue()))
+								FilterReadOnlyProperties(ctx, *propSchema.Value, v.ObjectValue())
 							}
 							break
 						}
@@ -58,10 +57,8 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 			propSchema = doc.NewRef()
 		}
 
-		if !v.IsObject() && !propSchema.Value.ReadOnly {
-			filtered[k] = v
+		if !v.IsObject() && propSchema.Value.ReadOnly {
+			delete(inputs, k)
 		}
 	}
-
-	return filtered
 }

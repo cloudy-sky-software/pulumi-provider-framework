@@ -36,11 +36,17 @@ func TestFilterReadOnlyProperties(t *testing.T) {
 
 	doc := GetOpenAPISpec([]byte(renderOpenAPIEmbed))
 
-	inputs = FilterReadOnlyProperties(ctx, *doc.Paths["/services"].Post.RequestBody.Value.Content.Get("application/json").Schema.Value, inputs)
+	FilterReadOnlyProperties(ctx, *doc.Paths["/services"].Post.RequestBody.Value.Content.Get("application/json").Schema.Value, inputs)
 
 	assert.NotNil(t, inputs)
 
 	inputsMap := inputs.Mappable()
+	assert.Contains(t, inputsMap, "name")
+	assert.Equal(t, "Test service", inputsMap["name"])
+
+	assert.Contains(t, inputsMap, "autoDeploy")
+	assert.Equal(t, "yes", inputsMap["autoDeploy"])
+
 	assert.NotContains(t, inputsMap, "id")
 	assert.NotContains(t, inputsMap, "createdAt")
 	assert.NotContains(t, inputsMap, "updatedAt")
@@ -50,7 +56,13 @@ func TestFilterReadOnlyProperties(t *testing.T) {
 	serviceDetails := inputs["serviceDetails"].ObjectValue().Mappable()
 
 	assert.NotContains(t, serviceDetails, "url")
+
 	assert.Contains(t, serviceDetails, "buildCommand")
+	assert.Equal(t, "make render-build", serviceDetails["buildCommand"])
+
 	assert.Contains(t, serviceDetails, "publishPath")
+	assert.Equal(t, "public", serviceDetails["publishPath"])
+
 	assert.Contains(t, serviceDetails, "pullRequestPreviewsEnabled")
+	assert.Equal(t, "yes", serviceDetails["pullRequestPreviewsEnabled"])
 }

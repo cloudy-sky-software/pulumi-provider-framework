@@ -17,6 +17,8 @@ import (
 type fakeProviderCallback struct {
 }
 
+var _ callback.ProviderCallback = &fakeProviderCallback{}
+
 func (p *fakeProviderCallback) GetAuthorizationHeader() string {
 	return fmt.Sprintf("%s fake-token", authSchemePrefix)
 }
@@ -37,8 +39,8 @@ func (p *fakeProviderCallback) OnPreCreate(ctx context.Context, req *pulumirpc.C
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs map[string]interface{}) (map[string]interface{}, error) {
-	return outputs, nil
+func (p *fakeProviderCallback) OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
 }
 
 func (p *fakeProviderCallback) OnPreRead(ctx context.Context, req *pulumirpc.ReadRequest, httpReq *http.Request) error {
@@ -53,8 +55,8 @@ func (p *fakeProviderCallback) OnPreUpdate(ctx context.Context, req *pulumirpc.U
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs map[string]interface{}) (map[string]interface{}, error) {
-	return outputs, nil
+func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
 }
 
 func (p *fakeProviderCallback) OnPreDelete(ctx context.Context, req *pulumirpc.DeleteRequest, httpReq *http.Request) error {
@@ -64,5 +66,3 @@ func (p *fakeProviderCallback) OnPreDelete(ctx context.Context, req *pulumirpc.D
 func (p *fakeProviderCallback) OnPostDelete(ctx context.Context, req *pulumirpc.DeleteRequest) error {
 	return nil
 }
-
-var providerCallback callback.ProviderCallback = &fakeProviderCallback{}

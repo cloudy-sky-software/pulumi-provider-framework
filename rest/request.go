@@ -107,8 +107,6 @@ func (p *Provider) createHttpRequestWithBody(ctx context.Context, httpEndpointPa
 
 	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
 
-	logging.V(3).Info("Executing create resource request")
-
 	return httpReq, nil
 }
 

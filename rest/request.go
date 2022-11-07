@@ -73,7 +73,7 @@ func (p *Provider) CreateGetRequest(
 	return httpReq, nil
 }
 
-func (p *Provider) createHttpRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	buf := bytes.NewBuffer(reqBody)
@@ -113,13 +113,13 @@ func (p *Provider) createHttpRequestWithBody(ctx context.Context, httpEndpointPa
 // CreatePostRequest returns a validated POST HTTP request for the
 // provided inputs map.
 func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
-	return p.createHttpRequestWithBody(ctx, httpEndpointPath, http.MethodPost, reqBody, inputs)
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPost, reqBody, inputs)
 }
 
 // CreatePutRequest returns a validated PUT HTTP request for the
 // provided inputs map.
 func (p *Provider) CreatePutRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
-	return p.createHttpRequestWithBody(ctx, httpEndpointPath, http.MethodPut, reqBody, inputs)
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, reqBody, inputs)
 }
 
 func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {

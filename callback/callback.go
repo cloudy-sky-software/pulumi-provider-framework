@@ -54,7 +54,7 @@ type ProviderCallback interface {
 	// Implementations must return an outputs map,
 	// which can either be the same as the one that
 	// was provided to it or modified in some way.
-	OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs map[string]interface{}) (map[string]interface{}, error)
+	OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs interface{}) (map[string]interface{}, error)
 
 	// OnPreDelete is a hook for modifying the HTTP request
 	// to be made for the delete request.

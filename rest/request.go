@@ -73,13 +73,11 @@ func (p *Provider) CreateGetRequest(
 	return httpReq, nil
 }
 
-// CreatePostRequest returns a validated POST HTTP request for the
-// provided inputs map.
-func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+func (p *Provider) createHttpRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	buf := bytes.NewBuffer(reqBody)
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, p.baseURL+httpEndpointPath, buf)
+	httpReq, err := http.NewRequestWithContext(ctx, httpMethod, p.baseURL+httpEndpointPath, buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
@@ -97,7 +95,7 @@ func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath strin
 	// for the param names.
 	if hasPathParams {
 		var err error
-		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodPost, inputs)
+		pathParams, err = p.getPathParamsMap(httpEndpointPath, httpMethod, inputs)
 		if err != nil {
 			return nil, errors.Wrap(err, "getting path params")
 		}
@@ -112,6 +110,18 @@ func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath strin
 	logging.V(3).Info("Executing create resource request")
 
 	return httpReq, nil
+}
+
+// CreatePostRequest returns a validated POST HTTP request for the
+// provided inputs map.
+func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+	return p.createHttpRequestWithBody(ctx, httpEndpointPath, http.MethodPost, reqBody, inputs)
+}
+
+// CreatePutRequest returns a validated PUT HTTP request for the
+// provided inputs map.
+func (p *Provider) CreatePutRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+	return p.createHttpRequestWithBody(ctx, httpEndpointPath, http.MethodPut, reqBody, inputs)
 }
 
 func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {

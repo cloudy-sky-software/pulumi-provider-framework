@@ -292,19 +292,28 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
-	if crudMap.U == nil {
+	if crudMap.U == nil && crudMap.P == nil {
 		return nil, errors.Errorf("resource update endpoint is unknown for %s", resourceTypeToken)
 	}
 
-	patchOp := p.openAPIDoc.Paths[*crudMap.U].Patch
-	if patchOp == nil {
-		return nil, errors.Errorf("openapi doc does not have patch endpoint definition for the path %s", *crudMap.U)
+	var updateOp *openapi3.Operation
+	switch {
+	case crudMap.U != nil:
+		updateOp = p.openAPIDoc.Paths[*crudMap.U].Patch
+		if updateOp == nil {
+			return nil, errors.Errorf("openapi doc does not have patch endpoint definition for the path %s", *crudMap.U)
+		}
+	case crudMap.P != nil:
+		updateOp = p.openAPIDoc.Paths[*crudMap.P].Put
+		if updateOp == nil {
+			return nil, errors.Errorf("openapi doc does not have put endpoint definition for the path %s", *crudMap.U)
+		}
 	}
 
 	var replaces []string
 	var diffs []string
 	changes := pulumirpc.DiffResponse_DIFF_SOME
-	patchReqSchema := patchOp.RequestBody.Value.Content[jsonMimeType]
+	patchReqSchema := updateOp.RequestBody.Value.Content[jsonMimeType]
 
 	diffResp, callbackErr := p.providerCallback.OnDiff(ctx, req, resourceTypeToken, diff, patchReqSchema)
 	if callbackErr != nil || diffResp != nil {
@@ -344,28 +353,33 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Errorf("resource construction endpoint is unknown for %s", resourceTypeToken)
 	}
 
-	var httpEndpointPath string
-	switch {
-	case crudMap.C != nil:
-		httpEndpointPath = *crudMap.C
-	case crudMap.P != nil:
-		httpEndpointPath = *crudMap.P
-	}
-
 	b, err := json.Marshal(inputs.Mappable())
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling inputs")
 	}
 
-	httpReq, err := p.CreatePostRequest(ctx, httpEndpointPath, b, inputs)
-	if err != nil {
-		return nil, errors.Wrapf(err, "creating post request (type token: %s)", resourceTypeToken)
-	}
-	// Use PUT request method if this resource's CRUD map does not have a create-specific
-	// endpoint.
-	if crudMap.P != nil && crudMap.C == nil {
-		logging.V(3).Infoln("Overriding HTTP request method to PUT")
-		httpReq.Method = http.MethodPut
+	var httpEndpointPath string
+	var httpReq *http.Request
+	var httpReqErr error
+
+	switch {
+	// Prefer the PUT request over POST request for resource creation.
+	// That's because if a resource has a PUT request, it's likely that
+	// the endpoint for resource creation in the CRUD map is just there
+	// as a placeholder so that the resource construction is possible.
+	// In other words, this is a dirty hack. :)
+	case crudMap.P != nil:
+		httpEndpointPath = *crudMap.P
+		httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, b, inputs)
+		if httpReqErr != nil {
+			return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
+		}
+	case crudMap.C != nil:
+		httpEndpointPath = *crudMap.C
+		httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, b, inputs)
+		if httpReqErr != nil {
+			return nil, errors.Wrapf(httpReqErr, "creating post request (type token: %s)", resourceTypeToken)
+		}
 	}
 
 	preCreateErr := p.providerCallback.OnPreCreate(ctx, req, httpReq)
@@ -418,11 +432,12 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	id, ok := outputsMap["id"]
 	if !ok {
+		// TODO: should we return the CreateResponse without the Id property here?
 		return nil, errors.New("resource may have been created successfully but the id was not present in the response")
 	}
 
 	return &pulumirpc.CreateResponse{
-		Id:         id.(string), // ID's in Render are always strings.
+		Id:         id.(string),
 		Properties: outputProperties,
 	}, nil
 }
@@ -596,16 +611,16 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		}
 	}
 
-	preUpdateErr := p.providerCallback.OnPreUpdate(ctx, req, httpReq)
-	if preUpdateErr != nil {
-		return nil, preUpdateErr
-	}
-
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
 	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
+
+	preUpdateErr := p.providerCallback.OnPreUpdate(ctx, req, httpReq)
+	if preUpdateErr != nil {
+		return nil, preUpdateErr
+	}
 
 	// Update the resource.
 	httpResp, err := p.httpClient.Do(httpReq)
@@ -628,20 +643,19 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return &pulumirpc.UpdateResponse{}, nil
 	}
 
-	var outputs map[string]interface{}
+	var outputs interface{}
 	if err := json.Unmarshal(body, &outputs); err != nil {
 		return nil, errors.Wrap(err, "unmarshaling the response")
 	}
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
 
-	var postUpdateErr error
-	outputs, postUpdateErr = p.providerCallback.OnPostUpdate(ctx, req, *httpReq, outputs)
+	outputsMap, postUpdateErr := p.providerCallback.OnPostUpdate(ctx, req, *httpReq, outputs)
 	if postUpdateErr != nil {
 		return nil, postUpdateErr
 	}
 
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputs, inputs), state.DefaultMarshalOpts)
+	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}

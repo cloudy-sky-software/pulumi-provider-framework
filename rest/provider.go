@@ -340,11 +340,17 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
-	if crudMap.C == nil {
+	if crudMap.C == nil && crudMap.P == nil {
 		return nil, errors.Errorf("resource construction endpoint is unknown for %s", resourceTypeToken)
 	}
 
-	httpEndpointPath := *crudMap.C
+	var httpEndpointPath string
+	switch {
+	case crudMap.C != nil:
+		httpEndpointPath = *crudMap.C
+	case crudMap.P != nil:
+		httpEndpointPath = *crudMap.P
+	}
 
 	b, err := json.Marshal(inputs.Mappable())
 	if err != nil {
@@ -354,6 +360,12 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	httpReq, err := p.CreatePostRequest(ctx, httpEndpointPath, b, inputs)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating post request (type token: %s)", resourceTypeToken)
+	}
+	// Use PUT request method if this resource's CRUD map does not have a create-specific
+	// endpoint.
+	if crudMap.P != nil && crudMap.C == nil {
+		logging.V(3).Infoln("Overriding HTTP request method to PUT")
+		httpReq.Method = http.MethodPut
 	}
 
 	preCreateErr := p.providerCallback.OnPreCreate(ctx, req, httpReq)

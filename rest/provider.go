@@ -396,15 +396,14 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	httpResp.Body.Close()
 
-	var outputs map[string]interface{}
+	var outputs interface{}
 	if err := json.Unmarshal(body, &outputs); err != nil {
 		return nil, errors.Wrap(err, "unmarshaling the response")
 	}
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
 
-	var postCreateErr error
-	outputs, postCreateErr = p.providerCallback.OnPostCreate(ctx, req, outputs)
+	outputsMap, postCreateErr := p.providerCallback.OnPostCreate(ctx, req, outputs)
 	if postCreateErr != nil {
 		// TODO: returning a nil CreateResponse will mean that Pulumi will consider
 		// this resource to not have been created. We should use the outputs we
@@ -412,12 +411,12 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, postCreateErr
 	}
 
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputs, inputs), state.DefaultMarshalOpts)
+	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
 
-	id, ok := outputs["id"]
+	id, ok := outputsMap["id"]
 	if !ok {
 		return nil, errors.New("resource may have been created successfully but the id was not present in the response")
 	}

@@ -34,7 +34,7 @@ type ProviderCallback interface {
 	// Implementations must return an outputs map,
 	// which can either be the same as the one that
 	// was provided to it or modified in some way.
-	OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs map[string]interface{}) (map[string]interface{}, error)
+	OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs interface{}) (map[string]interface{}, error)
 
 	// OnPreRead is a hook for modifying the HTTP request
 	// to be made for the read request.

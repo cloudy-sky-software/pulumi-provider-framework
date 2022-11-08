@@ -446,12 +446,22 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
 	oldState, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
 	if err != nil {
-		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
+		return nil, errors.Wrap(err, "unmarshal current state as propertymap")
 	}
 
-	// Add the id property to the state map since our HTTP request creation will
-	// look for it in the inputs map.
-	oldState["id"] = resource.NewPropertyValue(req.GetId())
+	if len(oldState) == 0 {
+		logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
+		oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+		if err != nil {
+			return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
+		}
+	}
+
+	if !oldState.HasValue("id") {
+		// Add the id property to the state map since our HTTP request creation will
+		// look for it in the inputs map.
+		oldState["id"] = resource.NewPropertyValue(req.GetId())
+	}
 
 	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]

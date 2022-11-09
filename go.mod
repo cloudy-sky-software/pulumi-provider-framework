@@ -7,8 +7,8 @@ require (
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/golang/protobuf v1.5.2
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.46.0
-	github.com/pulumi/pulumi/sdk/v3 v3.46.0
+	github.com/pulumi/pulumi/pkg/v3 v3.46.1
+	github.com/pulumi/pulumi/sdk/v3 v3.46.1
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/grpc v1.50.1
 )
@@ -166,6 +166,7 @@ require (
 	cloud.google.com/go/compute v1.10.0 // indirect
 	cloud.google.com/go/iam v0.5.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
+	github.com/AlecAivazis/survey/v2 v2.0.5 // indirect
 	github.com/Azure/azure-sdk-for-go v67.0.0+incompatible // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v0.5.1 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.7.0 // indirect
@@ -182,6 +183,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.14.1 // indirect
 	github.com/hashicorp/vault/api v1.8.1 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.1 // indirect

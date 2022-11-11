@@ -20,7 +20,7 @@ type fakeProviderCallback struct {
 var _ callback.ProviderCallback = &fakeProviderCallback{}
 
 func (p *fakeProviderCallback) GetAuthorizationHeader() string {
-	return fmt.Sprintf("%s fake-token", authSchemePrefix)
+	return fmt.Sprintf("%s fake-token", bearerAuthSchemePrefix)
 }
 
 func (p *fakeProviderCallback) OnConfigure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {

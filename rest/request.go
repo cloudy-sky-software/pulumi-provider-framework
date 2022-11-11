@@ -20,9 +20,8 @@ import (
 )
 
 const (
-	authHeaderName   = "Authorization"
-	authSchemePrefix = "Bearer"
-	jsonMimeType     = "application/json"
+	bearerAuthSchemePrefix = "Bearer"
+	jsonMimeType           = "application/json"
 )
 
 // Request interface is implemented by REST-based providers that perform
@@ -36,6 +35,44 @@ type Request interface {
 	CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 }
 
+func (p *Provider) getAuthHeaderName() string {
+	var authHeaderName string
+
+	// We are assuming that the API requires auth as a header attribute.
+	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
+		switch {
+		case securitySchemeRef.Value.Name != "":
+			authHeaderName = securitySchemeRef.Value.Name
+		case securitySchemeRef.Value.Scheme == "bearer":
+			fallthrough
+		default:
+			authHeaderName = "Authorization"
+		}
+		break
+	}
+
+	return authHeaderName
+}
+
+func (p *Provider) getAuthScheme() string {
+	var scheme string
+
+	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
+		switch {
+		case securitySchemeRef.Value.Scheme == "bearer":
+			// Some APIs are specific about the case-sensitiveness
+			// of the scheme. Pretty much all APIs will accept the
+			// title-case of the scheme.
+			scheme = bearerAuthSchemePrefix
+		default:
+			scheme = securitySchemeRef.Value.Scheme
+		}
+		break
+	}
+
+	return scheme
+}
+
 // CreateGetRequest returns a validated GET HTTP request for the provided inputs map.
 func (p *Provider) CreateGetRequest(
 	ctx context.Context,
@@ -46,19 +83,7 @@ func (p *Provider) CreateGetRequest(
 		return nil, errors.Wrap(err, "initializing request")
 	}
 
-	// We are assuming that the API requires auth as a header attribute.
-	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
-		var authHeader string
-		switch {
-		case securitySchemeRef.Value.Name != "":
-			authHeader = securitySchemeRef.Value.Name
-		case securitySchemeRef.Value.Scheme == "bearer":
-			fallthrough
-		default:
-			authHeader = "Authorization"
-		}
-		httpReq.Header.Add(authHeader, p.providerCallback.GetAuthorizationHeader())
-	}
+	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -95,8 +120,7 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 
 	logging.V(3).Infof("URL: %s", httpReq.URL.String())
 
-	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
+	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -146,17 +170,26 @@ func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, p
 		Route:      route,
 		Options: &openapi3filter.Options{
 			AuthenticationFunc: func(ctx context.Context, ai *openapi3filter.AuthenticationInput) error {
+				authHeaderName := p.getAuthHeaderName()
 				authHeader := ai.RequestValidationInput.Request.Header.Get(authHeaderName)
 				if authHeader == "" {
-					return errors.New("authorization header is required")
+					return errors.Errorf("authorization header value %s is required", authHeaderName)
 				}
-				if !strings.HasPrefix(authHeader, authSchemePrefix) {
+
+				authSchemePrefix := p.getAuthScheme()
+				if authSchemePrefix != "" && !strings.HasPrefix(authHeader, authSchemePrefix) {
 					return errors.Errorf("unexpected auth scheme (expected %q)", authSchemePrefix)
 				}
 
-				bearerToken := strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", authSchemePrefix))
-				if bearerToken == "" {
-					return errors.New("bearer token is required")
+				var token string
+				if authSchemePrefix == "" {
+					token = authHeader
+				} else {
+					token = strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerAuthSchemePrefix))
+				}
+
+				if token == "" {
+					return errors.New("auth token is required")
 				}
 
 				return nil

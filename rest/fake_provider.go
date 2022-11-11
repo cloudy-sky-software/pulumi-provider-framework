@@ -27,8 +27,12 @@ func (p *fakeProviderCallback) OnConfigure(ctx context.Context, req *pulumirpc.C
 	return nil, nil
 }
 
-func (p *fakeProviderCallback) OnInvoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error) {
-	return nil, nil
+func (p *fakeProviderCallback) OnPreInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, httpReq *http.Request) error {
+	return nil
+}
+
+func (p *fakeProviderCallback) OnPostInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
 }
 
 func (p *fakeProviderCallback) OnDiff(ctx context.Context, req *pulumirpc.DiffRequest, resourceTypeToken string, diff *resource.ObjectDiff, jsonReq *openapi3.MediaType) (*pulumirpc.DiffResponse, error) {

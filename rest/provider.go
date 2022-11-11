@@ -186,6 +186,10 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", invokeTypeToken)
 	}
 
+	if err := p.providerCallback.OnPreInvoke(ctx, req, httpReq); err != nil {
+		return nil, err
+	}
+
 	// Read the resource.
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
@@ -209,29 +213,19 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 
 	httpResp.Body.Close()
 
-	var obj resource.PropertyMap
-	// TODO: Is this too specific for this lib?
-	// Should this be pushed downstream to the actual provider
-	// implementation?
-	if strings.Contains(invokeTypeToken, ":list") {
-		var outputs []interface{}
-		if err := json.Unmarshal(body, &outputs); err != nil {
-			return nil, errors.Wrap(err, "unmarshaling the response")
-		}
-
-		m := make(map[string]interface{})
-		m["items"] = outputs
-		obj = resource.NewPropertyMapFromMap(m)
-	} else {
-		var outputs map[string]interface{}
-		if err := json.Unmarshal(body, &outputs); err != nil {
-			return nil, errors.Wrap(err, "unmarshaling the response")
-		}
-
-		obj = resource.NewPropertyMapFromMap(outputs)
+	var outputs interface{}
+	if err := json.Unmarshal(body, &outputs); err != nil {
+		return nil, errors.Wrap(err, "unmarshaling the response")
 	}
 
-	outputProperties, err := plugin.MarshalProperties(obj, state.DefaultMarshalOpts)
+	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
+
+	outputsMap, postInvokeErr := p.providerCallback.OnPostInvoke(ctx, req, outputs)
+	if postInvokeErr != nil {
+		return nil, postInvokeErr
+	}
+
+	outputProperties, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}

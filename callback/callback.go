@@ -19,7 +19,8 @@ type ProviderCallback interface {
 	// Return a non-nil response to override the default behavior.
 	OnConfigure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error)
 
-	OnInvoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error)
+	OnPreInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, httpReq *http.Request) error
+	OnPostInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error)
 
 	// OnDiff is a hook for calculating diffs on old vs. new inputs.
 	// Return a non-nil response to override the default behavior.

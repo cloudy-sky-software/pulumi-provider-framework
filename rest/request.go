@@ -46,8 +46,19 @@ func (p *Provider) CreateGetRequest(
 		return nil, errors.Wrap(err, "initializing request")
 	}
 
-	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
+	// We are assuming that the API requires auth as a header attribute.
+	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
+		var authHeader string
+		switch {
+		case securitySchemeRef.Value.Name != "":
+			authHeader = securitySchemeRef.Value.Name
+		case securitySchemeRef.Value.Scheme == "bearer":
+			fallthrough
+		default:
+			authHeader = "Authorization"
+		}
+		httpReq.Header.Add(authHeader, p.providerCallback.GetAuthorizationHeader())
+	}
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 

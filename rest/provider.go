@@ -457,6 +457,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		}
 	}
 
+	logging.V(3).Infof("Resource read will use state: %v", oldState)
+
 	if !oldState.HasValue("id") {
 		// Add the id property to the state map since our HTTP request creation will
 		// look for it in the inputs map.

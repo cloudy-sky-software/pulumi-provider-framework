@@ -600,7 +600,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	}
 
 	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
+	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -621,7 +621,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
+	p.replacePathParams(httpReq, pathParams)
 
 	preUpdateErr := p.providerCallback.OnPreUpdate(ctx, req, httpReq)
 	if preUpdateErr != nil {
@@ -698,7 +698,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 	}
 
 	// Set the API key in the auth header.
-	httpReq.Header.Add("Authorization", p.providerCallback.GetAuthorizationHeader())
+	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
 	httpReq.Header.Add("Accept", jsonMimeType)
 	httpReq.Header.Add("Content-Type", jsonMimeType)
 
@@ -724,7 +724,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
+	p.replacePathParams(httpReq, pathParams)
 
 	// Delete the resource.
 	httpResp, err := p.httpClient.Do(httpReq)

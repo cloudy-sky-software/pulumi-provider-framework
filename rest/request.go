@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -104,7 +105,7 @@ func (p *Provider) CreateGetRequest(
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
+	p.replacePathParams(httpReq, pathParams)
 
 	return httpReq, nil
 }
@@ -140,7 +141,7 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	httpReq.URL.Path = p.replacePathParams(httpReq.URL.Path, pathParams)
+	p.replacePathParams(httpReq, pathParams)
 
 	return httpReq, nil
 }
@@ -288,12 +289,38 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 	return pathParams, nil
 }
 
-func (p *Provider) replacePathParams(path string, pathParams map[string]string) string {
-	for k, v := range pathParams {
-		path = strings.ReplaceAll(path, fmt.Sprintf("{%s}", k), v)
+func (p *Provider) replacePathParams(httpReq *http.Request, pathParams map[string]string) error {
+	path := httpReq.URL.Path
+	var bodyMap map[string]interface{}
+
+	if httpReq.Body != nil {
+		body, _ := io.ReadAll(httpReq.Body)
+		if err := json.Unmarshal(body, &bodyMap); err != nil {
+			return errors.Wrap(err, "unmarshaling body while replacing path params")
+		}
 	}
 
-	return path
+	for k, v := range pathParams {
+		path = strings.ReplaceAll(path, fmt.Sprintf("{%s}", k), v)
+		// Delete the path param from the request body since it was added
+		// as a way to take path params as inputs to the resource.
+		if bodyMap != nil {
+			delete(bodyMap, k)
+		}
+	}
+
+	if bodyMap != nil {
+		updatedBody, _ := json.Marshal(bodyMap)
+		newContentLength := int64(len(updatedBody))
+		httpReq.Body = io.NopCloser(bytes.NewBuffer(updatedBody))
+		httpReq.ContentLength = newContentLength
+		logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
+	}
+
+	httpReq.URL.Path = path
+	logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST URL: %s", httpReq.URL.String())
+
+	return nil
 }
 
 func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {

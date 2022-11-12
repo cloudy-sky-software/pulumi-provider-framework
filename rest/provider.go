@@ -621,7 +621,9 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	p.replacePathParams(httpReq, pathParams)
+	if err := p.replacePathParams(httpReq, pathParams); err != nil {
+		return nil, errors.Wrap(err, "replacing path params in the request url")
+	}
 
 	preUpdateErr := p.providerCallback.OnPreUpdate(ctx, req, httpReq)
 	if preUpdateErr != nil {
@@ -715,16 +717,18 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		}
 	}
 
-	preErr := p.providerCallback.OnPreDelete(ctx, req, httpReq)
-	if preErr != nil {
-		return nil, preErr
-	}
-
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	p.replacePathParams(httpReq, pathParams)
+	if err := p.replacePathParams(httpReq, pathParams); err != nil {
+		return nil, errors.Wrap(err, "replacing path params in the request url")
+	}
+
+	preErr := p.providerCallback.OnPreDelete(ctx, req, httpReq)
+	if preErr != nil {
+		return nil, preErr
+	}
 
 	// Delete the resource.
 	httpResp, err := p.httpClient.Do(httpReq)

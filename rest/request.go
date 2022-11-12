@@ -105,7 +105,9 @@ func (p *Provider) CreateGetRequest(
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	p.replacePathParams(httpReq, pathParams)
+	if err := p.replacePathParams(httpReq, pathParams); err != nil {
+		return nil, errors.Wrap(err, "replacing path params")
+	}
 
 	return httpReq, nil
 }
@@ -141,7 +143,9 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 		return nil, errors.Wrap(err, "validate http request")
 	}
 
-	p.replacePathParams(httpReq, pathParams)
+	if err := p.replacePathParams(httpReq, pathParams); err != nil {
+		return nil, errors.Wrap(err, "replacing path params")
+	}
 
 	return httpReq, nil
 }

@@ -363,10 +363,22 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	// as a placeholder so that the resource construction is possible.
 	// In other words, this is a dirty hack. :)
 	case crudMap.P != nil:
-		httpEndpointPath = *crudMap.P
-		httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, b, inputs)
-		if httpReqErr != nil {
-			return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
+		// BUT if the Create (POST) endpoint is different from the Put endpoint,
+		// we should use the Create endpoint.
+		if crudMap.C != nil && *crudMap.C != *crudMap.P {
+			logging.V(3).Infof("Using POST endpoint to create resource %s", resourceTypeToken)
+			httpEndpointPath = *crudMap.C
+			httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, b, inputs)
+			if httpReqErr != nil {
+				return nil, errors.Wrapf(httpReqErr, "creating post request (type token: %s)", resourceTypeToken)
+			}
+		} else {
+			logging.V(3).Infof("Using PUT endpoint to create resource %s", resourceTypeToken)
+			httpEndpointPath = *crudMap.P
+			httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, b, inputs)
+			if httpReqErr != nil {
+				return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
+			}
 		}
 	case crudMap.C != nil:
 		httpEndpointPath = *crudMap.C
@@ -387,7 +399,9 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Wrap(err, "executing http request")
 	}
 
-	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated {
+	if httpResp.StatusCode != http.StatusOK &&
+		httpResp.StatusCode != http.StatusCreated &&
+		httpResp.StatusCode != http.StatusAccepted {
 		body, err := io.ReadAll(httpResp.Body)
 		if err != nil {
 			return nil, errors.Wrap(err, "http request failed and the error response could not be read")
@@ -615,6 +629,13 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		if err != nil {
 			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
 		}
+
+		if httpReq.Body != nil {
+			logging.V(3).Infoln("Removing path params from request body")
+			if err := p.removePathParamsFromRequestBody(httpReq, pathParams); err != nil {
+				return nil, errors.Wrap(err, "removing path params from request body")
+			}
+		}
 	}
 
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
@@ -714,6 +735,13 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodDelete, inputs)
 		if err != nil {
 			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
+		}
+
+		if httpReq.Body != nil {
+			logging.V(3).Infoln("Removing path params from request body")
+			if err := p.removePathParamsFromRequestBody(httpReq, pathParams); err != nil {
+				return nil, errors.Wrap(err, "removing path params from request body")
+			}
 		}
 	}
 

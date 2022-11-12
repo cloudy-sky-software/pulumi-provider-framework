@@ -112,6 +112,28 @@ func (p *Provider) CreateGetRequest(
 	return httpReq, nil
 }
 
+func (p *Provider) removePathParamsFromRequestBody(httpReq *http.Request, pathParams map[string]string) error {
+	var bodyMap map[string]interface{}
+
+	body, _ := io.ReadAll(httpReq.Body)
+	if err := json.Unmarshal(body, &bodyMap); err != nil {
+		return errors.Wrap(err, "unmarshaling body")
+	}
+
+	for k := range pathParams {
+		// Delete the path param from the request body since it was added
+		// as a way to take path params as inputs to the resource.
+		delete(bodyMap, k)
+	}
+
+	updatedBody, _ := json.Marshal(bodyMap)
+	newContentLength := int64(len(updatedBody))
+	httpReq.Body = io.NopCloser(bytes.NewBuffer(updatedBody))
+	httpReq.ContentLength = newContentLength
+	logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
+	return nil
+}
+
 func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
@@ -137,6 +159,13 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 		if err != nil {
 			return nil, errors.Wrap(err, "getting path params")
 		}
+
+		if httpReq.Body != nil {
+			logging.V(3).Infoln("Removing path params from request body")
+			if err := p.removePathParamsFromRequestBody(httpReq, pathParams); err != nil {
+				return nil, errors.Wrap(err, "removing path params from request body")
+			}
+		}
 	}
 
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
@@ -160,6 +189,18 @@ func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath strin
 // provided inputs map.
 func (p *Provider) CreatePutRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, reqBody, inputs)
+}
+
+// CreatePatchRequest returns a validated PATCH HTTP request for the
+// provided inputs map.
+func (p *Provider) CreatePatchRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, reqBody, inputs)
+}
+
+// CreateDeleteRequest returns a validated DELETE HTTP request for the
+// provided inputs map.
+func (p *Provider) CreateDeleteRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, reqBody, inputs)
 }
 
 func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {
@@ -283,7 +324,7 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 
 	numPathParams := len(pathParams)
 	if numPathParams == 0 {
-		return nil, errors.New("did not find any path parameters in the openapi doc for")
+		return nil, errors.New("did not find any path parameters")
 	}
 
 	if numPathParams != count {
@@ -295,30 +336,9 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 
 func (p *Provider) replacePathParams(httpReq *http.Request, pathParams map[string]string) error {
 	path := httpReq.URL.Path
-	var bodyMap map[string]interface{}
-
-	if httpReq.Body != nil {
-		body, _ := io.ReadAll(httpReq.Body)
-		if err := json.Unmarshal(body, &bodyMap); err != nil {
-			return errors.Wrap(err, "unmarshaling body while replacing path params")
-		}
-	}
 
 	for k, v := range pathParams {
 		path = strings.ReplaceAll(path, fmt.Sprintf("{%s}", k), v)
-		// Delete the path param from the request body since it was added
-		// as a way to take path params as inputs to the resource.
-		if bodyMap != nil {
-			delete(bodyMap, k)
-		}
-	}
-
-	if bodyMap != nil {
-		updatedBody, _ := json.Marshal(bodyMap)
-		newContentLength := int64(len(updatedBody))
-		httpReq.Body = io.NopCloser(bytes.NewBuffer(updatedBody))
-		httpReq.ContentLength = newContentLength
-		logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
 	}
 
 	httpReq.URL.Path = path

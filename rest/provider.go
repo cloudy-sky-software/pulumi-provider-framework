@@ -121,6 +121,10 @@ func GetResourceTypeToken(u string) string {
 	return urn.Type().String()
 }
 
+func getResourceName(u string) string {
+	return resource.URN(u).Name().String()
+}
+
 // Attach sends the engine address to an already running plugin.
 func (p *Provider) Attach(context context.Context, req *pulumirpc.PluginAttach) (*pbempty.Empty, error) {
 	host, err := provider.NewHostClient(req.GetAddress())
@@ -249,7 +253,54 @@ func (p *Provider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumirpc.R
 // required for correctness, violations thereof can negatively impact the end-user experience, as
 // the provider inputs are used for detecting and rendering diffs.
 func (p *Provider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
-	return &pulumirpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
+	urn := req.GetUrn()
+	resourceName := getResourceName(urn)
+	resourceTypeToken := GetResourceTypeToken(urn)
+	autoNameProp, ok := p.metadata.AutoNameMap[resourceTypeToken]
+
+	// If this resource type token is not in the auto-name map,
+	// then return the default `CheckResponse`.
+	if !ok {
+		return &pulumirpc.CheckResponse{Inputs: req.GetNews(), Failures: nil}, nil
+	}
+
+	logging.V(3).Infof("Resource type %q has an auto-name property %q", resourceTypeToken, autoNameProp)
+
+	inputs, err := plugin.UnmarshalProperties(req.GetNews(), state.DefaultUnmarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshaling new inputs in check method")
+	}
+
+	olds, err := plugin.UnmarshalProperties(req.GetOlds(), state.DefaultUnmarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshaling old inputs in check method")
+	}
+
+	namePropKey := resource.PropertyKey(autoNameProp)
+
+	// If neither the new inputs nor the old inputs have the name property
+	if _, ok := inputs[namePropKey]; !ok {
+		logging.V(3).Infof("New inputs did not have auto-name property %q", autoNameProp)
+
+		if oldAutoNameValue, ok := olds[namePropKey]; !ok {
+			logging.V(3).Infof("Old inputs did not have auto-name property %q. Will generate a new value...", autoNameProp)
+
+			randomName, err := resource.NewUniqueName(req.GetRandomSeed(), resourceName+"-", 8, 24, nil)
+			if err != nil {
+				return nil, errors.Wrapf(err, "creating unique name for %s (token: %s)", resourceName, resourceTypeToken)
+			}
+			inputs[namePropKey] = resource.NewStringProperty(randomName)
+		} else {
+			logging.V(3).Infof("Found auto-name property %q in old inputs. Will set that in new inputs...", autoNameProp)
+			inputs[namePropKey] = oldAutoNameValue
+		}
+	}
+
+	updatedInputs, err := plugin.MarshalProperties(inputs, state.DefaultMarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "marshaling updated inputs in check method")
+	}
+	return &pulumirpc.CheckResponse{Inputs: updatedInputs}, nil
 }
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.

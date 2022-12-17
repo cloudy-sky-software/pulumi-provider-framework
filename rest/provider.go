@@ -41,6 +41,8 @@ import (
 // The implemented methods assume that the cloud provider supports RESTful
 // APIs that accept a content-type of `application/json`.
 type Provider struct {
+	pulumirpc.UnimplementedResourceProviderServer
+
 	host    *provider.HostClient
 	name    string
 	version string
@@ -871,4 +873,8 @@ func (p *Provider) GetBaseURL() string {
 
 func (p *Provider) GetHTTPClient() *http.Client {
 	return p.httpClient
+}
+
+func (p *Provider) GetMapping(ctx context.Context, req *pulumirpc.GetMappingRequest) (*pulumirpc.GetMappingResponse, error) {
+	return &pulumirpc.GetMappingResponse{}, nil
 }

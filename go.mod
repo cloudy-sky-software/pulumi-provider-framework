@@ -7,10 +7,10 @@ require (
 	github.com/getkin/kin-openapi v0.111.0
 	github.com/golang/protobuf v1.5.2
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.49.0
-	github.com/pulumi/pulumi/sdk/v3 v3.49.0
+	github.com/pulumi/pulumi/pkg/v3 v3.50.0
+	github.com/pulumi/pulumi/sdk/v3 v3.50.0
 	github.com/stretchr/testify v1.8.1
-	google.golang.org/grpc v1.50.1
+	google.golang.org/grpc v1.51.0
 )
 
 require (
@@ -96,7 +96,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/vault/sdk v0.6.0 // indirect
+	github.com/hashicorp/vault/sdk v0.6.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/ijc/Gotty v0.0.0-20170406111628-a8b993ba6abd // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
@@ -177,16 +177,19 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/hashicorp/go-hclog v1.3.1 // indirect
-	github.com/hashicorp/hcl/v2 v2.14.1 // indirect
-	github.com/hashicorp/vault/api v1.8.1 // indirect
+	github.com/hashicorp/hcl/v2 v2.15.0 // indirect
+	github.com/hashicorp/vault/api v1.8.2 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.1 // indirect
 	github.com/segmentio/encoding v0.3.6 // indirect
-	github.com/spf13/cobra v1.6.0 // indirect
-	github.com/zclconf/go-cty v1.11.1 // indirect
+	github.com/spf13/cobra v1.6.1 // indirect
+	github.com/zclconf/go-cty v1.12.1 // indirect
 	gocloud.dev/secrets/hashivault v0.27.0 // indirect
 	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
 	golang.org/x/net v0.0.0-20221017152216-f25eb7ecb193 // indirect

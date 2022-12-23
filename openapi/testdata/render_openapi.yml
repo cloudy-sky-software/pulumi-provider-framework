@@ -1443,6 +1443,7 @@ paths:
                     contents: exercitation ut Duis ex
                 serviceDetails:
                   buildCommand: dolore ex
+                  env: "docker"
                   headers:
                     - path: enim Excepteur p
                       name: deserunt

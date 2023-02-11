@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -24,6 +27,8 @@ const (
 	bearerAuthSchemePrefix = "Bearer"
 	jsonMimeType           = "application/json"
 )
+
+var titleCaser = cases.Title(language.AmericanEnglish)
 
 // Request interface is implemented by REST-based providers that perform
 // CRUD operations using RESTful APIs.
@@ -59,15 +64,7 @@ func (p *Provider) getAuthScheme() string {
 	var scheme string
 
 	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
-		switch {
-		case securitySchemeRef.Value.Scheme == "bearer":
-			// Some APIs are specific about the case-sensitiveness
-			// of the scheme. Pretty much all APIs will accept the
-			// title-case of the scheme.
-			scheme = bearerAuthSchemePrefix
-		default:
-			scheme = securitySchemeRef.Value.Scheme
-		}
+		scheme = titleCaser.String(securitySchemeRef.Value.Scheme)
 		break
 	}
 

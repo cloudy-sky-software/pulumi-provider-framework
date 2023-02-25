@@ -9,7 +9,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi/pkg/v3 v3.52.1
 	github.com/pulumi/pulumi/sdk/v3 v3.52.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
+	golang.org/x/text v0.5.0
 	google.golang.org/grpc v1.52.3
 )
 
@@ -198,7 +199,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.102.0 // indirect

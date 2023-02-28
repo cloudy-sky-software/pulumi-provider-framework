@@ -1065,7 +1065,6 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 $ref: "#/components/schemas/owner"
               example:
                 id: nisi aute veniam elit
@@ -2376,11 +2375,11 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/envVar"
-              example:
-                - key: aute cupidatat
-                  value: esse
-                - key: officia esse nostrud Excepteur
-                  value: Lorem
+            example:
+              - key: aute cupidatat
+                value: esse
+              - key: officia esse nostrud Excepteur
+                value: Lorem
       parameters:
         - name: Content-Type
           in: header
@@ -3628,8 +3627,8 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/deploy"
-              example:
-                clearCache: do_not_clear
+            example:
+              clearCache: do_not_clear
       parameters:
         - name: Content-Type
           in: header
@@ -5136,9 +5135,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/job"
-              example:
-                startCommand: et ex Duis sit
-                planId: cupidatat Duis ad
+            example:
+              startCommand: et ex Duis sit
+              planId: cupidatat Duis ad
       parameters:
         - name: Content-Type
           in: header

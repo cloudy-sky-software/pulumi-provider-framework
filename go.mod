@@ -7,8 +7,8 @@ require (
 	github.com/getkin/kin-openapi v0.115.0
 	github.com/golang/protobuf v1.5.3
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.58.0
-	github.com/pulumi/pulumi/sdk/v3 v3.58.0
+	github.com/pulumi/pulumi/pkg/v3 v3.59.0
+	github.com/pulumi/pulumi/sdk/v3 v3.59.0
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/text v0.8.0
 	google.golang.org/grpc v1.54.0
@@ -193,6 +193,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.1 // indirect
 	github.com/segmentio/encoding v0.3.6 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
+	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
 	gocloud.dev/secrets/hashivault v0.27.0 // indirect

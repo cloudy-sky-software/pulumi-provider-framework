@@ -60,15 +60,15 @@ func (p *Provider) getAuthHeaderName() string {
 	return authHeaderName
 }
 
-func (p *Provider) getAuthScheme() string {
-	var scheme string
+func (p *Provider) getSupportedAuthSchemes() []string {
+	schemes := make([]string, 0, len(p.openAPIDoc.Components.SecuritySchemes))
 
 	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
-		scheme = titleCaser.String(securitySchemeRef.Value.Scheme)
+		schemes = append(schemes, titleCaser.String(securitySchemeRef.Value.Scheme))
 		break
 	}
 
-	return scheme
+	return schemes
 }
 
 // CreateGetRequest returns a validated GET HTTP request for the provided inputs map.
@@ -214,23 +214,24 @@ func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, p
 		Options: &openapi3filter.Options{
 			AuthenticationFunc: func(ctx context.Context, ai *openapi3filter.AuthenticationInput) error {
 				authHeaderName := p.getAuthHeaderName()
-				authHeader := ai.RequestValidationInput.Request.Header.Get(authHeaderName)
-				if authHeader == "" {
+				authHeaderValue := ai.RequestValidationInput.Request.Header.Get(authHeaderName)
+				if authHeaderValue == "" {
 					return errors.Errorf("authorization header value %s is required", authHeaderName)
 				}
 
-				authSchemePrefix := p.getAuthScheme()
-				if authSchemePrefix != "" && !strings.HasPrefix(authHeader, authSchemePrefix) {
-					return errors.Errorf("unexpected auth scheme (expected %q)", authSchemePrefix)
+				authSchemes := p.getSupportedAuthSchemes()
+				matchingAuthSchemePrefix := ""
+				for _, scheme := range authSchemes {
+					if strings.HasPrefix(authHeaderValue, scheme) {
+						matchingAuthSchemePrefix = scheme
+						break
+					}
+				}
+				if matchingAuthSchemePrefix == "" {
+					return errors.Errorf("unexpected auth scheme (expected one of %v)", authSchemes)
 				}
 
-				var token string
-				if authSchemePrefix == "" {
-					token = authHeader
-				} else {
-					token = strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerAuthSchemePrefix))
-				}
-
+				token := strings.TrimPrefix(authHeaderValue, fmt.Sprintf("%s ", bearerAuthSchemePrefix))
 				if token == "" {
 					return errors.New("auth token is required")
 				}

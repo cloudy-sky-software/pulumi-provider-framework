@@ -69,7 +69,6 @@ func (p *Provider) getSupportedAuthSchemes() []string {
 			scheme = "Bearer"
 		}
 		schemes = append(schemes, scheme)
-		break
 	}
 
 	return schemes

@@ -64,7 +64,11 @@ func (p *Provider) getSupportedAuthSchemes() []string {
 	schemes := make([]string, 0, len(p.openAPIDoc.Components.SecuritySchemes))
 
 	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
-		schemes = append(schemes, titleCaser.String(securitySchemeRef.Value.Scheme))
+		scheme := titleCaser.String(securitySchemeRef.Value.Scheme)
+		if scheme == "" && strings.ToLower(securitySchemeRef.Value.Type) == "oauth2" {
+			scheme = "Bearer"
+		}
+		schemes = append(schemes, scheme)
 		break
 	}
 

@@ -339,22 +339,35 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
-	if crudMap.U == nil && crudMap.P == nil {
-		return nil, errors.Errorf("resource update endpoint is unknown for %s", resourceTypeToken)
-	}
 
 	var updateOp *openapi3.Operation
 	switch {
 	case crudMap.U != nil:
 		updateOp = p.openAPIDoc.Paths[*crudMap.U].Patch
 		if updateOp == nil {
-			return nil, errors.Errorf("openapi doc does not have patch endpoint definition for the path %s", *crudMap.U)
+			return nil, errors.Errorf("openapi doc does not have PATCH endpoint definition for the path %s", *crudMap.U)
 		}
 	case crudMap.P != nil:
 		updateOp = p.openAPIDoc.Paths[*crudMap.P].Put
 		if updateOp == nil {
-			return nil, errors.Errorf("openapi doc does not have put endpoint definition for the path %s", *crudMap.U)
+			return nil, errors.Errorf("openapi doc does not have PUT endpoint definition for the path %s", *crudMap.U)
 		}
+
+	default:
+		// If there is no PATCH or PUT endpoint for this type token,
+		// then we'll need to trigger a replacement.
+
+		changedKeys := diff.ChangedKeys()
+		replaces := make([]string, 0, len(changedKeys))
+		for _, prop := range changedKeys {
+			replaces = append(replaces, string(prop))
+		}
+
+		return &pulumirpc.DiffResponse{
+			Changes:  pulumirpc.DiffResponse_DIFF_SOME,
+			Replaces: replaces,
+			Diffs:    replaces,
+		}, nil
 	}
 
 	var replaces []string

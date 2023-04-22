@@ -33,12 +33,11 @@ var titleCaser = cases.Title(language.AmericanEnglish)
 // Request interface is implemented by REST-based providers that perform
 // CRUD operations using RESTful APIs.
 type Request interface {
-	CreateGetRequest(
-		ctx context.Context,
-		httpEndpointPath string,
-		inputs resource.PropertyMap) (*http.Request, error)
-
+	CreateDeleteRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
+	CreateGetRequest(ctx context.Context, httpEndpointPath string, inputs resource.PropertyMap) (*http.Request, error)
+	CreatePatchRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 	CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
+	CreatePutRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 }
 
 func (p *Provider) getAuthHeaderName() string {
@@ -112,12 +111,11 @@ func (p *Provider) CreateGetRequest(
 	return httpReq, nil
 }
 
-func (p *Provider) removePathParamsFromRequestBody(httpReq *http.Request, pathParams map[string]string) error {
+func (p *Provider) removePathParamsFromRequestBody(body []byte, pathParams map[string]string) ([]byte, error) {
 	var bodyMap map[string]interface{}
 
-	body, _ := io.ReadAll(httpReq.Body)
 	if err := json.Unmarshal(body, &bodyMap); err != nil {
-		return errors.Wrap(err, "unmarshaling body")
+		return nil, errors.Wrap(err, "unmarshaling body")
 	}
 
 	for k := range pathParams {
@@ -127,27 +125,12 @@ func (p *Provider) removePathParamsFromRequestBody(httpReq *http.Request, pathPa
 	}
 
 	updatedBody, _ := json.Marshal(bodyMap)
-	newContentLength := int64(len(updatedBody))
-	httpReq.Body = io.NopCloser(bytes.NewBuffer(updatedBody))
-	httpReq.ContentLength = newContentLength
 	logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
-	return nil
+	return updatedBody, nil
 }
 
 func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
-
-	buf := bytes.NewBuffer(reqBody)
-	httpReq, err := http.NewRequestWithContext(ctx, httpMethod, p.baseURL+httpEndpointPath, buf)
-	if err != nil {
-		return nil, errors.Wrap(err, "initializing request")
-	}
-
-	logging.V(3).Infof("URL: %s", httpReq.URL.String())
-
-	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
-	httpReq.Header.Add("Accept", jsonMimeType)
-	httpReq.Header.Add("Content-Type", jsonMimeType)
 
 	hasPathParams := strings.Contains(httpEndpointPath, "{")
 	var pathParams map[string]string
@@ -160,13 +143,28 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 			return nil, errors.Wrap(err, "getting path params")
 		}
 
-		if httpReq.Body != nil {
+		if reqBody != nil {
 			logging.V(3).Infoln("Removing path params from request body")
-			if err := p.removePathParamsFromRequestBody(httpReq, pathParams); err != nil {
+			updatedBody, err := p.removePathParamsFromRequestBody(reqBody, pathParams)
+			if err != nil {
 				return nil, errors.Wrap(err, "removing path params from request body")
 			}
+
+			reqBody = updatedBody
 		}
 	}
+
+	buf := bytes.NewBuffer(reqBody)
+	httpReq, err := http.NewRequestWithContext(ctx, httpMethod, p.baseURL+httpEndpointPath, buf)
+	if err != nil {
+		return nil, errors.Wrap(err, "initializing request")
+	}
+
+	logging.V(3).Infof("URL: %s", httpReq.URL.String())
+
+	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
+	httpReq.Header.Add("Accept", jsonMimeType)
+	httpReq.Header.Add("Content-Type", jsonMimeType)
 
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
 		return nil, errors.Wrap(err, "validate http request")

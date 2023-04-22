@@ -667,22 +667,12 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		method = http.MethodPut
 	}
 
-	b, err := json.Marshal(inputs.Mappable())
+	reqBody, err := json.Marshal(inputs.Mappable())
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling inputs")
 	}
 
-	logging.V(3).Infof("REQUEST BODY: %s", string(b))
-	buf := bytes.NewBuffer(b)
-	httpReq, err := http.NewRequestWithContext(ctx, method, p.baseURL+httpEndpointPath, buf)
-	if err != nil {
-		return nil, errors.Wrap(err, "initializing request")
-	}
-
-	// Set the API key in the auth header.
-	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
-	httpReq.Header.Add("Accept", jsonMimeType)
-	httpReq.Header.Add("Content-Type", jsonMimeType)
+	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	hasPathParams := strings.Contains(httpEndpointPath, "{")
 	var pathParams map[string]string
@@ -696,13 +686,27 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
 		}
 
-		if httpReq.Body != nil {
+		if reqBody != nil {
 			logging.V(3).Infoln("Removing path params from request body")
-			if err := p.removePathParamsFromRequestBody(httpReq, pathParams); err != nil {
+			updatedBody, err := p.removePathParamsFromRequestBody(reqBody, pathParams)
+			if err != nil {
 				return nil, errors.Wrap(err, "removing path params from request body")
 			}
+
+			reqBody = updatedBody
 		}
 	}
+
+	buf := bytes.NewBuffer(reqBody)
+	httpReq, err := http.NewRequestWithContext(ctx, method, p.baseURL+httpEndpointPath, buf)
+	if err != nil {
+		return nil, errors.Wrap(err, "initializing request")
+	}
+
+	// Set the API key in the auth header.
+	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
+	httpReq.Header.Add("Accept", jsonMimeType)
+	httpReq.Header.Add("Content-Type", jsonMimeType)
 
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
 		return nil, errors.Wrap(err, "validate http request")
@@ -781,7 +785,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 	}
 
 	httpEndpointPath := *crudMap.D
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, p.baseURL+httpEndpointPath, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, p.baseURL+httpEndpointPath, nil /*no request body for DELETEs*/)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
 	}
@@ -801,13 +805,6 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodDelete, inputs)
 		if err != nil {
 			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
-		}
-
-		if httpReq.Body != nil {
-			logging.V(3).Infoln("Removing path params from request body")
-			if err := p.removePathParamsFromRequestBody(httpReq, pathParams); err != nil {
-				return nil, errors.Wrap(err, "removing path params from request body")
-			}
 		}
 	}
 

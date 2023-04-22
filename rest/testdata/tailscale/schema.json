@@ -1,0 +1,1320 @@
+{
+    "name": "tailscale-native",
+    "displayName": "Tailscale Native",
+    "description": "A native Pulumi package for creating and managing Tailscale resources.",
+    "keywords": [
+        "pulumi",
+        "tailscale-native",
+        "category/cloud",
+        "kind/native"
+    ],
+    "homepage": "https://cloudysky.software",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/cloudy-sky-software/pulumi-tailscale-native",
+    "pluginDownloadURL": "github://api.github.com/cloudy-sky-software/pulumi-tailscale-native",
+    "publisher": "Cloudy Sky Software",
+    "language": {
+        "csharp": {
+            "namespaces": {
+                "": "Provider",
+                "device": "Device",
+                "tailnet": "Tailnet",
+                "tailscale-native": "TailscaleNative"
+            },
+            "packageReferences": {
+                "Pulumi": "3.*"
+            },
+            "rootNamespace": "Pulumi"
+        },
+        "go": {
+            "importBasePath": "github.com/cloudy-sky-software/pulumi-tailscale-native/sdk/go/tailscale",
+            "packageImportAliases": {
+                "github.com/cloudy-sky-software/pulumi-tailscale-native/sdk/go/tailscale": "tailscale"
+            }
+        },
+        "nodejs": {
+            "dependencies": {
+                "@pulumi/pulumi": "^3.0.0",
+                "@types/glob": "^5.0.35",
+                "@types/node-fetch": "^2.1.4",
+                "@types/tmp": "^0.0.33",
+                "glob": "^7.1.2",
+                "node-fetch": "^2.3.0",
+                "shell-quote": "^1.6.1",
+                "tmp": "^0.0.33"
+            },
+            "devDependencies": {
+                "@types/mocha": "^5.2.5",
+                "@types/shell-quote": "^1.6.0",
+                "mocha": "^5.2.0"
+            },
+            "packageName": "@cloudyskysoftware/pulumi-tailscale-native"
+        },
+        "python": {
+            "packageName": "pulumi_tailscale_native",
+            "requires": {
+                "pulumi": "\u003e=3.0.0,\u003c4.0.0"
+            }
+        }
+    },
+    "config": {
+        "variables": {
+            "apiKey": {
+                "type": "string",
+                "description": "The API key",
+                "language": {
+                    "csharp": {
+                        "name": "ApiKey"
+                    }
+                },
+                "secret": true
+            },
+            "clientId": {
+                "type": "string",
+                "description": "The OAuth client ID",
+                "language": {
+                    "csharp": {
+                        "name": "ClientId"
+                    }
+                }
+            },
+            "clientSecret": {
+                "type": "string",
+                "description": "The OAuth client secret",
+                "language": {
+                    "csharp": {
+                        "name": "ClientSecret"
+                    }
+                },
+                "secret": true
+            }
+        }
+    },
+    "types": {
+        "tailscale-native:device:ClientConnectivity": {
+            "properties": {
+                "clientSupports": {
+                    "$ref": "#/types/tailscale-native:device:ClientSupports"
+                },
+                "derp": {
+                    "type": "string"
+                },
+                "endpoints": {
+                    "type": "string"
+                },
+                "latency": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "mappingVariesByDestIP": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "clientSupports",
+                "derp",
+                "endpoints",
+                "latency",
+                "mappingVariesByDestIP"
+            ]
+        },
+        "tailscale-native:device:ClientSupports": {
+            "properties": {
+                "hairPinning": {
+                    "type": "boolean"
+                },
+                "ipv6": {
+                    "type": "boolean"
+                },
+                "pcp": {
+                    "type": "boolean"
+                },
+                "pmp": {
+                    "type": "boolean"
+                },
+                "udp": {
+                    "type": "boolean"
+                },
+                "upnp": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "hairPinning",
+                "ipv6",
+                "pcp",
+                "pmp",
+                "udp",
+                "upnp"
+            ]
+        },
+        "tailscale-native:device:Device": {
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "advertisedRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "authorized": {
+                    "type": "boolean"
+                },
+                "blocksIncomingConnections": {
+                    "type": "boolean"
+                },
+                "clientConnectivity": {
+                    "$ref": "#/types/tailscale-native:device:ClientConnectivity"
+                },
+                "clientVersion": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "enabledRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "hostname": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "keyExpiryDisabled": {
+                    "type": "boolean"
+                },
+                "lastSeen": {
+                    "type": "string"
+                },
+                "machineKey": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nodeKey": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "updateAvailable": {
+                    "type": "boolean"
+                },
+                "user": {
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "required": [
+                "addresses",
+                "advertisedRoutes",
+                "authorized",
+                "blocksIncomingConnections",
+                "clientConnectivity",
+                "clientVersion",
+                "created",
+                "enabledRoutes",
+                "expires",
+                "hostname",
+                "id",
+                "isExternal",
+                "keyExpiryDisabled",
+                "lastSeen",
+                "machineKey",
+                "name",
+                "nodeKey",
+                "os",
+                "updateAvailable",
+                "user"
+            ]
+        },
+        "tailscale-native:device:DeviceRoutes": {
+            "properties": {
+                "advertisedRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabledRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "advertisedRoutes",
+                "enabledRoutes"
+            ]
+        },
+        "tailscale-native:tailnet:Acl": {
+            "properties": {
+                "acls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:AclRule"
+                    }
+                },
+                "autoApprovers": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "groups": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "hosts": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "nodeAttrs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:NodeAttrs"
+                    }
+                },
+                "ssh": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:SshRule"
+                    }
+                },
+                "tagOwners": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "tests": {
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "required": [
+                "acls",
+                "autoApprovers",
+                "groups",
+                "hosts",
+                "nodeAttrs",
+                "ssh",
+                "tagOwners",
+                "tests"
+            ]
+        },
+        "tailscale-native:tailnet:AclRule": {
+            "properties": {
+                "action": {
+                    "$ref": "#/types/tailscale-native:tailnet:AclRuleAction"
+                },
+                "ports": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "action",
+                "ports",
+                "users"
+            ]
+        },
+        "tailscale-native:tailnet:AclRuleAction": {
+            "type": "string",
+            "enum": [
+                {
+                    "name": "Accept",
+                    "value": "accept"
+                }
+            ]
+        },
+        "tailscale-native:tailnet:AuthKey": {
+            "properties": {
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "required": [
+                "expires",
+                "key"
+            ]
+        },
+        "tailscale-native:tailnet:ClientConnectivity": {
+            "properties": {
+                "clientSupports": {
+                    "$ref": "#/types/tailscale-native:tailnet:ClientSupports"
+                },
+                "derp": {
+                    "type": "string"
+                },
+                "endpoints": {
+                    "type": "string"
+                },
+                "latency": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "mappingVariesByDestIP": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "clientSupports",
+                "derp",
+                "endpoints",
+                "latency",
+                "mappingVariesByDestIP"
+            ]
+        },
+        "tailscale-native:tailnet:ClientSupports": {
+            "properties": {
+                "hairPinning": {
+                    "type": "boolean"
+                },
+                "ipv6": {
+                    "type": "boolean"
+                },
+                "pcp": {
+                    "type": "boolean"
+                },
+                "pmp": {
+                    "type": "boolean"
+                },
+                "udp": {
+                    "type": "boolean"
+                },
+                "upnp": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "hairPinning",
+                "ipv6",
+                "pcp",
+                "pmp",
+                "udp",
+                "upnp"
+            ]
+        },
+        "tailscale-native:tailnet:CreateKey": {
+            "properties": {
+                "ephemeral": {
+                    "type": "boolean"
+                },
+                "preauthorized": {
+                    "type": "boolean"
+                },
+                "reusable": {
+                    "type": "boolean"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "ephemeral",
+                "preauthorized",
+                "reusable",
+                "tags"
+            ]
+        },
+        "tailscale-native:tailnet:Device": {
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "advertisedRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "authorized": {
+                    "type": "boolean"
+                },
+                "blocksIncomingConnections": {
+                    "type": "boolean"
+                },
+                "clientConnectivity": {
+                    "$ref": "#/types/tailscale-native:tailnet:ClientConnectivity"
+                },
+                "clientVersion": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "enabledRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "hostname": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isExternal": {
+                    "type": "boolean"
+                },
+                "keyExpiryDisabled": {
+                    "type": "boolean"
+                },
+                "lastSeen": {
+                    "type": "string"
+                },
+                "machineKey": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nodeKey": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "updateAvailable": {
+                    "type": "boolean"
+                },
+                "user": {
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "required": [
+                "addresses",
+                "advertisedRoutes",
+                "authorized",
+                "blocksIncomingConnections",
+                "clientConnectivity",
+                "clientVersion",
+                "created",
+                "enabledRoutes",
+                "expires",
+                "hostname",
+                "id",
+                "isExternal",
+                "keyExpiryDisabled",
+                "lastSeen",
+                "machineKey",
+                "name",
+                "nodeKey",
+                "os",
+                "updateAvailable",
+                "user"
+            ]
+        },
+        "tailscale-native:tailnet:DeviceKeyCapabilities": {
+            "properties": {
+                "create": {
+                    "$ref": "#/types/tailscale-native:tailnet:CreateKey"
+                }
+            },
+            "type": "object",
+            "required": [
+                "create"
+            ]
+        },
+        "tailscale-native:tailnet:DnsSearchPaths": {
+            "properties": {
+                "searchPaths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "searchPaths"
+            ]
+        },
+        "tailscale-native:tailnet:KeyCapabilities": {
+            "properties": {
+                "devices": {
+                    "$ref": "#/types/tailscale-native:tailnet:DeviceKeyCapabilities"
+                }
+            },
+            "type": "object",
+            "required": [
+                "devices"
+            ]
+        },
+        "tailscale-native:tailnet:ListDevicesProperties": {
+            "properties": {
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:Device"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "devices"
+            ]
+        },
+        "tailscale-native:tailnet:NameServers": {
+            "properties": {
+                "dns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "magicDNS": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "dns",
+                "magicDNS"
+            ]
+        },
+        "tailscale-native:tailnet:NameServersPreference": {
+            "properties": {
+                "magicDNS": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "magicDNS"
+            ]
+        },
+        "tailscale-native:tailnet:NodeAttrs": {
+            "properties": {
+                "attr": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "target": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "attr",
+                "target"
+            ]
+        },
+        "tailscale-native:tailnet:SshRule": {
+            "properties": {
+                "action": {
+                    "$ref": "#/types/tailscale-native:tailnet:SshRuleAction"
+                },
+                "checkPeriod": {
+                    "type": "string"
+                },
+                "dst": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "src": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "action",
+                "checkPeriod",
+                "dst",
+                "src",
+                "users"
+            ]
+        },
+        "tailscale-native:tailnet:SshRuleAction": {
+            "type": "string",
+            "enum": [
+                {
+                    "name": "Check",
+                    "value": "check"
+                },
+                {
+                    "name": "Accept",
+                    "value": "accept"
+                }
+            ]
+        }
+    },
+    "provider": {
+        "description": "The provider type for the Tailscale package.",
+        "type": "object",
+        "inputProperties": {
+            "apiKey": {
+                "type": "string",
+                "description": "The Tailscale API key.",
+                "defaultInfo": {
+                    "environment": [
+                        "TAILSCALE_NATIVE_APIKEY",
+                        "TAILSCALE_APIKEY"
+                    ]
+                },
+                "language": {
+                    "csharp": {
+                        "name": "ApiKey"
+                    }
+                },
+                "secret": true
+            },
+            "clientId": {
+                "type": "string",
+                "description": "The Tailscale OAuth client ID.",
+                "defaultInfo": {
+                    "environment": [
+                        "TAILSCALE_NATIVE_CLIENT_ID",
+                        "TAILSCALE_CLIENT_ID"
+                    ]
+                },
+                "language": {
+                    "csharp": {
+                        "name": "ClientId"
+                    }
+                }
+            },
+            "clientSecret": {
+                "type": "string",
+                "description": "The Tailscale OAuth client secret.",
+                "defaultInfo": {
+                    "environment": [
+                        "TAILSCALE_NATIVE_CLIENT_SECRET",
+                        "TAILSCALE_CLIENT_SECRET"
+                    ]
+                },
+                "language": {
+                    "csharp": {
+                        "name": "ClientSecret"
+                    }
+                },
+                "secret": true
+            }
+        }
+    },
+    "resources": {
+        "tailscale-native:device:KeyExpiry": {
+            "properties": {
+                "keyExpiryDisabled": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "keyExpiryDisabled"
+            ],
+            "inputProperties": {
+                "id": {
+                    "type": "string"
+                },
+                "keyExpiryDisabled": {
+                    "type": "boolean"
+                }
+            },
+            "requiredInputs": [
+                "keyExpiryDisabled"
+            ]
+        },
+        "tailscale-native:device:Routes": {
+            "properties": {
+                "advertisedRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "enabledRoutes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "routes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "csharp": {
+                            "name": "RoutesValue"
+                        }
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "advertisedRoutes",
+                "enabledRoutes"
+            ],
+            "inputProperties": {
+                "id": {
+                    "type": "string"
+                },
+                "routes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "csharp": {
+                            "name": "RoutesValue"
+                        }
+                    }
+                }
+            },
+            "requiredInputs": [
+                "routes"
+            ]
+        },
+        "tailscale-native:device:Tags": {
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "csharp": {
+                            "name": "TagsValue"
+                        }
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "tags"
+            ],
+            "inputProperties": {
+                "id": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "csharp": {
+                            "name": "TagsValue"
+                        }
+                    }
+                }
+            },
+            "requiredInputs": [
+                "tags"
+            ]
+        },
+        "tailscale-native:device:authorizeDevice": {
+            "properties": {
+                "authorized": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "authorized"
+            ],
+            "inputProperties": {
+                "authorized": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "authorized"
+            ]
+        },
+        "tailscale-native:tailnet:Acl": {
+            "properties": {
+                "acls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:AclRule"
+                    }
+                },
+                "autoApprovers": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "groups": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "hosts": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "nodeAttrs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:NodeAttrs"
+                    }
+                },
+                "ssh": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:SshRule"
+                    }
+                },
+                "tagOwners": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "tests": {
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "required": [
+                "acls",
+                "autoApprovers",
+                "groups",
+                "hosts",
+                "nodeAttrs",
+                "ssh",
+                "tagOwners",
+                "tests"
+            ],
+            "inputProperties": {
+                "acls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:AclRule"
+                    }
+                },
+                "autoApprovers": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "groups": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "hosts": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "nodeAttrs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:NodeAttrs"
+                    }
+                },
+                "ssh": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:SshRule"
+                    }
+                },
+                "tagOwners": {
+                    "$ref": "pulumi.json#/Any"
+                },
+                "tailnet": {
+                    "type": "string"
+                },
+                "tests": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "acls",
+                "autoApprovers",
+                "groups",
+                "hosts",
+                "nodeAttrs",
+                "ssh",
+                "tagOwners",
+                "tests"
+            ]
+        },
+        "tailscale-native:tailnet:DNSPreferences": {
+            "properties": {
+                "magicDNS": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "magicDNS"
+            ],
+            "inputProperties": {
+                "magicDNS": {
+                    "type": "boolean"
+                },
+                "tailnet": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "magicDNS"
+            ]
+        },
+        "tailscale-native:tailnet:Key": {
+            "properties": {
+                "capabilities": {
+                    "$ref": "#/types/tailscale-native:tailnet:KeyCapabilities"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "expirySeconds": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string",
+                    "language": {
+                        "csharp": {
+                            "name": "KeyValue"
+                        }
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "expires",
+                "key"
+            ],
+            "inputProperties": {
+                "capabilities": {
+                    "$ref": "#/types/tailscale-native:tailnet:KeyCapabilities"
+                },
+                "expirySeconds": {
+                    "type": "integer"
+                },
+                "tailnet": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "capabilities",
+                "expirySeconds"
+            ]
+        },
+        "tailscale-native:tailnet:NameServers": {
+            "properties": {
+                "dns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "magicDNS": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object",
+            "required": [
+                "dns",
+                "magicDNS"
+            ],
+            "inputProperties": {
+                "dns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "magicDNS": {
+                    "type": "boolean"
+                },
+                "tailnet": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "dns",
+                "magicDNS"
+            ]
+        },
+        "tailscale-native:tailnet:replaceSearchPaths": {
+            "properties": {
+                "searchPaths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "searchPaths"
+            ],
+            "inputProperties": {
+                "searchPaths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tailnet": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "searchPaths"
+            ]
+        }
+    },
+    "functions": {
+        "tailscale-native:device:getDevice": {
+            "inputs": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:device:Device"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:device:getRoutes": {
+            "inputs": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:device:DeviceRoutes"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:tailnet:getAcl": {
+            "inputs": {
+                "properties": {
+                    "tailnet": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "tailnet"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:Acl"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:tailnet:getDNSPreferences": {
+            "inputs": {
+                "properties": {
+                    "tailnet": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "tailnet"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:NameServersPreference"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:tailnet:getKey": {
+            "inputs": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "tailnet": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "tailnet"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:AuthKey"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:tailnet:getNameServers": {
+            "inputs": {
+                "properties": {
+                    "tailnet": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "tailnet"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:NameServers"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:tailnet:listDevices": {
+            "inputs": {
+                "properties": {
+                    "tailnet": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "tailnet"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:ListDevicesProperties"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:tailnet:listKeys": {
+            "inputs": {
+                "properties": {
+                    "tailnet": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "tailnet"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/types/tailscale-native:tailnet:AuthKey"
+                        }
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        },
+        "tailscale-native:tailnet:listSearchPaths": {
+            "inputs": {
+                "properties": {
+                    "tailnet": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "tailnet"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "items": {
+                        "$ref": "#/types/tailscale-native:tailnet:DnsSearchPaths"
+                    }
+                },
+                "required": [
+                    "items"
+                ]
+            }
+        }
+    }
+}

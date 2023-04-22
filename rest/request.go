@@ -33,12 +33,11 @@ var titleCaser = cases.Title(language.AmericanEnglish)
 // Request interface is implemented by REST-based providers that perform
 // CRUD operations using RESTful APIs.
 type Request interface {
-	CreateGetRequest(
-		ctx context.Context,
-		httpEndpointPath string,
-		inputs resource.PropertyMap) (*http.Request, error)
-
+	CreateDeleteRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
+	CreateGetRequest(ctx context.Context, httpEndpointPath string, inputs resource.PropertyMap) (*http.Request, error)
+	CreatePatchRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 	CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
+	CreatePutRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 }
 
 func (p *Provider) getAuthHeaderName() string {

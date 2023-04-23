@@ -317,6 +317,16 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 		return nil, errors.New("fetching old inputs from the state")
 	}
 
+	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
+	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
+	if !ok {
+		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
+	}
+
+	// Filter out read-only properties from the inputs.
+	pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
+	openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, olds)
+
 	news, err := plugin.UnmarshalProperties(req.GetNews(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, err
@@ -333,12 +343,6 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	logging.V(4).Infof("ADDS: %v", diff.Adds)
 	logging.V(4).Infof("DELETES: %v", diff.Deletes)
 	logging.V(4).Infof("UPDATES: %v", diff.Updates)
-
-	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
-	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
-	if !ok {
-		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
-	}
 
 	var updateOp *openapi3.Operation
 	switch {
@@ -359,7 +363,17 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 
 		changedKeys := diff.ChangedKeys()
 		replaces := make([]string, 0, len(changedKeys))
+
+		// Capture all keys that have changed.
 		for _, prop := range changedKeys {
+			replaces = append(replaces, string(prop))
+		}
+
+		// Also capture all the additions and deletions.
+		for prop := range diff.Adds {
+			replaces = append(replaces, string(prop))
+		}
+		for prop := range diff.Deletes {
 			replaces = append(replaces, string(prop))
 		}
 
@@ -631,6 +645,13 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.New("looking up id property from the response")
 	}
 
+	// TODO: Is this needed?
+	// Now that we've captured the provider's perspective of a resource,
+	// filter out the read-only properties from the "new inputs".
+	// Filter out read-only properties from the inputs.
+	// pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
+	// openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, inputs)
+
 	// Serialize and return the calculated inputs.
 	inputsRecord, err := plugin.MarshalProperties(inputs, state.DefaultMarshalOpts)
 	if err != nil {
@@ -762,6 +783,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, postUpdateErr
 	}
 
+	// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")

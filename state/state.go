@@ -41,12 +41,11 @@ func ApplyDiffFromCloudProvider(newProps resource.PropertyMap, oldProps resource
 	}
 
 	result := resource.PropertyMap{}
-	// Maintain inputs that we have that they don't have.
+	// Maintain inputs that we have that they may not have.
 	for name, value := range oldProps {
-		if !diff.Deleted(name) {
-			result[name] = value
-		}
+		result[name] = value
 	}
+
 	// Take all the additions and updates from them.
 	for key, value := range diff.Adds {
 		result[key] = value

@@ -607,6 +607,14 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
 	}
 
+	// Make sure that the original output properties still remain in the state.
+	// For example, resources like keys, secrets would return the actual secret
+	// payload on creation but on subsequent reads, they won't be returned by
+	// APIs, so we should maintain those in the outputs
+	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputs), oldState)
+
+	outputs = updatedOutputsMap.Mappable()
+
 	var postReadErr error
 	outputs, postReadErr = p.providerCallback.OnPostRead(ctx, req, outputs)
 	if postReadErr != nil {

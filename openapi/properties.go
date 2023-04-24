@@ -6,6 +6,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
 // FilterReadOnlyProperties recursively removes properties from the inputs map
@@ -15,9 +16,12 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 		var propSchema *openapi3.SchemaRef
 		propKey := string(k)
 
+		logging.V(3).Infof("FilterReadOnlyProperties: checking if %s is a read-only property", k)
+
 		// Don't add the id property to the inputs since it is always provider-assigned
 		// and is considered read-only always.
 		if propKey == "id" {
+			logging.V(3).Info("FilterReadOnlyProperties: deleting id property")
 			delete(inputs, k)
 			continue
 		}
@@ -57,7 +61,8 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 			propSchema = doc.NewRef()
 		}
 
-		if !v.IsObject() && propSchema.Value.ReadOnly {
+		if !v.IsObject() && (propSchema == nil || propSchema.Value.ReadOnly) {
+			logging.V(3).Infof("FilterReadOnlyProperties: deleting %s", k)
 			delete(inputs, k)
 		}
 	}

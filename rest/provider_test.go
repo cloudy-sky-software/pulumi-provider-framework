@@ -131,5 +131,10 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 	actualOutputState, err := plugin.UnmarshalProperties(readResp.GetProperties(), state.DefaultUnmarshalOpts)
 	assert.Nil(t, err, "Failed to unmarshal output properties struct: %v", err)
 	actualStashedInputState := state.GetOldInputs(actualOutputState)
+
+	// The read operation should not have modified the stashed inputs
+	// because the resource read returned would have returned read-only
+	// properties in the response which should not be serialized into
+	// the stashed inputs.
 	assert.Equal(t, inputsPropertyMap, actualStashedInputState, "Expected the stashed inputs to match the origin inputs")
 }

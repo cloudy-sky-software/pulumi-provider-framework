@@ -91,7 +91,10 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 			return
 		}
 
-		io.WriteString(w, "Unknown path")
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
 	}))
 	testServer.EnableHTTP2 = true
 	testServer.Start()

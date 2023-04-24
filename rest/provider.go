@@ -317,6 +317,12 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 		return nil, errors.New("fetching old inputs from the state")
 	}
 
+	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
+	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
+	if !ok {
+		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
+	}
+
 	news, err := plugin.UnmarshalProperties(req.GetNews(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, err
@@ -334,12 +340,6 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	logging.V(4).Infof("DELETES: %v", diff.Deletes)
 	logging.V(4).Infof("UPDATES: %v", diff.Updates)
 
-	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
-	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
-	if !ok {
-		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
-	}
-
 	var updateOp *openapi3.Operation
 	switch {
 	case crudMap.U != nil:
@@ -356,12 +356,17 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	default:
 		// If there is no PATCH or PUT endpoint for this type token,
 		// then we'll need to trigger a replacement.
+		logging.V(3).Infof("Resource type %s will only support replacement as it does not have update endpoints", resourceTypeToken)
 
 		changedKeys := diff.ChangedKeys()
 		replaces := make([]string, 0, len(changedKeys))
+
+		// Capture all keys that have changed.
 		for _, prop := range changedKeys {
 			replaces = append(replaces, string(prop))
 		}
+
+		logging.V(3).Infof("Diffs for properties: %v", replaces)
 
 		return &pulumirpc.DiffResponse{
 			Changes:  pulumirpc.DiffResponse_DIFF_SOME,
@@ -413,7 +418,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Errorf("resource construction endpoint is unknown for %s", resourceTypeToken)
 	}
 
-	b, err := json.Marshal(inputs.Mappable())
+	bodyBytes, err := json.Marshal(inputs.Mappable())
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling inputs")
 	}
@@ -434,21 +439,21 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		if crudMap.C != nil && *crudMap.C != *crudMap.P {
 			logging.V(3).Infof("Using POST endpoint to create resource %s", resourceTypeToken)
 			httpEndpointPath = *crudMap.C
-			httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, b, inputs)
+			httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, bodyBytes, inputs)
 			if httpReqErr != nil {
 				return nil, errors.Wrapf(httpReqErr, "creating post request (type token: %s)", resourceTypeToken)
 			}
 		} else {
 			logging.V(3).Infof("Using PUT endpoint to create resource %s", resourceTypeToken)
 			httpEndpointPath = *crudMap.P
-			httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, b, inputs)
+			httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, inputs)
 			if httpReqErr != nil {
 				return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
 			}
 		}
 	case crudMap.C != nil:
 		httpEndpointPath = *crudMap.C
-		httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, b, inputs)
+		httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, bodyBytes, inputs)
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating post request (type token: %s)", resourceTypeToken)
 		}
@@ -604,6 +609,10 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		// so that the checkpoint is in-sync with the state in the
 		// cloud provider.
 		newState := resource.NewPropertyMapFromMap(outputs)
+		// Filter out read-only properties before we apply the cloud provider
+		// state to our input state.
+		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
+		openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, newState)
 		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
 	}
 
@@ -762,6 +771,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, postUpdateErr
 	}
 
+	// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")

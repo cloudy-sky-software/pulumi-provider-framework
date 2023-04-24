@@ -112,7 +112,9 @@ func TestRead(t *testing.T) {
 	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
 		t.Fatalf("Failed to unmarshal test payload: %v", err)
 	}
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputsPropertyMap), state.DefaultMarshalOpts)
+
+	expectedOutputState := state.GetResourceState(outputsMap, inputsPropertyMap)
+	serializedOutputState, err := plugin.MarshalProperties(expectedOutputState, state.DefaultMarshalOpts)
 	if err != nil {
 		t.Fatalf("Marshaling the output properties map: %v", err)
 	}
@@ -120,9 +122,14 @@ func TestRead(t *testing.T) {
 	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
 		Id:         "kTaPCj2CNTRL",
 		Inputs:     inputsRecord,
-		Properties: outputProperties,
+		Properties: serializedOutputState,
 		Urn:        "urn:pulumi:some-stack::some-project::tailscale-native:tailnet:Key::myAuthKey",
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, readResp)
+
+	actualOutputState, err := plugin.UnmarshalProperties(readResp.GetProperties(), state.DefaultUnmarshalOpts)
+	assert.Nil(t, err, "Failed to unmarshal output properties struct: %v", err)
+	actualStashedInputState := state.GetOldInputs(actualOutputState)
+	assert.Equal(t, inputsPropertyMap, actualStashedInputState, "Expected the stashed inputs to match the origin inputs")
 }

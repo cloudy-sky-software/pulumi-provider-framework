@@ -63,7 +63,7 @@ func makeTestProvider(ctx context.Context, t *testing.T, testServer *httptest.Se
 	return p
 }
 
-func TestRead(t *testing.T) {
+func TestResourceReadResultsInNoChanges(t *testing.T) {
 	ctx := context.Background()
 
 	inputsJSON := `{

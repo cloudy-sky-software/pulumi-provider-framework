@@ -84,7 +84,10 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/tailnet/mytailnet@tailscale.com/keys/kTaPCj2CNTRL" {
-			io.WriteString(w, outputsJSON)
+			_, err := io.WriteString(w, outputsJSON)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
 			return
 		}
 

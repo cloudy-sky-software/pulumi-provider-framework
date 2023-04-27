@@ -7,8 +7,8 @@ require (
 	github.com/getkin/kin-openapi v0.116.0
 	github.com/golang/protobuf v1.5.3
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.64.0
-	github.com/pulumi/pulumi/sdk/v3 v3.64.0
+	github.com/pulumi/pulumi/pkg/v3 v3.65.1
+	github.com/pulumi/pulumi/sdk/v3 v3.65.1
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/text v0.9.0
 	google.golang.org/grpc v1.54.0
@@ -146,7 +146,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	gocloud.dev v0.27.0 // indirect
-	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

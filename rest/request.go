@@ -67,6 +67,11 @@ func (p *Provider) getSupportedAuthSchemes() []string {
 		if scheme == "" && strings.ToLower(securitySchemeRef.Value.Type) == "oauth2" {
 			scheme = "Bearer"
 		}
+
+		if scheme == "" {
+			continue
+		}
+
 		schemes = append(schemes, scheme)
 	}
 
@@ -217,10 +222,14 @@ func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, p
 				authHeaderName := p.getAuthHeaderName()
 				authHeaderValue := ai.RequestValidationInput.Request.Header.Get(authHeaderName)
 				if authHeaderValue == "" {
-					return errors.Errorf("authorization header value %s is required", authHeaderName)
+					return errors.Errorf("authorization header %s is required", authHeaderName)
 				}
 
 				authSchemes := p.getSupportedAuthSchemes()
+				if len(authSchemes) == 0 {
+					return nil
+				}
+
 				matchingAuthSchemePrefix := ""
 				for _, scheme := range authSchemes {
 					if strings.HasPrefix(authHeaderValue, scheme) {

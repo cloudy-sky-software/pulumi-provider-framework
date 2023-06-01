@@ -7,8 +7,8 @@ require (
 	github.com/getkin/kin-openapi v0.117.0
 	github.com/golang/protobuf v1.5.3
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.68.0
-	github.com/pulumi/pulumi/sdk/v3 v3.68.0
+	github.com/pulumi/pulumi/pkg/v3 v3.69.0
+	github.com/pulumi/pulumi/sdk/v3 v3.69.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/text v0.9.0
 	google.golang.org/grpc v1.55.0
@@ -189,7 +189,7 @@ require (
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
-	github.com/rivo/uniseg v0.4.2 // indirect
+	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.1 // indirect
 	github.com/segmentio/encoding v0.3.6 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
@@ -197,7 +197,7 @@ require (
 	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	gocloud.dev/secrets/hashivault v0.27.0 // indirect
-	golang.org/x/crypto v0.3.1-0.20221117191849-2c476679df9a // indirect
+	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect

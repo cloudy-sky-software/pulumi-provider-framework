@@ -404,6 +404,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20230527183210-76c562571e0d h1:R
 github.com/cloudy-sky-software/pulschema v0.0.0-20230527183210-76c562571e0d/go.mod h1:EOT7Jj0zp4jlrO+gCne2qb9YQHlydBj9Qj1la1j0VxQ=
 github.com/cloudy-sky-software/pulschema v0.0.0-20230601215737-c766d0d29479 h1:QOeUyazOfJIzlqW26aYQltBcO4PuOR8DFh+8ElMGEds=
 github.com/cloudy-sky-software/pulschema v0.0.0-20230601215737-c766d0d29479/go.mod h1:7d4L0mO+GOlJttcbt0g7vrHesOlp624BHbJDwL6g/q8=
+github.com/cloudy-sky-software/pulschema v0.0.0-20230607175426-7667c0b0af47 h1:PA5S/FZYbN3gVeI6bZgpTge/tkfZ9Vf6Nr/DVdvpuZE=
+github.com/cloudy-sky-software/pulschema v0.0.0-20230607175426-7667c0b0af47/go.mod h1:5py2kw5fYJk0HkbNIfGmxThJPQhj2tlytfQM/A4bkyQ=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
@@ -650,6 +652,8 @@ github.com/getkin/kin-openapi v0.116.0 h1:o986hwgMzR972JzOG5j6+WTwWqllZLs1EJKMKC
 github.com/getkin/kin-openapi v0.116.0/go.mod h1:l5e9PaFUo9fyLJCPGQeXI2ML8c3P8BHOEV2VaAVf/pc=
 github.com/getkin/kin-openapi v0.117.0 h1:QT2DyGujAL09F4NrKDHJGsUoIprlIcFVHWDVDcUFE8A=
 github.com/getkin/kin-openapi v0.117.0/go.mod h1:l5e9PaFUo9fyLJCPGQeXI2ML8c3P8BHOEV2VaAVf/pc=
+github.com/getkin/kin-openapi v0.118.0 h1:z43njxPmJ7TaPpMSCQb7PN0dEYno4tyBPQcrFdHoLuM=
+github.com/getkin/kin-openapi v0.118.0/go.mod h1:l5e9PaFUo9fyLJCPGQeXI2ML8c3P8BHOEV2VaAVf/pc=
 github.com/getsentry/raven-go v0.2.0/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
 github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=

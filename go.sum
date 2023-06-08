@@ -1515,6 +1515,8 @@ github.com/pulumi/pulumi/pkg/v3 v3.68.0 h1:JeJAAJiVe6JliNRKI1ABYPfUJ3Fcy72qYoVZJ
 github.com/pulumi/pulumi/pkg/v3 v3.68.0/go.mod h1:4uJVC8hkWk0PxTx/d64da9x3IUJxBGR6RXi8eUv7Rvk=
 github.com/pulumi/pulumi/pkg/v3 v3.69.0 h1:IP9WCBFYRXWzbEFNsSquBoHKF5ux32XImKpRdju8HjU=
 github.com/pulumi/pulumi/pkg/v3 v3.69.0/go.mod h1:GbsJqE2bGotPY+mj07LKlpps9ZzAlV7qRQ/u77kw9yk=
+github.com/pulumi/pulumi/pkg/v3 v3.70.0 h1:1QTA3CREnfPzgydwqfOwC9ohG5l3rRa1fOIzwbBwhw4=
+github.com/pulumi/pulumi/pkg/v3 v3.70.0/go.mod h1:5Lbt/AM5sIx19KX83ddsWLYghM36N73P0n4lpUbn5r4=
 github.com/pulumi/pulumi/sdk/v3 v3.66.0 h1:85qz3fTvAs0J4YoOM/1I1RK/adUptA/bYmYU/v14MRk=
 github.com/pulumi/pulumi/sdk/v3 v3.66.0/go.mod h1:hK2uQnf2SwwvCcaAco3l9+g5mGOkRfR7uqUaZpY/fD8=
 github.com/pulumi/pulumi/sdk/v3 v3.67.0 h1:ED5eeIlLIaZdn5+wMoNS30ihVJJeA/c9hgTsOREVtpE=
@@ -1525,6 +1527,8 @@ github.com/pulumi/pulumi/sdk/v3 v3.68.0 h1:JWn3DGJhzoWL8bNbUdyLSSPeKS2F9mv14/EL9
 github.com/pulumi/pulumi/sdk/v3 v3.68.0/go.mod h1:A/WHc5MlxU8GpX/sRmfQ9G0/Bxxl4GNdSP7TQmy4yIw=
 github.com/pulumi/pulumi/sdk/v3 v3.69.0 h1:WENc7menQMT10I34kVg1ZatQTMlifovuZ9i8CcTrk7A=
 github.com/pulumi/pulumi/sdk/v3 v3.69.0/go.mod h1:BUUBfQZsH0FPuznRfFHkR+b96VlXELnn+DgidFj4XSQ=
+github.com/pulumi/pulumi/sdk/v3 v3.70.0 h1:1asfj2CFoRK96IGI4DPyWUWZw7GZ9hTQLCL2EAC2/Sk=
+github.com/pulumi/pulumi/sdk/v3 v3.70.0/go.mod h1:BUUBfQZsH0FPuznRfFHkR+b96VlXELnn+DgidFj4XSQ=
 github.com/rakyll/embedmd v0.0.0-20171029212350-c8060a0752a2/go.mod h1:7jOTMgqac46PZcF54q6l2hkLEG8op93fZu61KmxWDV4=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
@@ -1718,6 +1722,8 @@ github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPS
 github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
 github.com/zclconf/go-cty v1.13.1 h1:0a6bRwuiSHtAmqCqNOE+c2oHgepv0ctoxU4FUe43kwc=
 github.com/zclconf/go-cty v1.13.1/go.mod h1:YKQzy/7pZ7iq2jNFzy5go57xdxdWoLLpaEp4u238AE0=
+github.com/zclconf/go-cty v1.13.2 h1:4GvrUxe/QUDYuJKAav4EYqdM47/kZa672LwmXFmEKT0=
+github.com/zclconf/go-cty v1.13.2/go.mod h1:YKQzy/7pZ7iq2jNFzy5go57xdxdWoLLpaEp4u238AE0=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=

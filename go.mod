@@ -7,8 +7,8 @@ require (
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/golang/protobuf v1.5.3
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.77.0
-	github.com/pulumi/pulumi/sdk/v3 v3.77.0
+	github.com/pulumi/pulumi/pkg/v3 v3.77.1
+	github.com/pulumi/pulumi/sdk/v3 v3.77.1
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/text v0.12.0
 	google.golang.org/grpc v1.57.0

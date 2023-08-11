@@ -7,8 +7,8 @@ require (
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/golang/protobuf v1.5.3
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.78.0
-	github.com/pulumi/pulumi/sdk/v3 v3.78.0
+	github.com/pulumi/pulumi/pkg/v3 v3.78.1
+	github.com/pulumi/pulumi/sdk/v3 v3.78.1
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/text v0.12.0
 	google.golang.org/grpc v1.57.0
@@ -174,7 +174,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
-	github.com/aws/aws-sdk-go v1.44.200 // indirect
+	github.com/aws/aws-sdk-go v1.44.298 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.51 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.20.2 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect

@@ -128,7 +128,7 @@ func getResourceName(u string) string {
 }
 
 // Attach sends the engine address to an already running plugin.
-func (p *Provider) Attach(context context.Context, req *pulumirpc.PluginAttach) (*pbempty.Empty, error) {
+func (p *Provider) Attach(_ context.Context, req *pulumirpc.PluginAttach) (*pbempty.Empty, error) {
 	host, err := provider.NewHostClient(req.GetAddress())
 	if err != nil {
 		return nil, err
@@ -138,22 +138,22 @@ func (p *Provider) Attach(context context.Context, req *pulumirpc.PluginAttach) 
 }
 
 // Call dynamically executes a method in the provider associated with a component resource.
-func (p *Provider) Call(ctx context.Context, req *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
+func (p *Provider) Call(_ context.Context, _ *pulumirpc.CallRequest) (*pulumirpc.CallResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "call is not yet implemented")
 }
 
 // Construct creates a new component resource.
-func (p *Provider) Construct(ctx context.Context, req *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
+func (p *Provider) Construct(_ context.Context, _ *pulumirpc.ConstructRequest) (*pulumirpc.ConstructResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "construct is not yet implemented")
 }
 
 // CheckConfig validates the configuration for this provider.
-func (p *Provider) CheckConfig(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (p *Provider) CheckConfig(_ context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	return &pulumirpc.CheckResponse{Inputs: req.GetNews()}, nil
 }
 
 // DiffConfig diffs the configuration for this provider.
-func (p *Provider) DiffConfig(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
+func (p *Provider) DiffConfig(_ context.Context, _ *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
 	return &pulumirpc.DiffResponse{}, nil
 }
 
@@ -243,7 +243,7 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 
 // StreamInvoke dynamically executes a built-in function in the provider. The result is streamed
 // back as a series of messages.
-func (p *Provider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumirpc.ResourceProvider_StreamInvokeServer) error {
+func (p *Provider) StreamInvoke(req *pulumirpc.InvokeRequest, _ pulumirpc.ResourceProvider_StreamInvokeServer) error {
 	tok := req.GetTok()
 	return fmt.Errorf("unknown StreamInvoke token '%s'", tok)
 }
@@ -254,7 +254,7 @@ func (p *Provider) StreamInvoke(req *pulumirpc.InvokeRequest, server pulumirpc.R
 // representation of the properties as present in the program inputs. Though this rule is not
 // required for correctness, violations thereof can negatively impact the end-user experience, as
 // the provider inputs are used for detecting and rendering diffs.
-func (p *Provider) Check(ctx context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
+func (p *Provider) Check(_ context.Context, req *pulumirpc.CheckRequest) (*pulumirpc.CheckResponse, error) {
 	urn := req.GetUrn()
 	resourceName := getResourceName(urn)
 	resourceTypeToken := GetResourceTypeToken(urn)
@@ -867,7 +867,7 @@ func (p *Provider) GetPluginInfo(context.Context, *pbempty.Empty) (*pulumirpc.Pl
 }
 
 // GetSchema returns the JSON-serialized schema for the provider.
-func (p *Provider) GetSchema(ctx context.Context, req *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
+func (p *Provider) GetSchema(_ context.Context, _ *pulumirpc.GetSchemaRequest) (*pulumirpc.GetSchemaResponse, error) {
 	b, err := json.Marshal(p.schema)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the schema")
@@ -903,6 +903,6 @@ func (p *Provider) GetHTTPClient() *http.Client {
 	return p.httpClient
 }
 
-func (p *Provider) GetMapping(ctx context.Context, req *pulumirpc.GetMappingRequest) (*pulumirpc.GetMappingResponse, error) {
+func (p *Provider) GetMapping(_ context.Context, _ *pulumirpc.GetMappingRequest) (*pulumirpc.GetMappingResponse, error) {
 	return &pulumirpc.GetMappingResponse{}, nil
 }

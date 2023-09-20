@@ -23,50 +23,50 @@ func (p *fakeProviderCallback) GetAuthorizationHeader() string {
 	return fmt.Sprintf("%s fake-token", bearerAuthSchemePrefix)
 }
 
-func (p *fakeProviderCallback) OnConfigure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
+func (p *fakeProviderCallback) OnConfigure(_ context.Context, _ *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
 	return nil, nil
 }
 
-func (p *fakeProviderCallback) OnPreInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, httpReq *http.Request) error {
+func (p *fakeProviderCallback) OnPreInvoke(_ context.Context, _ *pulumirpc.InvokeRequest, _ *http.Request) error {
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error) {
+func (p *fakeProviderCallback) OnPostInvoke(_ context.Context, _ *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error) {
 	return outputs.(map[string]interface{}), nil
 }
 
-func (p *fakeProviderCallback) OnDiff(ctx context.Context, req *pulumirpc.DiffRequest, resourceTypeToken string, diff *resource.ObjectDiff, jsonReq *openapi3.MediaType) (*pulumirpc.DiffResponse, error) {
+func (p *fakeProviderCallback) OnDiff(_ context.Context, _ *pulumirpc.DiffRequest, _ string, _ *resource.ObjectDiff, _ *openapi3.MediaType) (*pulumirpc.DiffResponse, error) {
 	return nil, nil
 }
 
-func (p *fakeProviderCallback) OnPreCreate(ctx context.Context, req *pulumirpc.CreateRequest, http *http.Request) error {
+func (p *fakeProviderCallback) OnPreCreate(_ context.Context, _ *pulumirpc.CreateRequest, _ *http.Request) error {
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostCreate(ctx context.Context, req *pulumirpc.CreateRequest, outputs interface{}) (map[string]interface{}, error) {
+func (p *fakeProviderCallback) OnPostCreate(_ context.Context, _ *pulumirpc.CreateRequest, outputs interface{}) (map[string]interface{}, error) {
 	return outputs.(map[string]interface{}), nil
 }
 
-func (p *fakeProviderCallback) OnPreRead(ctx context.Context, req *pulumirpc.ReadRequest, httpReq *http.Request) error {
+func (p *fakeProviderCallback) OnPreRead(_ context.Context, _ *pulumirpc.ReadRequest, _ *http.Request) error {
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostRead(ctx context.Context, req *pulumirpc.ReadRequest, outputs map[string]interface{}) (map[string]interface{}, error) {
+func (p *fakeProviderCallback) OnPostRead(_ context.Context, _ *pulumirpc.ReadRequest, outputs map[string]interface{}) (map[string]interface{}, error) {
 	return outputs, nil
 }
 
-func (p *fakeProviderCallback) OnPreUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq *http.Request) error {
+func (p *fakeProviderCallback) OnPreUpdate(_ context.Context, _ *pulumirpc.UpdateRequest, _ *http.Request) error {
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostUpdate(ctx context.Context, req *pulumirpc.UpdateRequest, httpReq http.Request, outputs interface{}) (map[string]interface{}, error) {
+func (p *fakeProviderCallback) OnPostUpdate(_ context.Context, _ *pulumirpc.UpdateRequest, _ http.Request, outputs interface{}) (map[string]interface{}, error) {
 	return outputs.(map[string]interface{}), nil
 }
 
-func (p *fakeProviderCallback) OnPreDelete(ctx context.Context, req *pulumirpc.DeleteRequest, httpReq *http.Request) error {
+func (p *fakeProviderCallback) OnPreDelete(_ context.Context, _ *pulumirpc.DeleteRequest, _ *http.Request) error {
 	return nil
 }
 
-func (p *fakeProviderCallback) OnPostDelete(ctx context.Context, req *pulumirpc.DeleteRequest) error {
+func (p *fakeProviderCallback) OnPostDelete(_ context.Context, _ *pulumirpc.DeleteRequest) error {
 	return nil
 }

@@ -8,8 +8,9 @@ on:
       - main
 
 env:
-  GOLANG_CI_LINT_VERSION: v1.50.0
+  GOLANG_CI_LINT_VERSION: v1.54.2
   GOPRIVATE: "github.com/cloudy-sky-software/*"
+  GO_VERSION: 1.21.x
 
 jobs:
   lint:
@@ -24,7 +25,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.19.x
+          go-version: ${{ env.GO_VERSION }}
 
       - run: |
           git config --global url."https://praneetloke:${GH_REPO_PAT}@github.com/".insteadOf "https://github.com/"
@@ -38,4 +39,3 @@ jobs:
 
       - name: Test
         run: make test
-

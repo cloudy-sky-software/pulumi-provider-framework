@@ -16,7 +16,10 @@ func GetOpenAPISpec(data []byte) *openapi3.T {
 	}
 
 	ctx := context.Background()
-	if err := doc.Validate(ctx); err != nil {
+	// For the purposes of building a Pulumi schema, we don't care about
+	// examples that may have been added to the spec by the cloud provider,
+	// ignore those as those tend to have errors.
+	if err := doc.Validate(ctx, openapi3.DisableExamplesValidation()); err != nil {
 		contract.Failf("OpenAPI spec failed validation: %v", err)
 	}
 

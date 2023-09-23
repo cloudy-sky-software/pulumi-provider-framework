@@ -7,8 +7,8 @@ require (
 	github.com/getkin/kin-openapi v0.120.0
 	github.com/golang/protobuf v1.5.3
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.84.0
-	github.com/pulumi/pulumi/sdk/v3 v3.84.0
+	github.com/pulumi/pulumi/pkg/v3 v3.85.0
+	github.com/pulumi/pulumi/sdk/v3 v3.85.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/text v0.13.0
 	google.golang.org/grpc v1.58.2
@@ -156,7 +156,7 @@ require (
 	cloud.google.com/go/iam v1.1.1 // indirect
 	cloud.google.com/go/longrunning v0.5.1 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	github.com/AlecAivazis/survey/v2 v2.0.5 // indirect
+	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys v0.9.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/keyvault/internal v0.7.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.0.0 // indirect

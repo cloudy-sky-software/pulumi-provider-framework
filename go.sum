@@ -768,6 +768,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20230920052304-94db0fc5771a h1:c
 github.com/cloudy-sky-software/pulschema v0.0.0-20230920052304-94db0fc5771a/go.mod h1:ZCnkQutBUQItXyR7zwthvuz/xA2G9ZxT1R4G0gnbwCo=
 github.com/cloudy-sky-software/pulschema v0.0.0-20230925074936-30e508aad735 h1:CkrCxBncxSiquFTfyxy8zFo6Lu7XKmdSk6KnZxU/sWE=
 github.com/cloudy-sky-software/pulschema v0.0.0-20230925074936-30e508aad735/go.mod h1:CaQySogMq0+5HGrhnDERN0Cj80Z0uTepPf5PLg7xrN0=
+github.com/cloudy-sky-software/pulschema v0.0.0-20230926223051-1102f66234de h1:gObClWf8eeWn4x2J4MCT7vmWAawX2rFkZCL6XX14qEk=
+github.com/cloudy-sky-software/pulschema v0.0.0-20230926223051-1102f66234de/go.mod h1:ve+lQkceNkwGcpRqKP5XP/l2Luo8IOa7j0+znzIwxQk=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=

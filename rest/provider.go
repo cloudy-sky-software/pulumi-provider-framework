@@ -124,7 +124,7 @@ func GetResourceTypeToken(u string) string {
 }
 
 func getResourceName(u string) string {
-	return resource.URN(u).Name().String()
+	return resource.URN(u).Name()
 }
 
 // Attach sends the engine address to an already running plugin.
@@ -343,12 +343,12 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	var updateOp *openapi3.Operation
 	switch {
 	case crudMap.U != nil:
-		updateOp = p.openAPIDoc.Paths[*crudMap.U].Patch
+		updateOp = p.openAPIDoc.Paths.Find(*crudMap.U).Patch
 		if updateOp == nil {
 			return nil, errors.Errorf("openapi doc does not have PATCH endpoint definition for the path %s", *crudMap.U)
 		}
 	case crudMap.P != nil:
-		updateOp = p.openAPIDoc.Paths[*crudMap.P].Put
+		updateOp = p.openAPIDoc.Paths.Find(*crudMap.P).Put
 		if updateOp == nil {
 			return nil, errors.Errorf("openapi doc does not have PUT endpoint definition for the path %s", *crudMap.U)
 		}

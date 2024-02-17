@@ -281,15 +281,15 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 
 	switch requestMethod {
 	case http.MethodGet:
-		parameters = p.openAPIDoc.Paths[apiPath].Get.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Get.Parameters
 	case http.MethodPost:
-		parameters = p.openAPIDoc.Paths[apiPath].Post.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Post.Parameters
 	case http.MethodPatch:
-		parameters = p.openAPIDoc.Paths[apiPath].Patch.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Patch.Parameters
 	case http.MethodPut:
-		parameters = p.openAPIDoc.Paths[apiPath].Put.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Put.Parameters
 	case http.MethodDelete:
-		parameters = p.openAPIDoc.Paths[apiPath].Delete.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Delete.Parameters
 	default:
 		return pathParams, nil
 	}

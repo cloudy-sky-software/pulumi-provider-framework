@@ -3,7 +3,7 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 go 1.21
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20230926223051-1102f66234de
+	github.com/cloudy-sky-software/pulschema v0.0.0-20240110023034-551fb4501642
 	github.com/getkin/kin-openapi v0.123.0
 	github.com/golang/protobuf v1.5.3
 	github.com/pkg/errors v0.9.1
@@ -192,5 +192,3 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240213162025-012b6fc9bca9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240213162025-012b6fc9bca9 // indirect
 )
-
-replace github.com/cloudy-sky-software/pulschema => ../pulschema

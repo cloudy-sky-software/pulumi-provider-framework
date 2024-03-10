@@ -30,7 +30,7 @@ var tailscaleMetadataEmbed string
 //go:embed testdata/tailscale/schema.json
 var tailscalePulSchemaEmbed string
 
-func makeTestProvider(ctx context.Context, t *testing.T, testServer *httptest.Server) pulumirpc.ResourceProviderServer {
+func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *httptest.Server) pulumirpc.ResourceProviderServer {
 	t.Helper()
 
 	openapiBytes := []byte(tailscaleOpenAPIEmbed)
@@ -101,7 +101,7 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 
 	defer testServer.Close()
 
-	p := makeTestProvider(ctx, t, testServer)
+	p := makeTestTailscaleProvider(ctx, t, testServer)
 
 	var inputs map[string]interface{}
 	if err := json.Unmarshal([]byte(inputsJSON), &inputs); err != nil {

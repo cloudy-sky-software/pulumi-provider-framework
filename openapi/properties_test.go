@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
 )
 
 //go:embed testdata/render_openapi.yml
@@ -35,8 +36,10 @@ func TestFilterReadOnlyProperties(t *testing.T) {
 	})
 
 	doc := GetOpenAPISpec([]byte(renderOpenAPIEmbed))
+	pathItem := doc.Paths.Find("/services")
+	contract.Assertf(pathItem != nil, "/services was not found")
 
-	FilterReadOnlyProperties(ctx, *doc.Paths["/services"].Post.RequestBody.Value.Content.Get("application/json").Schema.Value, inputs)
+	FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get("application/json").Schema.Value, inputs)
 
 	assert.NotNil(t, inputs)
 

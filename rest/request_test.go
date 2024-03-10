@@ -34,7 +34,7 @@ func TestRemovePathParamsFromRequestBody(t *testing.T) {
 		t.Fatalf("Failed to unmarshal test payload: %v", err)
 	}
 
-	p := makeTestProvider(ctx, t, nil)
+	p := makeTestTailscaleProvider(ctx, t, nil)
 	httpReq, err := p.(Request).CreatePostRequest(ctx, "/tailnet/{tailnet}/keys", []byte(testCreateJSONPayload), resource.NewPropertyMapFromMap(inputs))
 	assert.Nil(t, err)
 	assert.NotNil(t, httpReq)

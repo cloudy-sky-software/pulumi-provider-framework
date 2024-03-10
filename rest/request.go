@@ -116,29 +116,19 @@ func (p *Provider) CreateGetRequest(
 	return httpReq, nil
 }
 
-func (p *Provider) removePathParamsFromRequestBody(body []byte, pathParams map[string]string) ([]byte, error) {
-	var bodyMap map[string]interface{}
-
-	if err := json.Unmarshal(body, &bodyMap); err != nil {
-		return nil, errors.Wrap(err, "unmarshaling body")
-	}
-
-	for k := range pathParams {
-		// Delete the path param from the request body since it was added
-		// as a way to take path params as inputs to the resource.
-		delete(bodyMap, k)
-	}
-
-	updatedBody, _ := json.Marshal(bodyMap)
-	logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
-	return updatedBody, nil
-}
-
 func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
 	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
 
 	hasPathParams := strings.Contains(httpEndpointPath, "{")
 	var pathParams map[string]string
+
+	var bodyMap map[string]interface{}
+	if reqBody != nil {
+		if err := json.Unmarshal(reqBody, &bodyMap); err != nil {
+			return nil, errors.Wrap(err, "unmarshaling body")
+		}
+	}
+
 	// If the endpoint has path params, peek into the OpenAPI doc
 	// for the param names.
 	if hasPathParams {
@@ -150,16 +140,23 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 
 		if reqBody != nil {
 			logging.V(3).Infoln("Removing path params from request body")
-			updatedBody, err := p.removePathParamsFromRequestBody(reqBody, pathParams)
-			if err != nil {
-				return nil, errors.Wrap(err, "removing path params from request body")
-			}
-
-			reqBody = updatedBody
+			p.removePathParamsFromRequestBody(bodyMap, pathParams)
 		}
 	}
 
-	buf := bytes.NewBuffer(reqBody)
+	var buf *bytes.Buffer
+	// Transform properties in the request body from SDK name to API name.
+	if bodyMap != nil {
+		p.TransformBody(ctx, bodyMap, p.metadata.SDKToAPINameMap)
+
+		updatedBody, err := json.Marshal(bodyMap)
+		if err != nil {
+			return nil, errors.Wrap(err, "marshaling body")
+		}
+
+		buf = bytes.NewBuffer(updatedBody)
+	}
+
 	httpReq, err := http.NewRequestWithContext(ctx, httpMethod, p.baseURL+httpEndpointPath, buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
@@ -281,15 +278,15 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 
 	switch requestMethod {
 	case http.MethodGet:
-		parameters = p.openAPIDoc.Paths[apiPath].Get.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Get.Parameters
 	case http.MethodPost:
-		parameters = p.openAPIDoc.Paths[apiPath].Post.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Post.Parameters
 	case http.MethodPatch:
-		parameters = p.openAPIDoc.Paths[apiPath].Patch.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Patch.Parameters
 	case http.MethodPut:
-		parameters = p.openAPIDoc.Paths[apiPath].Put.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Put.Parameters
 	case http.MethodDelete:
-		parameters = p.openAPIDoc.Paths[apiPath].Delete.Parameters
+		parameters = p.openAPIDoc.Paths.Find(apiPath).Delete.Parameters
 	default:
 		return pathParams, nil
 	}
@@ -305,8 +302,14 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 
 		count++
 		paramName := param.Value.Name
+		sdkName := paramName
+		if o, ok := p.metadata.PathParamNameMap[sdkName]; ok {
+			logging.V(3).Infof("Path param %q is overridden in the schema as %q", paramName, o)
+			sdkName = o
+		}
+
 		logging.V(3).Infof("Looking for path param %q in resource inputs %v", paramName, properties)
-		property, ok := properties[resource.PropertyKey(paramName)]
+		property, ok := properties[resource.PropertyKey(sdkName)]
 		// If the path param is not in the properties, check if
 		// we have the old inputs, if we are dealing with the state
 		// of an existing resource.
@@ -315,7 +318,7 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 				return nil, errors.Errorf("did not find value for path param %s in output props (old inputs was nil)", paramName)
 			}
 
-			property, ok = oldInputs[resource.PropertyKey(paramName)]
+			property, ok = oldInputs[resource.PropertyKey(sdkName)]
 			if !ok {
 				return nil, errors.Errorf("did not find value for path param %s in output props and old inputs", paramName)
 			}
@@ -340,6 +343,21 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 	}
 
 	return pathParams, nil
+}
+
+func (p *Provider) removePathParamsFromRequestBody(bodyMap map[string]interface{}, pathParams map[string]string) {
+	for paramName := range pathParams {
+		if sdkName, ok := p.metadata.PathParamNameMap[paramName]; ok {
+			logging.V(3).Infof("Path param %[1]q is overridden in the schema as %[2]q. Will remove %[2]q from body instead.", paramName, sdkName)
+			paramName = sdkName
+		}
+		// Delete the path param from the request body since it was added
+		// as a way to take path params as inputs to the resource.
+		delete(bodyMap, paramName)
+	}
+
+	updatedBody, _ := json.Marshal(bodyMap)
+	logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
 }
 
 func (p *Provider) replacePathParams(httpReq *http.Request, pathParams map[string]string) error {

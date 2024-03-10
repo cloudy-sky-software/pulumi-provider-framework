@@ -124,7 +124,7 @@ func GetResourceTypeToken(u string) string {
 }
 
 func getResourceName(u string) string {
-	return resource.URN(u).Name().String()
+	return resource.URN(u).Name()
 }
 
 // Attach sends the engine address to an already running plugin.
@@ -343,12 +343,12 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	var updateOp *openapi3.Operation
 	switch {
 	case crudMap.U != nil:
-		updateOp = p.openAPIDoc.Paths[*crudMap.U].Patch
+		updateOp = p.openAPIDoc.Paths.Find(*crudMap.U).Patch
 		if updateOp == nil {
 			return nil, errors.Errorf("openapi doc does not have PATCH endpoint definition for the path %s", *crudMap.U)
 		}
 	case crudMap.P != nil:
-		updateOp = p.openAPIDoc.Paths[*crudMap.P].Put
+		updateOp = p.openAPIDoc.Paths.Find(*crudMap.P).Put
 		if updateOp == nil {
 			return nil, errors.Errorf("openapi doc does not have PUT endpoint definition for the path %s", *crudMap.U)
 		}
@@ -504,6 +504,8 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, postCreateErr
 	}
 
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
+
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
@@ -630,6 +632,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, postReadErr
 	}
 
+	p.TransformBody(ctx, outputs, p.metadata.APIToSDKNameMap)
+
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputs, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
@@ -684,12 +688,8 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		method = http.MethodPut
 	}
 
-	reqBody, err := json.Marshal(inputs.Mappable())
-	if err != nil {
-		return nil, errors.Wrap(err, "marshaling inputs")
-	}
-
-	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
+	bodyMap := inputs.Mappable()
+	logging.V(3).Infof("REQUEST BODY: %v", bodyMap)
 
 	hasPathParams := strings.Contains(httpEndpointPath, "{")
 	var pathParams map[string]string
@@ -703,18 +703,24 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
 		}
 
-		if reqBody != nil {
+		if bodyMap != nil {
 			logging.V(3).Infoln("Removing path params from request body")
-			updatedBody, err := p.removePathParamsFromRequestBody(reqBody, pathParams)
-			if err != nil {
-				return nil, errors.Wrap(err, "removing path params from request body")
-			}
-
-			reqBody = updatedBody
+			p.removePathParamsFromRequestBody(bodyMap, pathParams)
 		}
 	}
 
-	buf := bytes.NewBuffer(reqBody)
+	var buf *bytes.Buffer
+	// Transform properties in the request body from SDK name to API name.
+	if bodyMap != nil {
+		p.TransformBody(ctx, bodyMap, p.metadata.SDKToAPINameMap)
+
+		reqBody, err := json.Marshal(bodyMap)
+		if err != nil {
+			return nil, errors.Wrap(err, "marshaling inputs")
+		}
+		buf = bytes.NewBuffer(reqBody)
+	}
+
 	httpReq, err := http.NewRequestWithContext(ctx, method, p.baseURL+httpEndpointPath, buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
@@ -770,6 +776,8 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	if postUpdateErr != nil {
 		return nil, postUpdateErr
 	}
+
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
 	// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)

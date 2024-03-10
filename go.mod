@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/cloudy-sky-software/pulschema v0.0.0-20240310164842-8fb71739f6c1
 	github.com/getkin/kin-openapi v0.123.0
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi/pkg/v3 v3.109.0
 	github.com/pulumi/pulumi/sdk/v3 v3.109.0
@@ -112,7 +112,7 @@ require (
 	golang.org/x/tools v0.18.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/frand v1.4.2 // indirect

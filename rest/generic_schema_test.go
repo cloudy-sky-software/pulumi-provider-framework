@@ -93,7 +93,8 @@ func genericPulumiSchema(openapiDoc *openapi3.T) (pschema.PackageSpec, openapige
 	metadata := openapigen.ProviderMetadata{
 		ResourceCRUDMap:  providerMetadata.ResourceCRUDMap,
 		AutoNameMap:      providerMetadata.AutoNameMap,
-		SdkToApiNameMap:  providerMetadata.SdkToApiNameMap,
+		SDKToAPINameMap:  providerMetadata.SDKToAPINameMap,
+		APIToSDKNameMap:  providerMetadata.APIToSDKNameMap,
 		PathParamNameMap: providerMetadata.PathParamNameMap,
 	}
 

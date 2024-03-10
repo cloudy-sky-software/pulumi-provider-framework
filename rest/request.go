@@ -147,7 +147,7 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 	var buf *bytes.Buffer
 	// Transform properties in the request body from SDK name to API name.
 	if bodyMap != nil {
-		p.TransformSDKNamestoAPINames(ctx, bodyMap)
+		p.TransformBody(ctx, bodyMap, p.metadata.SDKToAPINameMap)
 
 		updatedBody, err := json.Marshal(bodyMap)
 		if err != nil {

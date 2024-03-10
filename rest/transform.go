@@ -6,19 +6,19 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
-func (p *Provider) TransformSDKNamestoAPINames(ctx context.Context, bodyMap map[string]interface{}) {
-	if p.metadata.SdkToApiNameMap == nil || bodyMap == nil {
+func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interface{}, lookupMap map[string]string) {
+	if lookupMap == nil || bodyMap == nil {
 		return
 	}
 
 	for sdkName, v := range bodyMap {
 		apiName := sdkName
-		if overriddenName, ok := p.metadata.SdkToApiNameMap[sdkName]; ok {
+		if overriddenName, ok := lookupMap[sdkName]; ok {
 			apiName = overriddenName
 		}
 
 		if mv, ok := v.(map[string]interface{}); ok {
-			p.TransformSDKNamestoAPINames(ctx, mv)
+			p.TransformBody(ctx, mv, lookupMap)
 			v = mv
 		}
 

@@ -504,6 +504,8 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, postCreateErr
 	}
 
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
+
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
@@ -630,6 +632,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, postReadErr
 	}
 
+	p.TransformBody(ctx, outputs, p.metadata.APIToSDKNameMap)
+
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputs, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
@@ -708,7 +712,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	var buf *bytes.Buffer
 	// Transform properties in the request body from SDK name to API name.
 	if bodyMap != nil {
-		p.TransformSDKNamestoAPINames(ctx, bodyMap)
+		p.TransformBody(ctx, bodyMap, p.metadata.SDKToAPINameMap)
 
 		reqBody, err := json.Marshal(bodyMap)
 		if err != nil {
@@ -772,6 +776,8 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	if postUpdateErr != nil {
 		return nil, postUpdateErr
 	}
+
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
 	// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)

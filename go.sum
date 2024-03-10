@@ -113,8 +113,8 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cloudflare/circl v1.3.3/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
 github.com/cloudflare/circl v1.3.7 h1:qlCDlTPz2n9fu58M0Nh1J/JzcFpfgkFHHX3O35r5vcU=
 github.com/cloudflare/circl v1.3.7/go.mod h1:sRTcRWXGLrKw6yIGJ+l7amYJFfAXbZG0kBSc8r4zxgA=
-github.com/cloudy-sky-software/pulschema v0.0.0-20240310164842-8fb71739f6c1 h1:HHdJjjIhGtVtIFo/VF44vR269qw1G2/5OBptArLNb5c=
-github.com/cloudy-sky-software/pulschema v0.0.0-20240310164842-8fb71739f6c1/go.mod h1:8SWYmoY/LIf29VMRE7qH2zYUHWTSwi68m9mUobsuv04=
+github.com/cloudy-sky-software/pulschema v0.0.0-20240310171703-5c3ebeba3ea9 h1:pThBoDGIqmlVlb8JR+OrkfVW0pzjVNdU3CgFNQK2nt4=
+github.com/cloudy-sky-software/pulschema v0.0.0-20240310171703-5c3ebeba3ea9/go.mod h1:8SWYmoY/LIf29VMRE7qH2zYUHWTSwi68m9mUobsuv04=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/xds/go v0.0.0-20231109132714-523115ebc101 h1:7To3pQ+pZo0i3dsWEbinPNFs5gPSBOsJtx3wTT94VBY=
 github.com/cncf/xds/go v0.0.0-20231109132714-523115ebc101/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=

@@ -303,7 +303,11 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 		count++
 		paramName := param.Value.Name
 		sdkName := paramName
-		if o, ok := p.metadata.PathParamNameMap[sdkName]; ok {
+		// If this is the last path param in the URI,
+		// it's likely to be the `id` of the resource.
+		if strings.HasSuffix(apiPath, fmt.Sprintf("{%s}", paramName)) && (strings.HasSuffix(paramName, "_id") || strings.HasSuffix(paramName, "Id")) {
+			sdkName = "id"
+		} else if o, ok := p.metadata.PathParamNameMap[sdkName]; ok {
 			logging.V(3).Infof("Path param %q is overridden in the schema as %q", paramName, o)
 			sdkName = o
 		}

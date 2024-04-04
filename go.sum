@@ -121,6 +121,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20240316135725-4686ddc05323 h1:b
 github.com/cloudy-sky-software/pulschema v0.0.0-20240316135725-4686ddc05323/go.mod h1:yojpUbK1YCvPtDlSOu8ZT9roV0AU63jx6ZTDA4GeoYY=
 github.com/cloudy-sky-software/pulschema v0.0.0-20240328195836-d655a512903e h1:9i5yFQ4XQl9Ys6/u5JaQhvYoKOZsT6NDbx03OTebgJ0=
 github.com/cloudy-sky-software/pulschema v0.0.0-20240328195836-d655a512903e/go.mod h1:eJMnI8dSQdZCZQGWczDy78CCWAoliFXdkOL80fpk1XA=
+github.com/cloudy-sky-software/pulschema v0.0.0-20240404164430-b4fc9d533289 h1:YjQW1MQuS0YxJRCMsfwmEM3TUKZf0gry6IoVFBXlg8I=
+github.com/cloudy-sky-software/pulschema v0.0.0-20240404164430-b4fc9d533289/go.mod h1:t0Vdb1d4LtwqRUXeLAQ0iCQvemBCfL3hKWTdWLgUAWM=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/xds/go v0.0.0-20231128003011-0fa0005c9caa h1:jQCWAUqqlij9Pgj2i/PB79y4KOPYVyFYdROxgaCwdTQ=
 github.com/cncf/xds/go v0.0.0-20231128003011-0fa0005c9caa/go.mod h1:x/1Gn8zydmfq8dk6e9PdstVsDgu9RuyIIJqAaF//0IM=
@@ -193,6 +195,8 @@ github.com/golang-jwt/jwt/v5 v5.2.0/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVI
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/glog v1.2.0 h1:uCdmnmatrKCgMBlM4rMuJZWOkPDqdbZPnrMXDY4gI68=
 github.com/golang/glog v1.2.0/go.mod h1:6AhwSGph0fcJtXVM/PEHPqZlFeoLxhs7/t5UDAwmO+w=
+github.com/golang/glog v1.2.1 h1:OptwRhECazUx5ix5TTWC3EZhsZEHWcYWY4FQHTIubm4=
+github.com/golang/glog v1.2.1/go.mod h1:6AhwSGph0fcJtXVM/PEHPqZlFeoLxhs7/t5UDAwmO+w=
 github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=

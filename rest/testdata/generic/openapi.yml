@@ -61,3 +61,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/response_object_type"
+  # Path to test if the last path param is correctly mapped to the
+  # resource's `id` property.
+  /v2/anotherfakeresource/{some_id}:
+    get:
+      operationId: get_another_fake_resource
+      parameters:
+        - name: some_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/response_object_type"

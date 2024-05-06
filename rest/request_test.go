@@ -49,3 +49,22 @@ func TestRemovePathParamsFromRequestBody(t *testing.T) {
 	_, ok := bodyMap["tailnet"]
 	assert.False(t, ok, "Expected tailnet to be removed from the HTTP request body since it is a path param.")
 }
+
+func TestLastPathParamIsResourceId(t *testing.T) {
+	ctx := context.Background()
+
+	p := makeTestGenericProvider(ctx, t, nil)
+
+	properties := map[string]interface{}{
+		"id": "fake-id",
+	}
+
+	httpReq, err := p.(Request).CreateGetRequest(ctx, "/v2/anotherfakeresource/{some_id}", resource.NewPropertyMapFromMap(properties))
+	assert.Nil(t, err)
+	assert.NotNil(t, httpReq)
+
+	// The request's URL should have the correct ID since `{some_id}`
+	// is just points to the resource's `id` from its property
+	// map.
+	assert.Contains(t, httpReq.URL.Path, "fake-id")
+}

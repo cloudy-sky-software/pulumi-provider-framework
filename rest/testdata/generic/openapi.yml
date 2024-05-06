@@ -63,6 +63,7 @@ paths:
                 $ref: "#/components/schemas/response_object_type"
   # Path to test if the last path param is correctly mapped to the
   # resource's `id` property.
+  # See cloudy-sky-software/pulumi-provider-framework#199.
   /v2/anotherfakeresource/{some_id}:
     get:
       operationId: get_another_fake_resource

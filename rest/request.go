@@ -276,19 +276,19 @@ func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, p
 func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
 	pathParams := make(map[string]string)
 
-	var parameters openapi3.Parameters
+	parameters := p.openAPIDoc.Paths.Find(apiPath).Parameters
 
 	switch requestMethod {
 	case http.MethodGet:
-		parameters = p.openAPIDoc.Paths.Find(apiPath).Get.Parameters
+		parameters = append(parameters, p.openAPIDoc.Paths.Find(apiPath).Get.Parameters...)
 	case http.MethodPost:
-		parameters = p.openAPIDoc.Paths.Find(apiPath).Post.Parameters
+		parameters = append(parameters, p.openAPIDoc.Paths.Find(apiPath).Post.Parameters...)
 	case http.MethodPatch:
-		parameters = p.openAPIDoc.Paths.Find(apiPath).Patch.Parameters
+		parameters = append(parameters, p.openAPIDoc.Paths.Find(apiPath).Patch.Parameters...)
 	case http.MethodPut:
-		parameters = p.openAPIDoc.Paths.Find(apiPath).Put.Parameters
+		parameters = append(parameters, p.openAPIDoc.Paths.Find(apiPath).Put.Parameters...)
 	case http.MethodDelete:
-		parameters = p.openAPIDoc.Paths.Find(apiPath).Delete.Parameters
+		parameters = append(parameters, p.openAPIDoc.Paths.Find(apiPath).Delete.Parameters...)
 	default:
 		return pathParams, nil
 	}

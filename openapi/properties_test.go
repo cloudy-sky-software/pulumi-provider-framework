@@ -39,7 +39,7 @@ func TestFilterReadOnlyProperties(t *testing.T) {
 	pathItem := doc.Paths.Find("/services")
 	contract.Assertf(pathItem != nil, "/services was not found")
 
-	FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get("application/json").Schema.Value, inputs)
+	FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get("application/json").Schema.Value, inputs, nil)
 
 	assert.NotNil(t, inputs)
 

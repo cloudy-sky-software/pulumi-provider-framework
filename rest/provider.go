@@ -605,7 +605,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		inputs = resource.NewPropertyMapFromMap(outputs)
 		// Filter out read-only properties from the inputs.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
-		openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, inputs)
+		openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, inputs, nil)
 	} else {
 		// Take the values from outputs and apply them to the inputs
 		// so that the checkpoint is in-sync with the state in the
@@ -614,7 +614,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		// Filter out read-only properties before we apply the cloud provider
 		// state to our input state.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
-		openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, newState)
+		openapi.FilterReadOnlyProperties(ctx, *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value, newState, nil)
 		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
 	}
 

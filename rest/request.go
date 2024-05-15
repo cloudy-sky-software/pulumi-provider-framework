@@ -119,7 +119,11 @@ func (p *Provider) CreateGetRequest(
 }
 
 func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
-	logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
+	if reqBody == nil {
+		logging.V(3).Infof("REQUEST BODY is nil for %s", httpEndpointPath)
+	} else {
+		logging.V(3).Infof("REQUEST BODY: %s", string(reqBody))
+	}
 
 	hasPathParams := strings.Contains(httpEndpointPath, "{")
 	var pathParams map[string]string
@@ -146,7 +150,7 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 		}
 	}
 
-	var buf *bytes.Buffer
+	var buf io.Reader
 	// Transform properties in the request body from SDK name to API name.
 	if bodyMap != nil {
 		p.TransformBody(ctx, bodyMap, p.metadata.SDKToAPINameMap)

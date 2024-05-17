@@ -11,7 +11,7 @@ import (
 
 // FilterReadOnlyProperties recursively removes properties from the inputs map
 // that are marked as read-only in the OpenAPI doc.
-func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs resource.PropertyMap) {
+func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs resource.PropertyMap, discriminatedValue *string) {
 	for k, v := range inputs {
 		var propSchema *openapi3.SchemaRef
 		propKey := string(k)
@@ -29,9 +29,12 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 		switch {
 		case doc.Properties != nil:
 			propSchema = doc.Properties[propKey]
+			if propSchema != nil && propSchema.Value.Discriminator != nil {
+				dv := inputs[resource.PropertyKey(propSchema.Value.Discriminator.PropertyName)].StringValue()
+				FilterReadOnlyProperties(ctx, *propSchema.Value, v.ObjectValue(), &dv)
+			}
 		case doc.Discriminator != nil:
-			discriminatorValue := inputs[resource.PropertyKey(doc.Discriminator.PropertyName)]
-			mappingRefName := doc.Discriminator.Mapping[discriminatorValue.StringValue()]
+			mappingRefName := doc.Discriminator.Mapping[*discriminatedValue]
 			for _, schema := range doc.OneOf {
 				if schema.Ref != mappingRefName {
 					continue
@@ -50,7 +53,7 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 						propSchema, found = schemaRef.Value.Properties[propKey]
 						if found {
 							if v.IsObject() {
-								FilterReadOnlyProperties(ctx, *propSchema.Value, v.ObjectValue())
+								FilterReadOnlyProperties(ctx, *propSchema.Value, v.ObjectValue(), nil)
 							}
 							break
 						}

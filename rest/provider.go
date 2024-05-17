@@ -386,7 +386,7 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	}
 
 	if len(patchReqSchema.Schema.Value.Properties) != 0 {
-		replaces, diffs = p.determineDiffsAndReplacements(diff, patchReqSchema.Schema.Value.Properties)
+		replaces, diffs = p.determineDiffsAndReplacements(diff, *patchReqSchema.Schema)
 	} else {
 		changes = pulumirpc.DiffResponse_DIFF_UNKNOWN
 	}

@@ -383,9 +383,21 @@ func (p *Provider) replacePathParams(httpReq *http.Request, pathParams map[strin
 	return nil
 }
 
-func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, properties openapi3.Schemas) ([]string, []string) {
+func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaRef openapi3.SchemaRef) ([]string, []string) {
 	replaces := make([]string, 0)
 	diffs := make([]string, 0)
+
+	var properties openapi3.Schemas
+	if len(schemaRef.Value.Properties) > 0 {
+		properties = schemaRef.Value.Properties
+	} else if len(schemaRef.Value.AllOf) > 0 {
+		properties = make(openapi3.Schemas, 0)
+		for _, schemaRef := range schemaRef.Value.AllOf {
+			for k, v := range schemaRef.Value.Properties {
+				properties[k] = v
+			}
+		}
+	}
 
 	for propKey := range d.Adds {
 		prop := string(propKey)

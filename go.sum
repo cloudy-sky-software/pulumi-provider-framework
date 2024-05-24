@@ -121,6 +121,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20240517032900-17627496d613 h1:D
 github.com/cloudy-sky-software/pulschema v0.0.0-20240517032900-17627496d613/go.mod h1:UTy30D0hV2t6oWnJYIrHfhlW+DlCd4OCp0elWaq2KLc=
 github.com/cloudy-sky-software/pulschema v0.0.0-20240518020006-abb383ff8fdf h1:hU5YcpXqBpcS+MKVx6U2XIFaQA8vjwx3pnQxp4+BCwQ=
 github.com/cloudy-sky-software/pulschema v0.0.0-20240518020006-abb383ff8fdf/go.mod h1:UTy30D0hV2t6oWnJYIrHfhlW+DlCd4OCp0elWaq2KLc=
+github.com/cloudy-sky-software/pulschema v0.0.0-20240524174933-a16d5fc87520 h1:5+RP7wMdNllUIn3w+I9RlGrDIC5hMYARC1Ham9z80qg=
+github.com/cloudy-sky-software/pulschema v0.0.0-20240524174933-a16d5fc87520/go.mod h1:UTy30D0hV2t6oWnJYIrHfhlW+DlCd4OCp0elWaq2KLc=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/containerd/console v1.0.4 h1:F2g4+oChYvBTsASRTz8NP6iIAi97J3TtSAsLbIFn4ro=
 github.com/containerd/console v1.0.4/go.mod h1:YynlIjWYF8myEu6sdkwKIvGQq+cOckRm6So2avqoYAk=

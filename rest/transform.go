@@ -33,7 +33,7 @@ func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interfa
 	}
 }
 
-func convertToString(val interface{}) string {
+func convertIdToString(val interface{}) string {
 	switch v := val.(type) {
 	case string:
 		logging.V(4).Infof("Value %s to convert is a string already", v)
@@ -46,6 +46,8 @@ func convertToString(val interface{}) string {
 		return strconv.FormatInt(v, 10)
 	case float64:
 		logging.V(4).Info("Value to convert is a float64 which is likely a float with an exponent")
+		// It's ok to box this value because we are doing this specifically
+		// for resource IDs only which will be integers.
 		return strconv.FormatInt(int64(v), 10)
 	}
 

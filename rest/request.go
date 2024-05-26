@@ -326,19 +326,19 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 		// of an existing resource.
 		if !ok {
 			// Try to see if a top-level property has the required prop perhaps.
-			val, ok := tryPluckingProp(sdkName, properties.Mappable())
+			_, topLevelPropName, ok := tryPluckingProp(sdkName, properties.Mappable())
 			if ok {
-				pathParams[paramName] = convertToString(val)
-				continue
-			}
+				topLevelProp := properties[resource.PropertyKey(topLevelPropName)]
+				property = topLevelProp.ObjectValue()[resource.PropertyKey(sdkName)]
+			} else {
+				if oldInputs == nil {
+					return nil, errors.Errorf("did not find value for path param %s in output props (old inputs was nil)", paramName)
+				}
 
-			if oldInputs == nil {
-				return nil, errors.Errorf("did not find value for path param %s in output props (old inputs was nil)", paramName)
-			}
-
-			property, ok = oldInputs[resource.PropertyKey(sdkName)]
-			if !ok {
-				return nil, errors.Errorf("did not find value for path param %s in output props and old inputs", paramName)
+				property, ok = oldInputs[resource.PropertyKey(sdkName)]
+				if !ok {
+					return nil, errors.Errorf("did not find value for path param %s in output props and old inputs", paramName)
+				}
 			}
 		}
 

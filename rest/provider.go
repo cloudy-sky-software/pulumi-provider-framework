@@ -516,7 +516,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	if !ok {
 		logging.V(3).Infof("id prop not found in top-level repsonse. Checking if an embedded property has it...")
 		// Try plucking the id from top-level properties.
-		id, ok = tryPluckingProp("id", outputsMap)
+		id, _, ok = tryPluckingProp("id", outputsMap)
 		if !ok {
 			// TODO: should we return the CreateResponse without the Id property here?
 			return nil, errors.New("resource may have been created successfully but the id was not present in the response")
@@ -524,7 +524,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	}
 
 	return &pulumirpc.CreateResponse{
-		Id:         convertToString(id),
+		Id:         convertIdToString(id),
 		Properties: outputProperties,
 	}, nil
 }
@@ -661,7 +661,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	if !ok {
 		logging.V(3).Infof("id prop not found in top-level repsonse. Checking if an embedded property has it...")
 		// Try plucking the id from top-level properties.
-		id, ok = tryPluckingProp("id", outputs)
+		id, _, ok = tryPluckingProp("id", outputs)
 		if !ok {
 			return nil, errors.New("looking-up id property from the response")
 		}
@@ -674,7 +674,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	return &pulumirpc.ReadResponse{
-		Id:         convertToString(id),
+		Id:         convertIdToString(id),
 		Inputs:     inputsRecord,
 		Properties: outputProperties,
 	}, nil

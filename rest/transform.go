@@ -2,6 +2,8 @@ package rest
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
@@ -29,4 +31,24 @@ func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interfa
 
 		bodyMap[apiName] = v
 	}
+}
+
+func convertToString(val interface{}) string {
+	switch v := val.(type) {
+	case string:
+		logging.V(4).Infof("Value %s to convert is a string already", v)
+		return v
+	case int:
+		logging.V(4).Info("Value to convert is an int")
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		logging.V(4).Info("Value to convert is an int64")
+		return strconv.FormatInt(v, 10)
+	case float64:
+		logging.V(4).Info("Value to convert is a float64 which is likely a float with an exponent")
+		return strconv.FormatInt(int64(v), 10)
+	}
+
+	logging.V(4).Info("Returning default value format")
+	return fmt.Sprintf("%v", val)
 }

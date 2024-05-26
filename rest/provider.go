@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -513,12 +514,17 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	id, ok := outputsMap["id"]
 	if !ok {
-		// TODO: should we return the CreateResponse without the Id property here?
-		return nil, errors.New("resource may have been created successfully but the id was not present in the response")
+		logging.V(3).Infof("id prop not found in top-level repsonse. Checking if an embedded property has it...")
+		// Try plucking the id from top-level properties.
+		id, ok = tryPluckingProp("id", outputsMap)
+		if !ok {
+			// TODO: should we return the CreateResponse without the Id property here?
+			return nil, errors.New("resource may have been created successfully but the id was not present in the response")
+		}
 	}
 
 	return &pulumirpc.CreateResponse{
-		Id:         id.(string),
+		Id:         convertToString(id),
 		Properties: outputProperties,
 	}, nil
 }
@@ -653,7 +659,12 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 	id, ok := outputs["id"]
 	if !ok {
-		return nil, errors.New("looking up id property from the response")
+		logging.V(3).Infof("id prop not found in top-level repsonse. Checking if an embedded property has it...")
+		// Try plucking the id from top-level properties.
+		id, ok = tryPluckingProp("id", outputs)
+		if !ok {
+			return nil, errors.New("looking-up id property from the response")
+		}
 	}
 
 	// Serialize and return the calculated inputs.
@@ -663,7 +674,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	return &pulumirpc.ReadResponse{
-		Id:         id.(string),
+		Id:         convertToString(id),
 		Inputs:     inputsRecord,
 		Properties: outputProperties,
 	}, nil
@@ -865,8 +876,8 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		return nil, errors.Wrap(err, "executing http request")
 	}
 
-	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-		return nil, errors.Errorf("http request failed: %v. expected 200 or 204 but got %d", err, httpResp.StatusCode)
+	if slices.Contains(validStatusCodesForDelete, httpResp.StatusCode) {
+		return nil, errors.Errorf("http request failed: %v. expected one of %v but got %d", err, validStatusCodesForDelete, httpResp.StatusCode)
 	}
 
 	httpResp.Body.Close()

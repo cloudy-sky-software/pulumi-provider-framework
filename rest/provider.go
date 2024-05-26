@@ -514,7 +514,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	id, ok := outputsMap["id"]
 	if !ok {
-		logging.V(3).Infof("id prop not found in top-level repsonse. Checking if an embedded property has it...")
+		logging.V(3).Infof("id prop not found in top-level response. Checking if an embedded property has it...")
 		// Try plucking the id from top-level properties.
 		id, _, ok = tryPluckingProp("id", outputsMap)
 		if !ok {

@@ -536,12 +536,16 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.Wrap(err, "unmarshal current state as propertymap")
 	}
 
-	if len(oldState) == 0 {
+	if len(oldState) == 0 && req.GetInputs() != nil {
 		logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
 		oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
 		if err != nil {
 			return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 		}
+	} else {
+		// This is a request to import the resource.
+		id := req.GetId()
+		oldState = resource.NewPropertyMapFromMap(p.mapImportIdToPathParams(id))
 	}
 
 	logging.V(3).Infof("Resource read will use state: %v", oldState)

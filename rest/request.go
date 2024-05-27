@@ -442,3 +442,8 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 
 	return replaces, diffs
 }
+
+func (p *Provider) mapImportIdToPathParams(id, resourceTypeToken string) map[string]interface{} {
+	parts := strings.Split(id, "/")
+	return nil
+}

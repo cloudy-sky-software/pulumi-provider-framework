@@ -452,24 +452,28 @@ func (p *Provider) mapImportIdToPathParams(id, httpEndpointPath string) (map[str
 		return nil, errors.Errorf("get operation in path %s not found", httpEndpointPath)
 	}
 
-	pathParams := make(map[string]interface{}, 0)
-	idParts := strings.Split(id, "/")
-	endpointParts := strings.Split(httpEndpointPath, "/")
+	pathParams := make([]string, 0)
+	idParts := strings.Split(strings.TrimPrefix(id, "/"), "/")
+	endpointParts := strings.Split(strings.TrimPrefix(httpEndpointPath, "/"), "/")
 
-	for i, segment := range endpointParts {
+	for _, segment := range endpointParts {
 		// Skip if this segment is not a path param.
 		if !strings.HasPrefix(segment, "{") {
 			continue
 		}
 
 		pathParamName := strings.Trim(segment, "{}")
-		// If the path param has an SDK name override, use it.
-		if sdkName, ok := p.metadata.PathParamNameMap[pathParamName]; ok {
-			pathParams[sdkName] = idParts[i]
-		} else {
-			pathParams[pathParamName] = idParts[i]
-		}
-
+		pathParams = append(pathParams, pathParamName)
 	}
-	return pathParams, nil
+
+	pathParamsMap := make(map[string]interface{}, 0)
+	for i, param := range pathParams {
+		// If the path param has an SDK name override, use it.
+		if sdkName, ok := p.metadata.PathParamNameMap[param]; ok {
+			pathParamsMap[sdkName] = idParts[i]
+		} else {
+			pathParamsMap[param] = idParts[i]
+		}
+	}
+	return pathParamsMap, nil
 }

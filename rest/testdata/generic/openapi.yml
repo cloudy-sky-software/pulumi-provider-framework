@@ -27,6 +27,10 @@ components:
       properties:
         another_prop:
           $ref: "#/components/schemas/a_string_prop"
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
 
 paths:
   /v2/fakeresource:

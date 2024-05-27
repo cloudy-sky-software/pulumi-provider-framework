@@ -33,7 +33,7 @@ func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interfa
 	}
 }
 
-func convertIdToString(val interface{}) string {
+func convertNumericIDToString(val interface{}) string {
 	switch v := val.(type) {
 	case string:
 		logging.V(4).Infof("Value %s to convert is a string already", v)

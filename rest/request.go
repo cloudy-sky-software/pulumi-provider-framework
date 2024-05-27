@@ -443,7 +443,33 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 	return replaces, diffs
 }
 
-func (p *Provider) mapImportIdToPathParams(id, resourceTypeToken string) map[string]interface{} {
-	parts := strings.Split(id, "/")
-	return nil
+func (p *Provider) mapImportIdToPathParams(id, httpEndpointPath string) (map[string]interface{}, error) {
+	pathItem := p.openAPIDoc.Paths.Find(httpEndpointPath)
+	if pathItem == nil {
+		return nil, errors.Errorf("expected to find path %s in the openapi doc", httpEndpointPath)
+	}
+	if pathItem.Get == nil {
+		return nil, errors.Errorf("get operation in path %s not found", httpEndpointPath)
+	}
+
+	pathParams := make(map[string]interface{}, 0)
+	idParts := strings.Split(id, "/")
+	endpointParts := strings.Split(httpEndpointPath, "/")
+
+	for i, segment := range endpointParts {
+		// Skip if this segment is not a path param.
+		if !strings.HasPrefix(segment, "{") {
+			continue
+		}
+
+		pathParamName := strings.Trim(segment, "{}")
+		// If the path param has an SDK name override, use it.
+		if sdkName, ok := p.metadata.PathParamNameMap[pathParamName]; ok {
+			pathParams[sdkName] = idParts[i]
+		} else {
+			pathParams[pathParamName] = idParts[i]
+		}
+
+	}
+	return pathParams, nil
 }

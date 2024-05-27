@@ -536,26 +536,6 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.Wrap(err, "unmarshal current state as propertymap")
 	}
 
-	if len(oldState) == 0 && req.GetInputs() != nil {
-		logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
-		oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
-		if err != nil {
-			return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
-		}
-	} else {
-		// This is a request to import the resource.
-		id := req.GetId()
-		oldState = resource.NewPropertyMapFromMap(p.mapImportIdToPathParams(id))
-	}
-
-	logging.V(3).Infof("Resource read will use state: %v", oldState)
-
-	if !oldState.HasValue("id") {
-		// Add the id property to the state map since our HTTP request creation will
-		// look for it in the inputs map.
-		oldState["id"] = resource.NewPropertyValue(req.GetId())
-	}
-
 	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {
@@ -566,6 +546,40 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	httpEndpointPath := *crudMap.R
+
+	if len(oldState) == 0 {
+		if req.GetInputs() != nil {
+			logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
+			oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+			if err != nil {
+				return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
+			}
+		} else {
+			// This is a request to import a resource.
+			id := req.GetId()
+			if strings.Contains(id, "/") {
+				pathParams, err := p.mapImportIdToPathParams(id, httpEndpointPath)
+				if err != nil {
+					return nil, errors.Wrapf(err, "mapping import id %s to path params", id)
+				}
+
+				oldState = resource.NewPropertyMapFromMap(pathParams)
+			} else {
+				oldState = resource.NewPropertyMapFromMap(
+					map[string]interface{}{
+						"id": id,
+					})
+			}
+		}
+	}
+
+	logging.V(3).Infof("Resource read will use state: %v", oldState)
+
+	if !oldState.HasValue("id") {
+		// Add the id property to the state map since our HTTP request creation will
+		// look for it in the inputs map.
+		oldState["id"] = resource.NewPropertyValue(req.GetId())
+	}
 
 	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, oldState)
 	if err != nil {

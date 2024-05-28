@@ -469,3 +469,24 @@ func (p *Provider) mapImportIDToPathParams(id, httpEndpointPath string) (map[str
 	}
 	return pathParamsMap, nil
 }
+
+func (p *Provider) additionsArePathParams(diff *resource.ObjectDiff, news resource.PropertyMap, endpoint string, method string) (bool, error) {
+	// If there are only additions AND those additions
+	// are only the path params, then show no diff.
+	if len(diff.Deletes) > 0 || len(diff.Updates) > 0 || len(diff.Adds) == 0 {
+		return false, nil
+	}
+
+	pathParams, err := p.getPathParamsMap(endpoint, method, news)
+	if err != nil {
+		return false, errors.Wrap(err, "getting path params to determine if additions are only path params")
+	}
+
+	addsMap := diff.Adds.Mappable()
+	p.removePathParamsFromRequestBody(addsMap, pathParams)
+	if len(addsMap) == 0 {
+		return true, nil
+	}
+
+	return false, nil
+}

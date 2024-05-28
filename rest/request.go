@@ -444,14 +444,6 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 }
 
 func (p *Provider) mapImportIDToPathParams(id, httpEndpointPath string) (map[string]interface{}, error) {
-	pathItem := p.openAPIDoc.Paths.Find(httpEndpointPath)
-	if pathItem == nil {
-		return nil, errors.Errorf("expected to find path %s in the openapi doc", httpEndpointPath)
-	}
-	if pathItem.Get == nil {
-		return nil, errors.Errorf("get operation in path %s not found", httpEndpointPath)
-	}
-
 	pathParams := make([]string, 0)
 	idParts := strings.Split(strings.TrimPrefix(id, "/"), "/")
 	endpointParts := strings.Split(strings.TrimPrefix(httpEndpointPath, "/"), "/")

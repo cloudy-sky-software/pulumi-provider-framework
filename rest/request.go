@@ -470,6 +470,15 @@ func (p *Provider) mapImportIDToPathParams(id, httpEndpointPath string) (map[str
 	return pathParamsMap, nil
 }
 
+// additionsArePathParams returns true in the special case where
+// there are only additions and those additions are only for
+// path params. This is likely due to the resource being imported
+// and the fact that path params are injected as virtual input
+// properties. That is, they are not really input properties
+// required by the cloud provider. They are just filled into
+// the HTTP endpoint path as path params but since they are
+// required pulschema transposes them as required input
+// properties for convenience.
 func (p *Provider) additionsArePathParams(diff *resource.ObjectDiff, news resource.PropertyMap, endpoint string, method string) (bool, error) {
 	// If there are only additions AND those additions
 	// are only the path params, then show no diff.

@@ -44,7 +44,7 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 	}
 
 	_, err = p.Configure(ctx, &pulumirpc.ConfigureRequest{
-		Variables: map[string]string{"tailscale:config:apiKey": "fakeapikey"},
+		Variables: map[string]string{"generic:config:apiKey": "fakeapikey"},
 	})
 
 	if err != nil {

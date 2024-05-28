@@ -144,3 +144,42 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 	// the stashed inputs.
 	assert.Equal(t, inputsPropertyMap, actualStashedInputState, "Expected the stashed inputs to match the origin inputs")
 }
+
+func TestImports(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v2/fakeresource/fake-id" {
+			_, err := io.WriteString(w, `{"another_prop":"somevalue"}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+
+	p := makeTestGenericProvider(ctx, t, testServer)
+
+	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
+		Id:         "/fake-id",
+		Inputs:     nil,
+		Properties: nil,
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, readResp)
+	// Note how we check for anotherProp instead of another_prop
+	// as it is in the OpenAPI. That's because we would have
+	// applied a transformation on the response body before
+	// it's serialized into the state.
+	assert.Contains(t, readResp.GetProperties().AsMap(), "anotherProp")
+}

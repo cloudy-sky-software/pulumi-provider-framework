@@ -336,25 +336,22 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 		return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
 	}
 
-	logging.V(3).Info("Detected some changes...")
+	logging.V(3).Info("Detected some changes before filtering out path params...")
 	logging.V(4).Infof("ADDS: %v", diff.Adds)
 	logging.V(4).Infof("DELETES: %v", diff.Deletes)
 	logging.V(4).Infof("UPDATES: %v", diff.Updates)
 
-	var updateOp *openapi3.Operation
-	switch {
-	case crudMap.U != nil:
-		updateOp = p.openAPIDoc.Paths.Find(*crudMap.U).Patch
-		if updateOp == nil {
-			return nil, errors.Errorf("openapi doc does not have PATCH endpoint definition for the path %s", *crudMap.U)
-		}
-	case crudMap.P != nil:
-		updateOp = p.openAPIDoc.Paths.Find(*crudMap.P).Put
-		if updateOp == nil {
-			return nil, errors.Errorf("openapi doc does not have PUT endpoint definition for the path %s", *crudMap.U)
+	if crudMap.U == nil && crudMap.P == nil {
+		ok, err := p.additionsArePathParams(diff, news, *crudMap.C, http.MethodPost)
+		if err != nil {
+			return nil, errors.Wrap(err, "determining if all additions were just path params")
 		}
 
-	default:
+		if ok {
+			logging.V(3).Infof("Reporting no diff for %s because all new additions were path params", req.GetUrn())
+			return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
+		}
+
 		// If there is no PATCH or PUT endpoint for this type token,
 		// then we'll need to trigger a replacement.
 		logging.V(3).Infof("Resource type %s will only support replacement as it does not have update endpoints", resourceTypeToken)
@@ -374,6 +371,36 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 			Replaces: replaces,
 			Diffs:    replaces,
 		}, nil
+	}
+
+	var updateOp *openapi3.Operation
+	var endpoint string
+	var method string
+	switch {
+	case crudMap.U != nil:
+		endpoint = *crudMap.U
+		updateOp = p.openAPIDoc.Paths.Find(endpoint).Patch
+		method = http.MethodPatch
+		if updateOp == nil {
+			return nil, errors.Errorf("openapi doc does not have PATCH endpoint definition for the path %s", *crudMap.U)
+		}
+	case crudMap.P != nil:
+		endpoint = *crudMap.P
+		updateOp = p.openAPIDoc.Paths.Find(*crudMap.P).Put
+		method = http.MethodPut
+		if updateOp == nil {
+			return nil, errors.Errorf("openapi doc does not have PUT endpoint definition for the path %s", *crudMap.U)
+		}
+	}
+
+	noChanges, err := p.additionsArePathParams(diff, news, endpoint, method)
+	if err != nil {
+		return nil, errors.Wrap(err, "determining if all additions were just path params")
+	}
+
+	if noChanges {
+		logging.V(3).Infof("Reporting no diff for %s because all new additions were path params", req.GetUrn())
+		return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
 	}
 
 	var replaces []string
@@ -536,22 +563,6 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.Wrap(err, "unmarshal current state as propertymap")
 	}
 
-	if len(oldState) == 0 {
-		logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
-		oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
-		if err != nil {
-			return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
-		}
-	}
-
-	logging.V(3).Infof("Resource read will use state: %v", oldState)
-
-	if !oldState.HasValue("id") {
-		// Add the id property to the state map since our HTTP request creation will
-		// look for it in the inputs map.
-		oldState["id"] = resource.NewPropertyValue(req.GetId())
-	}
-
 	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
 	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
 	if !ok {
@@ -562,6 +573,40 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	httpEndpointPath := *crudMap.R
+
+	if len(oldState) == 0 {
+		if req.GetInputs() != nil {
+			logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
+			oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+			if err != nil {
+				return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
+			}
+		} else {
+			// This is a request to import a resource.
+			id := req.GetId()
+			if strings.Contains(id, "/") {
+				pathParams, err := p.mapImportIDToPathParams(id, httpEndpointPath)
+				if err != nil {
+					return nil, errors.Wrapf(err, "mapping import id %s to path params", id)
+				}
+
+				oldState = resource.NewPropertyMapFromMap(pathParams)
+			} else {
+				oldState = resource.NewPropertyMapFromMap(
+					map[string]interface{}{
+						"id": id,
+					})
+			}
+		}
+	}
+
+	logging.V(3).Infof("Resource read will use state: %v", oldState)
+
+	if !oldState.HasValue("id") {
+		// Add the id property to the state map since our HTTP request creation will
+		// look for it in the inputs map.
+		oldState["id"] = resource.NewPropertyValue(req.GetId())
+	}
 
 	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, oldState)
 	if err != nil {
@@ -599,19 +644,33 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 	httpResp.Body.Close()
 
-	var outputs map[string]interface{}
+	var outputs interface{}
 	if err := json.Unmarshal(body, &outputs); err != nil {
 		return nil, errors.Wrap(err, "unmarshaling the response")
+	}
+
+	outputsMap, postReadErr := p.providerCallback.OnPostRead(ctx, req, outputs)
+	if postReadErr != nil {
+		return nil, postReadErr
 	}
 
 	inputs := state.GetOldInputs(oldState)
 	// If there is no old state, then persist the current outputs as the
 	// "old" inputs going forward for this resource.
 	if inputs == nil {
-		inputs = resource.NewPropertyMapFromMap(outputs)
+		inputs = resource.NewPropertyMapFromMap(outputsMap)
 		// Filter out read-only properties from the inputs.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
-		requestBodySchema := *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value
+		var operation *openapi3.Operation
+		if pathItem.Post != nil {
+			operation = pathItem.Post
+		} else if pathItem.Put != nil {
+			operation = pathItem.Put
+		} else {
+			return nil, errors.Errorf("cannot determine the operation to use for endpoint path %s", *crudMap.C)
+		}
+
+		requestBodySchema := *operation.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value
 		var dv *string
 		if requestBodySchema.Discriminator != nil {
 			val := inputs[resource.PropertyKey(requestBodySchema.Discriminator.PropertyName)].StringValue()
@@ -622,11 +681,20 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		// Take the values from outputs and apply them to the inputs
 		// so that the checkpoint is in-sync with the state in the
 		// cloud provider.
-		newState := resource.NewPropertyMapFromMap(outputs)
+		newState := resource.NewPropertyMapFromMap(outputsMap)
 		// Filter out read-only properties before we apply the cloud provider
 		// state to our input state.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
-		requestBodySchema := *pathItem.Post.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value
+		var operation *openapi3.Operation
+		if pathItem.Post != nil {
+			operation = pathItem.Post
+		} else if pathItem.Put != nil {
+			operation = pathItem.Put
+		} else {
+			return nil, errors.Errorf("cannot determine the operation to use for endpoint path %s", *crudMap.C)
+		}
+
+		requestBodySchema := *operation.RequestBody.Value.Content.Get(jsonMimeType).Schema.Value
 		var dv *string
 		if requestBodySchema.Discriminator != nil {
 			val := inputs[resource.PropertyKey(requestBodySchema.Discriminator.PropertyName)].StringValue()
@@ -640,28 +708,22 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	// For example, resources like keys, secrets would return the actual secret
 	// payload on creation but on subsequent reads, they won't be returned by
 	// APIs, so we should maintain those in the outputs
-	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputs), oldState)
+	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputsMap), oldState)
 
-	outputs = updatedOutputsMap.Mappable()
+	outputsMap = updatedOutputsMap.Mappable()
 
-	var postReadErr error
-	outputs, postReadErr = p.providerCallback.OnPostRead(ctx, req, outputs)
-	if postReadErr != nil {
-		return nil, postReadErr
-	}
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	p.TransformBody(ctx, outputs, p.metadata.APIToSDKNameMap)
-
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputs, inputs), state.DefaultMarshalOpts)
+	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
 
-	id, ok := outputs["id"]
+	id, ok := outputsMap["id"]
 	if !ok {
 		logging.V(3).Infof("id prop not found in top-level response. Checking if an embedded property has it...")
 		// Try plucking the id from top-level properties.
-		id, _, ok = tryPluckingProp("id", outputs)
+		id, _, ok = tryPluckingProp("id", outputsMap)
 		if !ok {
 			return nil, errors.New("looking-up id property from the response")
 		}

@@ -442,3 +442,60 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 
 	return replaces, diffs
 }
+
+func (p *Provider) mapImportIDToPathParams(id, httpEndpointPath string) (map[string]interface{}, error) {
+	pathParams := make([]string, 0)
+	idParts := strings.Split(strings.TrimPrefix(id, "/"), "/")
+	endpointParts := strings.Split(strings.TrimPrefix(httpEndpointPath, "/"), "/")
+
+	for _, segment := range endpointParts {
+		// Skip if this segment is not a path param.
+		if !strings.HasPrefix(segment, "{") {
+			continue
+		}
+
+		pathParamName := strings.Trim(segment, "{}")
+		pathParams = append(pathParams, pathParamName)
+	}
+
+	pathParamsMap := make(map[string]interface{}, 0)
+	for i, param := range pathParams {
+		// If the path param has an SDK name override, use it.
+		if sdkName, ok := p.metadata.PathParamNameMap[param]; ok {
+			pathParamsMap[sdkName] = idParts[i]
+		} else {
+			pathParamsMap[param] = idParts[i]
+		}
+	}
+	return pathParamsMap, nil
+}
+
+// additionsArePathParams returns true in the special case where
+// there are only additions and those additions are only for
+// path params. This is likely due to the resource being imported
+// and the fact that path params are injected as virtual input
+// properties. That is, they are not really input properties
+// required by the cloud provider. They are just filled into
+// the HTTP endpoint path as path params but since they are
+// required pulschema transposes them as required input
+// properties for convenience.
+func (p *Provider) additionsArePathParams(diff *resource.ObjectDiff, news resource.PropertyMap, endpoint string, method string) (bool, error) {
+	// If there are only additions AND those additions
+	// are only the path params, then show no diff.
+	if len(diff.Deletes) > 0 || len(diff.Updates) > 0 || len(diff.Adds) == 0 {
+		return false, nil
+	}
+
+	pathParams, err := p.getPathParamsMap(endpoint, method, news)
+	if err != nil {
+		return false, errors.Wrap(err, "getting path params to determine if additions are only path params")
+	}
+
+	addsMap := diff.Adds.Mappable()
+	p.removePathParamsFromRequestBody(addsMap, pathParams)
+	if len(addsMap) == 0 {
+		return true, nil
+	}
+
+	return false, nil
+}

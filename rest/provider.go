@@ -558,7 +558,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 			// This is a request to import a resource.
 			id := req.GetId()
 			if strings.Contains(id, "/") {
-				pathParams, err := p.mapImportIdToPathParams(id, httpEndpointPath)
+				pathParams, err := p.mapImportIDToPathParams(id, httpEndpointPath)
 				if err != nil {
 					return nil, errors.Wrapf(err, "mapping import id %s to path params", id)
 				}

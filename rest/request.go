@@ -443,7 +443,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 	return replaces, diffs
 }
 
-func (p *Provider) mapImportIdToPathParams(id, httpEndpointPath string) (map[string]interface{}, error) {
+func (p *Provider) mapImportIDToPathParams(id, httpEndpointPath string) (map[string]interface{}, error) {
 	pathItem := p.openAPIDoc.Paths.Find(httpEndpointPath)
 	if pathItem == nil {
 		return nil, errors.Errorf("expected to find path %s in the openapi doc", httpEndpointPath)

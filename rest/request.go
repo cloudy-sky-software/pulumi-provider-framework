@@ -375,7 +375,7 @@ func (p *Provider) removePathParamsFromRequestBody(bodyMap map[string]interface{
 	}
 
 	updatedBody, _ := json.Marshal(bodyMap)
-	logging.V(3).Infof("replacePathParams: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
+	logging.V(3).Infof("removePathParamsFromRequestBody: UPDATED HTTP REQUEST BODY: %s", string(updatedBody))
 }
 
 func (p *Provider) replacePathParams(httpReq *http.Request, pathParams map[string]string) error {

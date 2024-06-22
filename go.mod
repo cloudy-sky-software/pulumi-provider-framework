@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/cloudy-sky-software/pulschema v0.0.0-20240613152213-1798b174f28e
-	github.com/getkin/kin-openapi v0.124.0
+	github.com/getkin/kin-openapi v0.125.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi/pkg/v3 v3.120.0

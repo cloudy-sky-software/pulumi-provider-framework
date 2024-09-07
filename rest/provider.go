@@ -938,7 +938,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		return nil, errors.Wrap(err, "executing http request")
 	}
 
-	if slices.Contains(validStatusCodesForDelete, httpResp.StatusCode) {
+	if !slices.Contains(validStatusCodesForDelete, httpResp.StatusCode) {
 		return nil, errors.Errorf("http request failed: %v. expected one of %v but got %d", err, validStatusCodesForDelete, httpResp.StatusCode)
 	}
 

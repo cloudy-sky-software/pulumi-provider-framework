@@ -181,7 +181,7 @@ func (p *Provider) convertInvokeOutput(_ context.Context, req *pulumirpc.InvokeR
 	schemaSpec := p.GetSchemaSpec()
 	funcSpec, ok := schemaSpec.Functions[invokeTypeToken]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("function definition (type token: %q) not found in schema spec", invokeTypeToken))
+		return nil, fmt.Errorf("function definition (type token: %q) not found in schema spec", invokeTypeToken)
 	}
 
 	// If the return type for this function has an object

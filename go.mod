@@ -3,7 +3,7 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 go 1.21
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20240905155039-3c8b2b0f5769
+	github.com/cloudy-sky-software/pulschema v0.0.0-20240907165126-4b477b608ed3
 	github.com/getkin/kin-openapi v0.127.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1

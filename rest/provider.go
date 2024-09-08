@@ -170,6 +170,34 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 	}, nil
 }
 
+func (p *Provider) convertInvokeOutput(_ context.Context, req *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error) {
+	invokeTypeToken := req.GetTok()
+
+	// Return non-list operations as-is.
+	if !strings.Contains(invokeTypeToken, ":list") {
+		return outputs.(map[string]interface{}), nil
+	}
+
+	schemaSpec := p.GetSchemaSpec()
+	funcSpec, ok := schemaSpec.Functions[invokeTypeToken]
+	if !ok {
+		return nil, fmt.Errorf("function definition (type token: %q) not found in schema spec", invokeTypeToken)
+	}
+
+	// If the return type for this function has an object
+	// spec, it means it is already properly wrapped in a
+	// JSON object.
+	if funcSpec.ReturnType.ObjectTypeSpec == nil {
+		return outputs.(map[string]interface{}), nil
+	}
+
+	// Otherwise, it is a naked array response that should
+	// be enveloped by an `items` property in a new object.
+	m := make(map[string]interface{})
+	m["items"] = outputs
+	return m, nil
+}
+
 // Invoke dynamically executes a built-in function in the provider.
 func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*pulumirpc.InvokeResponse, error) {
 	args, err := plugin.UnmarshalProperties(req.Args, state.DefaultUnmarshalOpts)
@@ -230,6 +258,15 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 	outputsMap, postInvokeErr := p.providerCallback.OnPostInvoke(ctx, req, outputs)
 	if postInvokeErr != nil {
 		return nil, postInvokeErr
+	}
+
+	if outputsMap == nil {
+		logging.V(3).Infof("OnPostInvoke returned nil output map. Attemping to self-convert output of invoke (token: %s) in provider framework", invokeTypeToken)
+		var convertErr error
+		outputsMap, convertErr = p.convertInvokeOutput(ctx, req, outputs)
+		if convertErr != nil {
+			return nil, errors.Wrapf(convertErr, "converting outputs")
+		}
 	}
 
 	outputProperties, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)

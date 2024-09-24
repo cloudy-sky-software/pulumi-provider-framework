@@ -12,6 +12,7 @@ import (
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/stretchr/testify/assert"
 
@@ -139,8 +140,8 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 	actualStashedInputState := state.GetOldInputs(actualOutputState)
 
 	// The read operation should not have modified the stashed inputs
-	// because the resource read returned would have returned read-only
-	// properties in the response which should not be serialized into
+	// because the read would have returned read-only properties
+	// in the response which should not be serialized into
 	// the stashed inputs.
 	assert.Equal(t, inputsPropertyMap, actualStashedInputState, "Expected the stashed inputs to match the origin inputs")
 }
@@ -182,4 +183,66 @@ func TestImports(t *testing.T) {
 	// applied a transformation on the response body before
 	// it's serialized into the state.
 	assert.Contains(t, readResp.GetProperties().AsMap(), "anotherProp")
+}
+
+func TestDiffForUpdateableResource(t *testing.T) {
+	ctx := context.Background()
+
+	oldInputsJSON := `{
+		"object_prop": {
+			"another_prop": "a value"
+		}
+	}`
+
+	newInputsJSON := `{
+		"object_prop": {
+			"another_prop": "a value"
+		},
+		"simple_prop": "new value"
+	}`
+	outputsJSON := `{"another_prop":"output value"}`
+
+	p := makeTestGenericProvider(ctx, t, nil)
+
+	getMarshaledProps := func(jsonStr string) (*structpb.Struct, resource.PropertyMap) {
+		var inputs map[string]interface{}
+		if err := json.Unmarshal([]byte(jsonStr), &inputs); err != nil {
+			t.Fatalf("Failed to unmarshal test payload: %v", err)
+		}
+
+		inputsPropertyMap := resource.NewPropertyMapFromMap(inputs)
+		inputsRecord, err := plugin.MarshalProperties(inputsPropertyMap, state.DefaultMarshalOpts)
+		if err != nil {
+			t.Fatalf("Failed to marshal input map: %v", err)
+		}
+
+		return inputsRecord, inputsPropertyMap
+	}
+
+	newInputs, _ := getMarshaledProps(newInputsJSON)
+	oldInputs, oldInputsPropertyMap := getMarshaledProps(oldInputsJSON)
+
+	var outputsMap map[string]interface{}
+	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
+		t.Fatalf("Failed to unmarshal test payload: %v", err)
+	}
+
+	expectedOutputState := state.GetResourceState(outputsMap, oldInputsPropertyMap)
+	serializedOutputState, err := plugin.MarshalProperties(expectedOutputState, state.DefaultMarshalOpts)
+	if err != nil {
+		t.Fatalf("Marshaling the output properties map: %v", err)
+	}
+
+	diffResp, err := p.Diff(ctx, &pulumirpc.DiffRequest{
+		Id:        "fake-id",
+		Olds:      serializedOutputState,
+		News:      newInputs,
+		OldInputs: oldInputs,
+		Type:      "generic:fakeresource/v2:FakeResource",
+		Name:      "myResource",
+		Urn:       "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, diffResp)
+	assert.Contains(t, diffResp.Diffs, "simple_prop")
 }

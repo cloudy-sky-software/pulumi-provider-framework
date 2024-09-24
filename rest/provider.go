@@ -430,6 +430,16 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 		}
 	}
 
+	if id, ok := news["id"]; !ok {
+		logging.V(3).Info("Adding id property to news")
+		// It's essential to add an `id` property here since the update
+		// endpoint path for the resource will have path params that
+		// may map to the `id` property.
+		news["id"] = resource.NewPropertyValue(req.GetId())
+	} else {
+		logging.V(3).Infof("news already has an id property (val: %s). won't override it", id.StringValue())
+	}
+
 	noChanges, err := p.additionsArePathParams(diff, news, endpoint, method)
 	if err != nil {
 		return nil, errors.Wrap(err, "determining if all additions were just path params")
@@ -744,7 +754,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	// Make sure that the original output properties still remain in the state.
 	// For example, resources like keys, secrets would return the actual secret
 	// payload on creation but on subsequent reads, they won't be returned by
-	// APIs, so we should maintain those in the outputs
+	// APIs, so we should maintain those in the outputs.
 	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputsMap), oldState)
 
 	outputsMap = updatedOutputsMap.Mappable()

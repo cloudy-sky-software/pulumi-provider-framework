@@ -43,7 +43,7 @@ paths:
               $ref: "#/components/schemas/request_object_type"
       responses:
         "200":
-          description: The response will be a JSON object with a key called `action`.
+          description: The response for creating a fake resource.
           content:
             application/json:
               schema:
@@ -61,6 +61,26 @@ paths:
       responses:
         "200":
           description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/response_object_type"
+    patch:
+      operationId: update_fake_resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/request_object_type"
+      responses:
+        "200":
+          description: The response for updating fake resource.
           content:
             application/json:
               schema:

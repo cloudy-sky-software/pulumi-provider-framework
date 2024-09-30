@@ -49,11 +49,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/response_object_type"
 
-  /v2/fakeresource/{id}:
+  /v2/fakeresource/{resourceId}:
     get:
       operationId: get_fake_resource
       parameters:
-        - name: id
+        - name: resourceId
           in: path
           required: true
           schema:

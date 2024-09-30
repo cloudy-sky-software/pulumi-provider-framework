@@ -309,14 +309,19 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 		count++
 		paramName := param.Value.Name
 		sdkName := paramName
-		// If this is the last path param in the URI,
-		// it's likely to be the `id` of the resource.
-		if strings.HasSuffix(apiPath, fmt.Sprintf("{%s}", paramName)) && (strings.HasSuffix(paramName, "_id") || strings.HasSuffix(paramName, "Id")) {
-			logging.V(3).Infof("Path param %q is likely the id property", paramName)
-			sdkName = "id"
-		} else if o, ok := p.metadata.PathParamNameMap[sdkName]; ok {
+
+		if o, ok := p.metadata.PathParamNameMap[sdkName]; ok {
 			logging.V(3).Infof("Path param %q is overridden in the schema as %q", paramName, o)
 			sdkName = o
+		}
+
+		if _, ok := properties[resource.PropertyKey(sdkName)]; !ok {
+			// If this is the last path param in the URI,
+			// it's likely to be the `id` of the resource.
+			if strings.HasSuffix(apiPath, fmt.Sprintf("{%s}", paramName)) && (strings.HasSuffix(paramName, "_id") || strings.HasSuffix(paramName, "Id")) {
+				logging.V(3).Infof("Path param %q is likely the id property", paramName)
+				sdkName = "id"
+			}
 		}
 
 		logging.V(3).Infof("Looking for path param %q in resource inputs %v", paramName, properties)
@@ -466,6 +471,15 @@ func (p *Provider) mapImportIDToPathParams(id, httpEndpointPath string) (map[str
 		} else {
 			pathParamsMap[param] = idParts[i]
 		}
+	}
+
+	// If the last path param is not called `id` but if it's "id-like",
+	// add an `id` param to the map since it's likely the primary
+	// resource's id for this endpoint path.
+	lastPathParam := pathParams[len(pathParams)-1]
+	lastPathParamLower := strings.ToLower(lastPathParam)
+	if lastPathParamLower != "id" && (strings.HasSuffix(lastPathParamLower, "id") || strings.HasPrefix(lastPathParamLower, "_id")) {
+		pathParamsMap["id"] = pathParamsMap[lastPathParam]
 	}
 	return pathParamsMap, nil
 }

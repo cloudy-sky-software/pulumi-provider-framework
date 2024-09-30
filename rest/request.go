@@ -315,10 +315,13 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 			sdkName = o
 		}
 
-		if _, ok := properties[resource.PropertyKey(sdkName)]; !ok {
+		// If there is no such property in the properties map,
+		// check if the param is an id-like param.
+		if _, ok := properties[resource.PropertyKey(sdkName)]; !ok && sdkName != "id" {
 			// If this is the last path param in the URI,
-			// it's likely to be the `id` of the resource.
-			if strings.HasSuffix(apiPath, fmt.Sprintf("{%s}", paramName)) && (strings.HasSuffix(paramName, "_id") || strings.HasSuffix(paramName, "Id")) {
+			// it's likely to be the `id` of the resource
+			// that the endpoint is targeting.
+			if strings.HasSuffix(apiPath, fmt.Sprintf("{%s}", paramName)) && (strings.HasSuffix(sdkName, "_id") || strings.HasSuffix(sdkName, "Id")) {
 				logging.V(3).Infof("Path param %q is likely the id property", paramName)
 				sdkName = "id"
 			}

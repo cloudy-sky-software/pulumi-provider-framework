@@ -92,7 +92,7 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return errors.New("unable to handle redirects")
 		},
 	}

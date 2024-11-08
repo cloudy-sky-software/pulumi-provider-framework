@@ -221,7 +221,7 @@ func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, p
 		PathParams: pathParams,
 		Route:      route,
 		Options: &openapi3filter.Options{
-			AuthenticationFunc: func(ctx context.Context, ai *openapi3filter.AuthenticationInput) error {
+			AuthenticationFunc: func(_ context.Context, ai *openapi3filter.AuthenticationInput) error {
 				authHeaderName := p.getAuthHeaderName()
 				authHeaderValue := ai.RequestValidationInput.Request.Header.Get(authHeaderName)
 				if authHeaderValue == "" {

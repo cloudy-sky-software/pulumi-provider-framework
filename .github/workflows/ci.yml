@@ -8,7 +8,7 @@ on:
       - main
 
 env:
-  GOLANG_CI_LINT_VERSION: v1.55.2
+  GOLANG_CI_LINT_VERSION: v1.61.0
   GOPRIVATE: "github.com/cloudy-sky-software/*"
   GO_VERSION: 1.21.x
 

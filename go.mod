@@ -5,12 +5,12 @@ go 1.22.7
 toolchain go1.23.3
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20241120014159-fa183f68a3c5
+	github.com/cloudy-sky-software/pulschema v0.0.0-20241123044824-9aa847cf8e33
 	github.com/getkin/kin-openapi v0.128.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.140.0
-	github.com/pulumi/pulumi/sdk/v3 v3.140.0
+	github.com/pulumi/pulumi/pkg/v3 v3.141.0
+	github.com/pulumi/pulumi/sdk/v3 v3.141.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/text v0.20.0
 	google.golang.org/grpc v1.68.0

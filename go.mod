@@ -5,7 +5,7 @@ go 1.22.7
 toolchain go1.23.3
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20241127020837-53118ec2dc8b
+	github.com/cloudy-sky-software/pulschema v0.0.0-20241129051016-28ed2ced4255
 	github.com/getkin/kin-openapi v0.128.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1

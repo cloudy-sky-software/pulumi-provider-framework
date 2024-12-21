@@ -10,7 +10,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi/pkg/v3 v3.143.0
-	github.com/pulumi/pulumi/sdk/v3 v3.143.0
+	github.com/pulumi/pulumi/sdk/v3 v3.144.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.21.0
 	google.golang.org/grpc v1.69.2
@@ -182,7 +182,7 @@ require (
 	gocloud.dev/secrets/hashivault v0.37.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8 // indirect
-	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/term v0.27.0 // indirect

@@ -100,6 +100,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20250109001002-c781ec8ce31a h1:K
 github.com/cloudy-sky-software/pulschema v0.0.0-20250109001002-c781ec8ce31a/go.mod h1:KcmEXhoz/gB00aquV6oO+Zg4pNVu2aLUWb3jevWnur4=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250114165554-f8bfeb1b95f8 h1:n75X4Q/qzTdMV26dVTBA2IDQUc7d4cxh5vw9HS1fQ+c=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250114165554-f8bfeb1b95f8/go.mod h1:nvJykpMlF8bjOo+b3CY/hS+7AZmniAf2Yg5viRY+29o=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250116160939-4c21315644f9 h1:XniM+DAGVZ7iZQyuxuoDV2hSmbUOXYkuKUSL75J/vFQ=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250116160939-4c21315644f9/go.mod h1:xXX7uI48gDbfOCDUbjB5vVJgBQ/6nEzgLE+yTWoLIEg=
 github.com/containerd/console v1.0.4 h1:F2g4+oChYvBTsASRTz8NP6iIAi97J3TtSAsLbIFn4ro=
 github.com/containerd/console v1.0.4/go.mod h1:YynlIjWYF8myEu6sdkwKIvGQq+cOckRm6So2avqoYAk=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=

@@ -10,7 +10,7 @@ on:
 env:
   GOLANG_CI_LINT_VERSION: v1.61.0
   GOPRIVATE: "github.com/cloudy-sky-software/*"
-  GO_VERSION: 1.23.x
+  GO_VERSION: 1.24.x
 
 jobs:
   lint:

@@ -114,6 +114,8 @@ github.com/cloudflare/circl v1.6.0 h1:cr5JKic4HI+LkINy2lg3W2jF8sHCVTBncJr5gIIq7q
 github.com/cloudflare/circl v1.6.0/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250313151450-60aa34a2b6ad h1:0CL/IWvQUJrXGvhdSs8idX2DrepZW6VGKY9/tQQPjsc=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250313151450-60aa34a2b6ad/go.mod h1:9vvxqdMt6jOH/9XEcIZ39GFYqy7662jYnFFAmjZprxM=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250313202410-6e6e257cbc56 h1:A+7ix9Mb1ULAFPNCrZjzwdNGO480fEEXrKjkGMkaenI=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250313202410-6e6e257cbc56/go.mod h1:MqjSxqx08Ma/Wf1si48CC28ZILSL4t5F1zO0HYX/55g=
 github.com/cncf/xds/go v0.0.0-20241223141626-cff3c89139a3 h1:boJj011Hh+874zpIySeApCX4GeOjPl9qhRF3QuIZq+Q=
 github.com/cncf/xds/go v0.0.0-20241223141626-cff3c89139a3/go.mod h1:W+zGtBO5Y1IgJhy4+A9GOqVhqLpfZi+vwmdNXUehLA8=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
@@ -327,8 +329,12 @@ github.com/pulumi/inflector v0.2.1 h1:bqyiish3tq//vLeLiEstSFE5K7RNjy/ce47ed4QATu
 github.com/pulumi/inflector v0.2.1/go.mod h1:HUFCjcPTz96YtTuUlwG3i3EZG4WlniBvR9bd+iJxCUY=
 github.com/pulumi/pulumi/pkg/v3 v3.155.0 h1:8D3yII7SpYICdohzyFJpmxW7ktPSGXQkC/3x0g1XWOU=
 github.com/pulumi/pulumi/pkg/v3 v3.155.0/go.mod h1:xDcy1c/kxXI+v9ssLyHBKcUjJTq/g3FG8cYzC2vNhSg=
+github.com/pulumi/pulumi/pkg/v3 v3.156.0 h1:N3K8uCBAPP/QUJJQ/I1AnhpfOQ9rPgcu35WTW7CD3Tg=
+github.com/pulumi/pulumi/pkg/v3 v3.156.0/go.mod h1:6JPziW0rWnmSDQ/5M0Py2VBHtO22NiZG8GldSNlZPic=
 github.com/pulumi/pulumi/sdk/v3 v3.155.0 h1:BzQoPriMNC/TiWvfyCnng8y6CaBXpYd+4H2CsN8InrA=
 github.com/pulumi/pulumi/sdk/v3 v3.155.0/go.mod h1:+WC9aIDo8fMgd2g0jCHuZU2S/VYNLRAZ3QXt6YVgwaA=
+github.com/pulumi/pulumi/sdk/v3 v3.156.0 h1:C4l4Z89EDft6aKe/ZmQYkZ8/7FUh/YvbKD4huIW4PoA=
+github.com/pulumi/pulumi/sdk/v3 v3.156.0/go.mod h1:+WC9aIDo8fMgd2g0jCHuZU2S/VYNLRAZ3QXt6YVgwaA=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=

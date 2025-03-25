@@ -5,12 +5,12 @@ go 1.23.1
 toolchain go1.24.1
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20250319155652-bce95758c130
+	github.com/cloudy-sky-software/pulschema v0.0.0-20250325150152-8169fdd97c9f
 	github.com/getkin/kin-openapi v0.131.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.157.0
-	github.com/pulumi/pulumi/sdk/v3 v3.157.0
+	github.com/pulumi/pulumi/pkg/v3 v3.158.0
+	github.com/pulumi/pulumi/sdk/v3 v3.158.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.23.0
 	google.golang.org/grpc v1.71.0

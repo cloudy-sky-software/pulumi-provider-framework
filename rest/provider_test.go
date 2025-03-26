@@ -64,6 +64,23 @@ func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *ht
 	return p
 }
 
+func getMarshaledProps(t *testing.T, jsonStr string) (*structpb.Struct, resource.PropertyMap) {
+	t.Helper()
+
+	var inputs map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &inputs); err != nil {
+		t.Fatalf("Failed to unmarshal test payload: %v", err)
+	}
+
+	inputsPropertyMap := resource.NewPropertyMapFromMap(inputs)
+	inputsRecord, err := plugin.MarshalProperties(inputsPropertyMap, state.DefaultMarshalOpts)
+	if err != nil {
+		t.Fatalf("Failed to marshal input map: %v", err)
+	}
+
+	return inputsRecord, inputsPropertyMap
+}
+
 func TestResourceReadResultsInNoChanges(t *testing.T) {
 	ctx := context.Background()
 
@@ -204,23 +221,8 @@ func TestDiffForUpdateableResource(t *testing.T) {
 
 	p := makeTestGenericProvider(ctx, t, nil)
 
-	getMarshaledProps := func(jsonStr string) (*structpb.Struct, resource.PropertyMap) {
-		var inputs map[string]interface{}
-		if err := json.Unmarshal([]byte(jsonStr), &inputs); err != nil {
-			t.Fatalf("Failed to unmarshal test payload: %v", err)
-		}
-
-		inputsPropertyMap := resource.NewPropertyMapFromMap(inputs)
-		inputsRecord, err := plugin.MarshalProperties(inputsPropertyMap, state.DefaultMarshalOpts)
-		if err != nil {
-			t.Fatalf("Failed to marshal input map: %v", err)
-		}
-
-		return inputsRecord, inputsPropertyMap
-	}
-
-	newInputs, _ := getMarshaledProps(newInputsJSON)
-	oldInputs, oldInputsPropertyMap := getMarshaledProps(oldInputsJSON)
+	newInputs, _ := getMarshaledProps(t, newInputsJSON)
+	oldInputs, oldInputsPropertyMap := getMarshaledProps(t, oldInputsJSON)
 
 	var outputsMap map[string]interface{}
 	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
@@ -245,4 +247,62 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, diffResp)
 	assert.Contains(t, diffResp.Diffs, "simple_prop")
+}
+
+func TestCreateWithSecretInput(t *testing.T) {
+	ctx := context.Background()
+
+	secretValue := "secretValue"
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+			b, _ := io.ReadAll(r.Body)
+			var reqBody map[string]interface{}
+			err := json.Unmarshal(b, &reqBody)
+			if err != nil {
+				t.Errorf("Error unmarshaling JSON request body to map: %v", err)
+				return
+			}
+
+			val := reqBody["simple_prop"]
+			assert.IsType(t, "string", val, "Expected string value for simple_prop")
+			assert.Equal(t, secretValue, val.(string))
+
+			_, err = io.WriteString(w, `{"id":"fakeId", "another_prop":"somevalue"}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+
+	p := makeTestGenericProvider(ctx, t, testServer)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]interface{}{
+		"simpleProp": resource.NewSecretProperty(&resource.Secret{Element: resource.NewStringProperty(secretValue)}),
+		"objectProp": resource.NewPropertyMapFromMap(map[string]interface{}{
+			"anotherProp": resource.NewStringProperty("plainValue"),
+		}),
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       "myResource",
+		Properties: props,
+		Type:       "fakeresource/v2:FakeResource",
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, createResp)
+	assert.Contains(t, createResp.GetProperties().AsMap(), "anotherProp")
 }

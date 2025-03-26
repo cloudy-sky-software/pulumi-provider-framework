@@ -30,7 +30,14 @@ func GetResourceState(outputs map[string]interface{}, inputs resource.PropertyMa
 // GetOldInputs returns the previously-stored inputs map from an outputs map.
 func GetOldInputs(state resource.PropertyMap) resource.PropertyMap {
 	if v, ok := state[stateKeyInputs]; ok {
-		return v.SecretValue().Element.ObjectValue()
+		if v.IsSecret() {
+			return v.SecretValue().Element.ObjectValue()
+		} else if v.IsComputed() {
+			return v.Input().Element.ObjectValue()
+		} else if v.IsOutput() {
+			return v.OutputValue().Element.ObjectValue()
+		}
+		return v.ObjectValue()
 	}
 
 	return nil

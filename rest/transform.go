@@ -19,9 +19,18 @@ func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interfa
 			apiName = overriddenName
 		}
 
-		if mv, ok := v.(map[string]interface{}); ok {
-			p.TransformBody(ctx, mv, lookupMap)
-			v = mv
+		switch val := v.(type) {
+		case map[string]interface{}:
+			p.TransformBody(ctx, val, lookupMap)
+			v = val
+		case []interface{}:
+			for i, item := range val {
+				if mapItem, ok := item.(map[string]interface{}); ok {
+					p.TransformBody(ctx, mapItem, lookupMap)
+					val[i] = mapItem
+				}
+			}
+			v = val
 		}
 
 		if apiName != sdkName {

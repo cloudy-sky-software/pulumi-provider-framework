@@ -479,7 +479,7 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*pulumirpc.CreateResponse, error) {
 	logging.V(3).Infof("Create: %s", req.GetUrn())
 
-	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
+	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 	}
@@ -495,7 +495,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	bodyBytes, err := json.Marshal(inputs.Mappable())
 	if err != nil {
-		return nil, errors.Wrap(err, "marshaling inputs")
+		return nil, errors.Wrap(err, "marshaling inputs to json")
 	}
 
 	var httpEndpointPath string

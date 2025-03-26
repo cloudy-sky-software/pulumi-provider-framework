@@ -11,6 +11,10 @@ const stateKeyInputs = "__inputs"
 // DefaultMarshalOpts is the default options used when marshaling inputs.
 var DefaultMarshalOpts = plugin.MarshalOptions{KeepUnknowns: true, KeepSecrets: true, SkipNulls: true}
 
+// HTTPRequestBodyUnmarshalOpts is the unmarshal options used for unmarshaling
+// resource inputs suitable for HTTP request bodies.
+var HTTPRequestBodyUnmarshalOpts = plugin.MarshalOptions{KeepUnknowns: true, KeepSecrets: false, SkipNulls: true}
+
 // DefaultUnmarshalOpts is the default options used during unmarshaling outputs.
 var DefaultUnmarshalOpts = plugin.MarshalOptions{KeepUnknowns: true, KeepSecrets: true, SkipNulls: true}
 

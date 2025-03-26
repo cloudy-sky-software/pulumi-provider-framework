@@ -791,12 +791,12 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 // Update updates an existing resource with new values.
 func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.Olds, state.DefaultUnmarshalOpts)
+	oldState, err := plugin.UnmarshalProperties(req.Olds, state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal olds as propertymap")
 	}
 
-	inputs, err := plugin.UnmarshalProperties(req.News, state.DefaultUnmarshalOpts)
+	inputs, err := plugin.UnmarshalProperties(req.News, state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal news as propertymap")
 	}
@@ -925,7 +925,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 // Delete tears down an existing resource with the given ID. If it fails, the resource is assumed
 // to still exist.
 func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*pbempty.Empty, error) {
-	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
+	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 	}

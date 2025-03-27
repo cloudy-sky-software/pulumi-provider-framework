@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -810,65 +809,29 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Errorf("neither resource update endpoints (update and put) are available for %s", resourceTypeToken)
 	}
 
-	var httpEndpointPath string
-	var method string
-	if crudMap.U != nil {
-		httpEndpointPath = *crudMap.U
-		method = http.MethodPatch
-	} else {
-		httpEndpointPath = *crudMap.P
-		method = http.MethodPut
-	}
-
-	bodyMap := inputs.Mappable()
-	logging.V(3).Infof("REQUEST BODY: %v", bodyMap)
-
-	hasPathParams := strings.Contains(httpEndpointPath, "{")
-	var pathParams map[string]string
-	// If the endpoint has path params, peek into the OpenAPI doc
-	// for the param names.
-	if hasPathParams {
-		var err error
-
-		pathParams, err = p.getPathParamsMap(httpEndpointPath, method, oldState)
-		if err != nil {
-			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
-		}
-
-		if bodyMap != nil {
-			logging.V(3).Infoln("Removing path params from request body")
-			p.removePathParamsFromRequestBody(bodyMap, pathParams)
-		}
-	}
-
-	var buf *bytes.Buffer
-	// Transform properties in the request body from SDK name to API name.
-	if bodyMap != nil {
-		p.TransformBody(ctx, bodyMap, p.metadata.SDKToAPINameMap)
-
-		reqBody, err := json.Marshal(bodyMap)
-		if err != nil {
-			return nil, errors.Wrap(err, "marshaling inputs")
-		}
-		buf = bytes.NewBuffer(reqBody)
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, method, p.baseURL+httpEndpointPath, buf)
+	bodyBytes, err := json.Marshal(inputs.Mappable())
 	if err != nil {
-		return nil, errors.Wrap(err, "initializing request")
+		return nil, errors.Wrap(err, "marshaling inputs")
 	}
 
-	// Set the API key in the auth header.
-	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
-	httpReq.Header.Add("Accept", jsonMimeType)
-	httpReq.Header.Add("Content-Type", jsonMimeType)
+	var httpEndpointPath string
+	var httpReq *http.Request
+	var httpReqErr error
 
-	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
-		return nil, errors.Wrap(err, "validate http request")
-	}
-
-	if err := p.replacePathParams(httpReq, pathParams); err != nil {
-		return nil, errors.Wrap(err, "replacing path params in the request url")
+	if crudMap.U != nil {
+		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
+		httpEndpointPath = *crudMap.U
+		httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		if httpReqErr != nil {
+			return nil, errors.Wrapf(httpReqErr, "creating patch request (type token: %s)", resourceTypeToken)
+		}
+	} else {
+		logging.V(3).Infof("Using PUT endpoint to update resource %s", resourceTypeToken)
+		httpEndpointPath = *crudMap.P
+		httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		if httpReqErr != nil {
+			return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
+		}
 	}
 
 	preUpdateErr := p.providerCallback.OnPreUpdate(ctx, req, httpReq)
@@ -942,36 +905,11 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		return &pbempty.Empty{}, nil
 	}
 
-	httpEndpointPath := *crudMap.D
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodDelete, p.baseURL+httpEndpointPath, nil /*no request body for DELETEs*/)
-	if err != nil {
-		return nil, errors.Wrap(err, "initializing request")
-	}
-
-	// Set the API key in the auth header.
-	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
-	httpReq.Header.Add("Accept", jsonMimeType)
-	httpReq.Header.Add("Content-Type", jsonMimeType)
-
-	hasPathParams := strings.Contains(httpEndpointPath, "{")
-	var pathParams map[string]string
-	// If the endpoint has path params, peek into the OpenAPI doc
-	// for the param names.
-	if hasPathParams {
-		var err error
-
-		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodDelete, inputs)
-		if err != nil {
-			return nil, errors.Wrapf(err, "getting path params (type token: %s)", resourceTypeToken)
-		}
-	}
-
-	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
-		return nil, errors.Wrap(err, "validate http request")
-	}
-
-	if err := p.replacePathParams(httpReq, pathParams); err != nil {
-		return nil, errors.Wrap(err, "replacing path params in the request url")
+	logging.V(3).Infof("Using DELETE endpoint to delete resource %s", resourceTypeToken)
+	var httpEndpointPath = *crudMap.D
+	var httpReq, httpReqErr = p.CreateDeleteRequest(ctx, httpEndpointPath, nil, inputs)
+	if httpReqErr != nil {
+		return nil, errors.Wrapf(httpReqErr, "creating delete request (type token: %s)", resourceTypeToken)
 	}
 
 	preErr := p.providerCallback.OnPreDelete(ctx, req, httpReq)

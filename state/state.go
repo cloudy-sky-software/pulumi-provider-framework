@@ -30,6 +30,12 @@ func GetResourceState(outputs map[string]interface{}, inputs resource.PropertyMa
 // GetOldInputs returns the previously-stored inputs map from an outputs map.
 func GetOldInputs(state resource.PropertyMap) resource.PropertyMap {
 	if v, ok := state[stateKeyInputs]; ok {
+		// If the state was unmarshaled with HTTPRequestBodyUnmarshalOpts,
+		// then secret input property would have already been converted to
+		// its plain value.
+		if !v.IsSecret() {
+			return v.ObjectValue()
+		}
 		return v.SecretValue().Element.ObjectValue()
 	}
 

@@ -791,7 +791,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 // Update updates an existing resource with new values.
 func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.Olds, state.HTTPRequestBodyUnmarshalOpts)
+	oldState, err := plugin.UnmarshalProperties(req.Olds, state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal olds as propertymap")
 	}

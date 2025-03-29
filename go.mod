@@ -1,4 +1,4 @@
-module github.com/cloudy-sky-software/pulumi-provider-framework
+module github.com/phillarson-xyz/pulumi-provider-framework
 
 go 1.23.1
 

@@ -10,8 +10,8 @@ import (
 
 	"testing"
 
-	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
-	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
+	"github.com/phillarson-xyz/pulumi-provider-framework/openapi"
+	"github.com/phillarson-xyz/pulumi-provider-framework/state"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/stretchr/testify/assert"

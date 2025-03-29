@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
+	"github.com/phillarson-xyz/pulumi-provider-framework/openapi"
 	"github.com/stretchr/testify/assert"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"

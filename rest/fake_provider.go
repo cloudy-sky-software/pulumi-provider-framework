@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
+	"github.com/phillarson-xyz/pulumi-provider-framework/callback"
 
 	"github.com/getkin/kin-openapi/openapi3"
 

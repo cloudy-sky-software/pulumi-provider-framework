@@ -12,7 +12,7 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/phillarson-xyz/pulumi-provider-framework/state"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"

@@ -25,9 +25,9 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 
-	"github.com/phillarson-xyz/pulumi-provider-framework/callback"
-	"github.com/phillarson-xyz/pulumi-provider-framework/openapi"
-	"github.com/phillarson-xyz/pulumi-provider-framework/state"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
 	providerGen "github.com/cloudy-sky-software/pulschema/pkg"
 

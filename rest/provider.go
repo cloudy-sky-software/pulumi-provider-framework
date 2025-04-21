@@ -279,13 +279,6 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 	}, nil
 }
 
-// StreamInvoke dynamically executes a built-in function in the provider. The result is streamed
-// back as a series of messages.
-func (p *Provider) StreamInvoke(req *pulumirpc.InvokeRequest, _ pulumirpc.ResourceProvider_StreamInvokeServer) error {
-	tok := req.GetTok()
-	return fmt.Errorf("unknown StreamInvoke token '%s'", tok)
-}
-
 // Check validates that the given property bag is valid for a resource of the given type and returns
 // the inputs that should be passed to successive calls to Diff, Create, or Update for this
 // resource. As a rule, the provider inputs returned by a call to Check should preserve the original

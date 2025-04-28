@@ -337,7 +337,7 @@ func (p *Provider) Check(_ context.Context, req *pulumirpc.CheckRequest) (*pulum
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
 func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.GetOlds(), state.DefaultUnmarshalOpts)
+	oldState, err := plugin.UnmarshalProperties(req.GetOlds(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +353,7 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
 
-	news, err := plugin.UnmarshalProperties(req.GetNews(), state.DefaultUnmarshalOpts)
+	news, err := plugin.UnmarshalProperties(req.GetNews(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, err
 	}

@@ -862,16 +862,27 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Errorf("neither resource update endpoints (update and put) are available for %s", resourceTypeToken)
 	}
 
-	bodyBytes, err := json.Marshal(inputs.Mappable())
-	if err != nil {
-		return nil, errors.Wrap(err, "marshaling inputs")
-	}
-
 	var httpEndpointPath string
 	var httpReq *http.Request
 	var httpReqErr error
 
 	if crudMap.U != nil {
+		// TODO: Only send what was updated.
+		oldInputs, _ := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+		diff := oldInputs.Diff(inputs)
+		inputsMap := inputs.Mappable()
+		patchReqBody := make(map[string]any)
+		for _, prop := range diff.ChangedKeys() {
+			propKey := string(prop)
+			val := inputsMap[propKey]
+			patchReqBody[propKey] = val
+		}
+
+		bodyBytes, err := json.Marshal(patchReqBody)
+		if err != nil {
+			return nil, errors.Wrap(err, "marshaling inputs")
+		}
+
 		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.U
 		httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
@@ -879,6 +890,11 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			return nil, errors.Wrapf(httpReqErr, "creating patch request (type token: %s)", resourceTypeToken)
 		}
 	} else {
+		bodyBytes, err := json.Marshal(inputs.Mappable())
+		if err != nil {
+			return nil, errors.Wrap(err, "marshaling inputs")
+		}
+
 		logging.V(3).Infof("Using PUT endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.P
 		httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)

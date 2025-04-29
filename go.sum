@@ -112,6 +112,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20250417170822-2be566d219c5 h1:l
 github.com/cloudy-sky-software/pulschema v0.0.0-20250417170822-2be566d219c5/go.mod h1:PQgANt4xm94Qdbcxnp98cXPWgyI6Z/z4t+SkLLH+/k8=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250427225520-a25fd4123991 h1:CbbqnG8mdbYKoWX6PgxPNx2jKSnZJ1XHiVlxdiQO7GA=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250427225520-a25fd4123991/go.mod h1:VGpLSgsZZ8ALw7Lhv8K9gjje4G2LhJNJFqXQ5Xo0Nzw=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250429175632-48b4caf53696 h1:af4k0NJHspIHF8oVZ/C65pnHBQQSh6D1r77jThlDDn8=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250429175632-48b4caf53696/go.mod h1:EVpZwtF62LOguA6B/EsQb2wWwug0YzIpp9rvEkTP4N0=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
@@ -169,6 +171,8 @@ github.com/golang-jwt/jwt/v5 v5.2.1 h1:OuVbFODueb089Lh128TAcimifWaLhJwVflnrgM17w
 github.com/golang-jwt/jwt/v5 v5.2.1/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
 github.com/golang/glog v1.2.4 h1:CNNw5U8lSiiBk7druxtSHHTsRWcxKoac6kZKm2peBBc=
 github.com/golang/glog v1.2.4/go.mod h1:6AhwSGph0fcJtXVM/PEHPqZlFeoLxhs7/t5UDAwmO+w=
+github.com/golang/glog v1.2.5 h1:DrW6hGnjIhtvhOIiAKT6Psh/Kd/ldepEa81DKeiRJ5I=
+github.com/golang/glog v1.2.5/go.mod h1:6AhwSGph0fcJtXVM/PEHPqZlFeoLxhs7/t5UDAwmO+w=
 github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 h1:f+oWsMOmNPc8JmEHVZIycC7hBoQxHH9pNKQORJNozsQ=
 github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8/go.mod h1:wcDNUvekVysuuOpQKo3191zZyTpiI6se1N1ULghS0sw=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=

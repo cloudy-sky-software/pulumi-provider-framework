@@ -255,6 +255,88 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	assert.Contains(t, diffResp.Diffs, "simpleProp")
 }
 
+func TestUpdateForUpdateableResource(t *testing.T) {
+	ctx := context.Background()
+
+	id := "fake-id"
+
+	oldInputsJSON := `{
+		"object_prop": {
+			"another_prop": "a value"
+		}
+	}`
+
+	newInputsJSON := `{
+		"object_prop": {
+			"another_prop": "a value"
+		},
+		"simple_prop": "new value"
+	}`
+	outputsJSON := fmt.Sprintf(`{"id":"%s", "another_prop":"output value"}`, id)
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v2/fakeresource/{resourceId}" && r.Method == "PATCH" {
+			b, _ := io.ReadAll(r.Body)
+			var reqBody map[string]interface{}
+			err := json.Unmarshal(b, &reqBody)
+			if err != nil {
+				t.Errorf("Error unmarshaling JSON request body to map: %v", err)
+				return
+			}
+
+			val := reqBody["simple_prop"]
+			assert.IsType(t, "string", val, "Expected string value for simple_prop")
+			assert.Equal(t, "new value", val.(string))
+
+			_, ok := reqBody["object_prop"]
+			assert.False(t, ok, "object_prop should not be in the request body since it was not updated")
+
+			_, err = io.WriteString(w, outputsJSON)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+
+	p := makeTestGenericProvider(ctx, t, testServer)
+
+	newInputs, _ := getMarshaledProps(t, newInputsJSON)
+	oldInputs, oldInputsPropertyMap := getMarshaledProps(t, oldInputsJSON)
+
+	var outputsMap map[string]interface{}
+	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
+		t.Fatalf("Failed to unmarshal test payload: %v", err)
+	}
+
+	expectedOutputState := state.GetResourceState(outputsMap, oldInputsPropertyMap)
+	serializedOutputState, err := plugin.MarshalProperties(expectedOutputState, state.DefaultMarshalOpts)
+	if err != nil {
+		t.Fatalf("Marshaling the output properties map: %v", err)
+	}
+
+	updateResp, err := p.Update(ctx, &pulumirpc.UpdateRequest{
+		Id:        id,
+		Olds:      serializedOutputState,
+		News:      newInputs,
+		OldInputs: oldInputs,
+		Type:      "generic:fakeresource/v2:FakeResource",
+		Name:      "myResource",
+		Urn:       "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, updateResp)
+}
+
 func TestCreateWithSecretInput(t *testing.T) {
 	ctx := context.Background()
 

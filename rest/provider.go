@@ -867,7 +867,6 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	var httpReqErr error
 
 	if crudMap.U != nil {
-		// TODO: Only send what was updated.
 		oldInputs, _ := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
 		diff := oldInputs.Diff(inputs)
 		inputsMap := inputs.Mappable()

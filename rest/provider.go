@@ -970,6 +970,10 @@ func (p *Provider) GetBaseURL() string {
 	return p.baseURL
 }
 
+func (p *Provider) SetBaseURL(baseURL string) {
+	p.baseURL = baseURL
+}
+
 func (p *Provider) GetHTTPClient() *http.Client {
 	return p.httpClient
 }

@@ -335,11 +335,19 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 		// we have the old inputs, if we are dealing with the state
 		// of an existing resource.
 		if !ok {
+			logging.V(3).Infof("Global Params Map: %v, sdkName: %s", p.globalPathParams, sdkName)
 			// Try to see if a top-level property has the required prop perhaps.
 			_, topLevelPropName, ok := tryPluckingProp(sdkName, properties.Mappable())
 			if ok {
 				topLevelProp := properties[resource.PropertyKey(topLevelPropName)]
 				property = topLevelProp.ObjectValue()[resource.PropertyKey(sdkName)]
+			} else if globalPathParam, ok := p.globalPathParams[sdkName]; ok {
+				// Is the property a global path param set in the provider?
+				// We look for this after checking the resource state, so it can be overridden at a resource level
+				logging.V(3).Infof("Path param %q is a global path param with value %q", sdkName, globalPathParam)
+				property = resource.PropertyValue{
+					V: globalPathParam,
+				}
 			} else {
 				if oldInputs == nil {
 					return nil, errors.Errorf("did not find value for path param %s in output props (old inputs was nil)", paramName)

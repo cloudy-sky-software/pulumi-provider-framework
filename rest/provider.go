@@ -757,6 +757,11 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 			dv = &val
 		}
 		openapi.FilterReadOnlyProperties(ctx, requestBodySchema, inputs, dv)
+
+		// Transform the inputs to match the API to SDK name map, which is assumed in later operations
+		var inputsMappable = inputs.Mappable()
+		p.TransformBody(ctx, inputsMappable, p.metadata.APIToSDKNameMap)
+		inputs = resource.NewPropertyMapFromMap(inputsMappable)
 	} else {
 		// Take the values from outputs and apply them to the inputs
 		// so that the checkpoint is in-sync with the state in the

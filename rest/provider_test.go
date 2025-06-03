@@ -212,18 +212,18 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	ctx := context.Background()
 
 	oldInputsJSON := `{
-		"object_prop": {
-			"another_prop": "a value"
+		"objectProp": {
+			"anotherProp": "a value"
 		}
 	}`
 
 	newInputsJSON := `{
-		"object_prop": {
-			"another_prop": "a value"
+		"objectProp": {
+			"anotherProp": "a value"
 		},
-		"simple_prop": "new value"
+		"simpleProp": "new value"
 	}`
-	outputsJSON := `{"another_prop":"output value"}`
+	outputsJSON := `{"anotherProp":"output value"}`
 
 	p := makeTestGenericProvider(ctx, t, nil, nil)
 
@@ -252,7 +252,7 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, diffResp)
-	assert.Contains(t, diffResp.Diffs, "simple_prop")
+	assert.Contains(t, diffResp.Diffs, "simpleProp")
 }
 
 func TestCreateWithSecretInput(t *testing.T) {

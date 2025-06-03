@@ -786,6 +786,12 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 			dv = &val
 		}
 		openapi.FilterReadOnlyProperties(ctx, requestBodySchema, newState, dv)
+
+		// Transform the newState to match the API to SDK name map, which the inputs being diff'd with certainly will be
+		var newStateMappable = newState.Mappable()
+		p.TransformBody(ctx, newStateMappable, p.metadata.APIToSDKNameMap)
+		newState = resource.NewPropertyMapFromMap(newStateMappable)
+
 		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
 	}
 

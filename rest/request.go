@@ -413,6 +413,8 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 	replaces := make([]string, 0)
 	diffs := make([]string, 0)
 
+	apiNameLookupMap := p.metadata.SDKToAPINameMap
+
 	var properties openapi3.Schemas
 	if len(schemaRef.Value.Properties) > 0 {
 		properties = schemaRef.Value.Properties
@@ -429,7 +431,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the added property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[prop]; !ok {
+		if _, ok := properties[apiNameLookupMap[prop]]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)
@@ -440,7 +442,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the updated property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[prop]; !ok {
+		if _, ok := properties[apiNameLookupMap[prop]]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)
@@ -451,7 +453,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the deleted property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[prop]; !ok {
+		if _, ok := properties[apiNameLookupMap[prop]]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)

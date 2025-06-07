@@ -431,7 +431,8 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the added property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[apiNameLookupMap[prop]]; !ok {
+
+		if _, ok := properties[GetOrKey(apiNameLookupMap, prop)]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)
@@ -442,7 +443,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the updated property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[apiNameLookupMap[prop]]; !ok {
+		if _, ok := properties[GetOrKey(apiNameLookupMap, prop)]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)
@@ -453,7 +454,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the deleted property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[apiNameLookupMap[prop]]; !ok {
+		if _, ok := properties[GetOrKey(apiNameLookupMap, prop)]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)

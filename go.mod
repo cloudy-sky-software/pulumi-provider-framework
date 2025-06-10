@@ -20,7 +20,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
-	github.com/cloudflare/circl v1.6.0 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/djherbis/times v1.6.0 // indirect
 	github.com/edsrzf/mmap-go v1.2.0 // indirect

@@ -104,3 +104,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/response_object_type"
+
+  /v2/{baseId}/fakeresource:
+    post:
+      operationId: create_base_fake_resource
+      parameters:
+        - name: baseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/request_object_type"
+      responses:
+        "200":
+          description: The response for creating a base fake resource.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/response_object_type"

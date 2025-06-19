@@ -37,7 +37,7 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 	updatedOpenAPIDocBytes, _ := yaml.Marshal(updatedOpenAPIDoc)
 	metadataBytes, _ := json.Marshal(metadata)
 
-	p, err := MakeProvider(nil, "", "", schemaJSON, updatedOpenAPIDocBytes, metadataBytes, fakeProvider)
+	p, err := MakeProvider(nil, "generic", "", schemaJSON, updatedOpenAPIDocBytes, metadataBytes, fakeProvider)
 
 	if err != nil {
 		t.Fatalf("Could not create a provider instance: %v", err)

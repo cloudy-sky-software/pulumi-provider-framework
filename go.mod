@@ -5,12 +5,12 @@ go 1.23.1
 toolchain go1.24.4
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20250610012945-a697fc098f03
+	github.com/cloudy-sky-software/pulschema v0.0.0-20250620154404-3a90b748f6a0
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.175.0
-	github.com/pulumi/pulumi/sdk/v3 v3.175.0
+	github.com/pulumi/pulumi/pkg/v3 v3.178.0
+	github.com/pulumi/pulumi/sdk/v3 v3.178.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.26.0
 	google.golang.org/grpc v1.73.0
@@ -20,7 +20,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
-	github.com/cloudflare/circl v1.6.0 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/djherbis/times v1.6.0 // indirect
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
@@ -103,7 +103,7 @@ require (
 	github.com/pgavlin/fx v0.1.6 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
-	github.com/pulumi/esc v0.14.2 // indirect
+	github.com/pulumi/esc v0.14.3 // indirect
 	github.com/pulumi/inflector v0.2.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
@@ -118,5 +118,5 @@ require (
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250519155744-55703ea1f237 // indirect
 )

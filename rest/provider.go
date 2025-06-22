@@ -169,7 +169,7 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 	// Override the API host, if required. Intended for providers where the server names in the
 	// openapi spec will not match the API host that the provider needs to interact with during a deployment.
 	// To set via pulumi config, this will be "providername:apiHost"
-	// Otherwise, this can be set via the API_HOST env var
+	// Otherwise, this can be set via the PROVIDERNAME_API_HOST env var
 	apiHost, ok := req.GetVariables()[fmt.Sprintf("%s:config:apiHost", p.name)]
 	if !ok {
 		// Check if it's set in the {p.name}_API_HOST env var.

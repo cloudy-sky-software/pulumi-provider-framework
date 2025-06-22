@@ -7,6 +7,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -162,6 +164,33 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 	resp, err := p.providerCallback.OnConfigure(ctx, req)
 	if err != nil || resp != nil {
 		return resp, err
+	}
+
+	// Override the API host, if required. Intended for providers where the server names in the
+	// openapi spec will not match the API host that the provider needs to interact with during a deployment.
+	// To set via pulumi config, this will be "providername:apiHost"
+	// Otherwise, this can be set via the PROVIDERNAME_API_HOST env var
+	apiHost, ok := req.GetVariables()[fmt.Sprintf("%s:config:apiHost", p.name)]
+	if !ok {
+		// Check if it's set in the {p.name}_API_HOST env var.
+		apiHostEnvVar := strings.ToUpper(strings.ReplaceAll(fmt.Sprintf("%s_API_HOST", p.name), "-", "_"))
+		v := os.Getenv(apiHostEnvVar)
+		if v != "" {
+			apiHost = v
+		}
+	}
+
+	if apiHost != "" {
+		logging.V(3).Infof("ApiHost overridden to %s", apiHost)
+		baseURL, err := url.Parse(p.baseURL)
+		if err != nil {
+			return nil, err
+		}
+
+		baseURL.Host = apiHost
+		p.baseURL = baseURL.String()
+
+		logging.V(3).Infof("Full API URL now %s", p.baseURL)
 	}
 
 	return &pulumirpc.ConfigureResponse{

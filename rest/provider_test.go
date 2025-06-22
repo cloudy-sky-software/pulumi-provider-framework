@@ -4,10 +4,10 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
-
 	"testing"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
@@ -305,4 +305,56 @@ func TestCreateWithSecretInput(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, createResp)
 	assert.Contains(t, createResp.GetProperties().AsMap(), "anotherProp")
+}
+
+func TestApiHostOverride(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+	p := makeTestGenericProvider(ctx, t, testServer)
+
+	const expectedHost = "10.1.1.1"
+	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{
+		Variables: map[string]string{"generic:config:apiHost": expectedHost},
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
+}
+
+func TestApiHostOverrideViaEnvVar(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+	p := makeTestGenericProvider(ctx, t, testServer)
+
+	const expectedHost = "10.1.1.1"
+	t.Setenv("GENERIC_API_HOST", expectedHost)
+	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
+}
+
+func TestNoApiHostOverride(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+	p := makeTestGenericProvider(ctx, t, testServer)
+
+	expectedBaseURL := p.(*Provider).GetBaseURL()
+	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{})
+
+	assert.Nil(t, err)
+	assert.Equal(t, expectedBaseURL, p.(*Provider).GetBaseURL())
 }

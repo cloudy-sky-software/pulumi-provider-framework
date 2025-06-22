@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-
 	"testing"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
@@ -322,6 +321,23 @@ func TestApiHostOverride(t *testing.T) {
 	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{
 		Variables: map[string]string{"generic:config:apiHost": expectedHost},
 	})
+	assert.Nil(t, err)
+	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
+}
+
+func TestApiHostOverrideViaEnvVar(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+	p := makeTestGenericProvider(ctx, t, testServer)
+
+	const expectedHost = "10.1.1.1"
+	t.Setenv("GENERIC_API_HOST", expectedHost)
+	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{})
 	assert.Nil(t, err)
 	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
 }

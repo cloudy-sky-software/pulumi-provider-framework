@@ -172,8 +172,9 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 	// Otherwise, this can be set via the API_HOST env var
 	apiHost, ok := req.GetVariables()[fmt.Sprintf("%s:config:apiHost", p.name)]
 	if !ok {
-		// Check if it's set in the API_HOST env var.
-		v := os.Getenv("API_HOST")
+		// Check if it's set in the {p.name}_API_HOST env var.
+		apiHostEnvVar := strings.ToUpper(strings.ReplaceAll(fmt.Sprintf("%s_API_HOST", p.name), "-", "_"))
+		v := os.Getenv(apiHostEnvVar)
 		if v != "" {
 			apiHost = v
 		}

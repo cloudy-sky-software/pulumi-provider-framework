@@ -182,13 +182,13 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 
 	if apiHost != "" {
 		logging.V(3).Infof("ApiHost overridden to %s", apiHost)
-		baseUrl, err := url.Parse(p.baseURL)
+		baseURL, err := url.Parse(p.baseURL)
 		if err != nil {
 			return nil, err
 		}
 
-		baseUrl.Host = apiHost
-		p.baseURL = baseUrl.String()
+		baseURL.Host = apiHost
+		p.baseURL = baseURL.String()
 
 		logging.V(3).Infof("Full API URL now %s", p.baseURL)
 	}

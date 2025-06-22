@@ -310,7 +310,7 @@ func TestCreateWithSecretInput(t *testing.T) {
 func TestApiHostOverride(t *testing.T) {
 	ctx := context.Background()
 
-	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {}))
 	testServer.EnableHTTP2 = true
 	testServer.Start()
 
@@ -328,7 +328,7 @@ func TestApiHostOverride(t *testing.T) {
 func TestApiHostOverrideViaEnvVar(t *testing.T) {
 	ctx := context.Background()
 
-	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {}))
 	testServer.EnableHTTP2 = true
 	testServer.Start()
 
@@ -345,7 +345,7 @@ func TestApiHostOverrideViaEnvVar(t *testing.T) {
 func TestNoApiHostOverride(t *testing.T) {
 	ctx := context.Background()
 
-	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {}))
 	testServer.EnableHTTP2 = true
 	testServer.Start()
 

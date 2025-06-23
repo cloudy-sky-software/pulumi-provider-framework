@@ -54,7 +54,7 @@ func TestProviderGlobalPathParams(t *testing.T) {
 	ctx := context.Background()
 	testCreateJSONPayload := `{}`
 
-	expectedBaseId := "fake-base-id"
+	expectedBaseID := "fake-base-id"
 
 	var inputs map[string]interface{}
 	if err := json.Unmarshal([]byte(testCreateJSONPayload), &inputs); err != nil {
@@ -62,12 +62,12 @@ func TestProviderGlobalPathParams(t *testing.T) {
 	}
 
 	p := makeTestGenericProvider(ctx, t, nil)
-	p.(*Provider).GetGlobalPathParams()["baseId"] = expectedBaseId
+	p.(*Provider).GetGlobalPathParams()["baseId"] = expectedBaseID
 
 	httpReq, err := p.(Request).CreatePostRequest(ctx, "/v2/{baseId}/fakeresource", []byte(testCreateJSONPayload), resource.NewPropertyMapFromMap(inputs))
 	assert.Nil(t, err)
 	assert.NotNil(t, httpReq)
-	assert.Equal(t, httpReq.URL.Path, "/v2/"+expectedBaseId+"/fakeresource")
+	assert.Equal(t, httpReq.URL.Path, "/v2/"+expectedBaseID+"/fakeresource")
 }
 
 func TestLastPathParamIsResourceId(t *testing.T) {

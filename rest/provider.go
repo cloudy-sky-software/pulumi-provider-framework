@@ -120,7 +120,7 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 		httpClient: httpClient,
 
 		providerCallback: callback,
-		globalPathParams: make(map[string]string), // initially an empty set
+		globalPathParams: make(map[string]string),
 	}, nil
 }
 

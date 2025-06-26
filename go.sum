@@ -138,6 +138,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20250620154404-3a90b748f6a0 h1:c
 github.com/cloudy-sky-software/pulschema v0.0.0-20250620154404-3a90b748f6a0/go.mod h1:DARM5T2hy42fL6xFhmfLHNyfFqW/u/Tvvf4zeBtmKcE=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250623051424-0930fd125443 h1:OVm0CR0b6Fadpw4h2HHVkvOqpSnZA8p2emsnYOFsoao=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250623051424-0930fd125443/go.mod h1:DARM5T2hy42fL6xFhmfLHNyfFqW/u/Tvvf4zeBtmKcE=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250626162444-a8c66b738ac5 h1:B9IBtfjxoWkMDRD4QmxduDp4vGCfH9TGKgR89LnrZ0w=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250626162444-a8c66b738ac5/go.mod h1:FkwKCJAE5S73ohBZalpGOMVrTbwq78cLGX3yl/JlNpM=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
@@ -372,6 +374,8 @@ github.com/pulumi/pulumi/pkg/v3 v3.175.0 h1:MsL2cnpGWivS/DLZ7MbJr0zMNg4P+pUprCEX
 github.com/pulumi/pulumi/pkg/v3 v3.175.0/go.mod h1:neGNOTNMYSGUrh/L8kiAgowHRoB/kMmmutPo8WcLzM4=
 github.com/pulumi/pulumi/pkg/v3 v3.178.0 h1:A0IG0OEextrLhVbW9ZpuZU0uILvupJSxWsGjXzeJoeg=
 github.com/pulumi/pulumi/pkg/v3 v3.178.0/go.mod h1:RkrGrl/kMr1JYsJlfrKCtCViwhMcwFfrYNTRQw4RamM=
+github.com/pulumi/pulumi/pkg/v3 v3.180.0 h1:HnFIWMn7C0NqCLearY1ZT60HXgzOGUVTEZG16Fi6eqs=
+github.com/pulumi/pulumi/pkg/v3 v3.180.0/go.mod h1:j1jlY0Tm5jb7bxIhB2+fxJaY40so1RCR7iCEjqn4PBQ=
 github.com/pulumi/pulumi/sdk/v3 v3.159.0 h1:pfBVSqfRNM7X1RmxJzjLSsVQe6nv9cAdM207K5sE4Ck=
 github.com/pulumi/pulumi/sdk/v3 v3.159.0/go.mod h1:YEbbl0N7eVsgfsL7h5215dDf8GBSe4AnRon7Ya/KIVc=
 github.com/pulumi/pulumi/sdk/v3 v3.160.0 h1:OxeATnIEqWyu3KpTeLUmyJdZaSEE6yX7ECvfGhByb9w=
@@ -396,6 +400,8 @@ github.com/pulumi/pulumi/sdk/v3 v3.175.0 h1:vANFQOpWjJFCuVBim7AfOM3hHnNHgjJ8NlVw
 github.com/pulumi/pulumi/sdk/v3 v3.175.0/go.mod h1:AD2BrIxFG4wdCLCFODrOasXhURwrD/8hHrwBcjzyU9Y=
 github.com/pulumi/pulumi/sdk/v3 v3.178.0 h1:24jNMvy6cMshwmW88Jm3k8ON2M4d0U2ocemQRcQElXQ=
 github.com/pulumi/pulumi/sdk/v3 v3.178.0/go.mod h1:XA+4kQ4ja6b5miOG/l5zp3xdqoA4NoPpmp2SZ37JK40=
+github.com/pulumi/pulumi/sdk/v3 v3.180.0 h1:mBiV5UVmXSSwqxSqk1vsv3doy3wLSdpkCLAOdX8+Cc4=
+github.com/pulumi/pulumi/sdk/v3 v3.180.0/go.mod h1:YS7uQ+eoIV/Fco804Upv3jmz5pwo/MkLYmbGH3VgA9c=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
@@ -491,6 +497,8 @@ golang.org/x/crypto v0.37.0 h1:kJNSjF/Xp7kU0iB2Z+9viTPMW4EqqsrywMXLJOOsXSE=
 golang.org/x/crypto v0.37.0/go.mod h1:vg+k43peMZ0pUMhYmVAWysMK35e6ioLh3wB8ZCAfbVc=
 golang.org/x/crypto v0.38.0 h1:jt+WWG8IZlBnVbomuhg2Mdq0+BBQaHbtqHEFEigjUV8=
 golang.org/x/crypto v0.38.0/go.mod h1:MvrbAqul58NNYPKnOra203SB9vpuZW0e+RRZV+Ggqjw=
+golang.org/x/crypto v0.39.0 h1:SHs+kF4LP+f+p14esP5jAoDpHU8Gu/v9lFRK6IT5imM=
+golang.org/x/crypto v0.39.0/go.mod h1:L+Xg3Wf6HoL4Bn4238Z6ft6KfEpN0tJGo53AAPC632U=
 golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 h1:nDVHiLt8aIbd/VzvPWN6kSOPE7+F/fNFDSXLVYkE/Iw=
 golang.org/x/exp v0.0.0-20250305212735-054e65f0b394/go.mod h1:sIifuuw/Yco/y6yb6+bDNfyeQ/MdPUy/hKEMYQV17cM=
 golang.org/x/lint v0.0.0-20200302205851-738671d3881b/go.mod h1:3xt1FjdF8hUf6vQPIChWIBhFzV8gjjsPE/fR3IyQdNY=

@@ -5,12 +5,12 @@ go 1.23.1
 toolchain go1.24.4
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20250623051424-0930fd125443
+	github.com/cloudy-sky-software/pulschema v0.0.0-20250626162444-a8c66b738ac5
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.178.0
-	github.com/pulumi/pulumi/sdk/v3 v3.178.0
+	github.com/pulumi/pulumi/pkg/v3 v3.180.0
+	github.com/pulumi/pulumi/sdk/v3 v3.180.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.26.0
 	google.golang.org/grpc v1.73.0
@@ -113,7 +113,7 @@ require (
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect

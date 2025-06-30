@@ -34,7 +34,7 @@ func TestRemovePathParamsFromRequestBody(t *testing.T) {
 		t.Fatalf("Failed to unmarshal test payload: %v", err)
 	}
 
-	p := makeTestTailscaleProvider(ctx, t, nil)
+	p := makeTestTailscaleProvider(ctx, t, nil, nil)
 	httpReq, err := p.(Request).CreatePostRequest(ctx, "/tailnet/{tailnet}/keys", []byte(testCreateJSONPayload), resource.NewPropertyMapFromMap(inputs))
 	assert.Nil(t, err)
 	assert.NotNil(t, httpReq)
@@ -61,8 +61,11 @@ func TestProviderGlobalPathParams(t *testing.T) {
 		t.Fatalf("Failed to unmarshal test payload: %v", err)
 	}
 
-	p := makeTestGenericProvider(ctx, t, nil)
-	p.(*Provider).GetGlobalPathParams()["baseId"] = expectedBaseID
+	p := makeTestGenericProvider(ctx, t, nil, &fakeProviderCallback{
+		globalPathParams: map[string]string{
+			"baseId": expectedBaseID,
+		},
+	})
 
 	httpReq, err := p.(Request).CreatePostRequest(ctx, "/v2/{baseId}/fakeresource", []byte(testCreateJSONPayload), resource.NewPropertyMapFromMap(inputs))
 	assert.Nil(t, err)
@@ -73,7 +76,7 @@ func TestProviderGlobalPathParams(t *testing.T) {
 func TestLastPathParamIsResourceId(t *testing.T) {
 	ctx := context.Background()
 
-	p := makeTestGenericProvider(ctx, t, nil)
+	p := makeTestGenericProvider(ctx, t, nil, nil)
 
 	properties := map[string]interface{}{
 		"id": "fake-id",

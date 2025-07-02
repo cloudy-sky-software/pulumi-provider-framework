@@ -34,7 +34,7 @@ func TestRemovePathParamsFromRequestBody(t *testing.T) {
 		t.Fatalf("Failed to unmarshal test payload: %v", err)
 	}
 
-	p := makeTestTailscaleProvider(ctx, t, nil)
+	p := makeTestTailscaleProvider(ctx, t, nil, nil)
 	httpReq, err := p.(Request).CreatePostRequest(ctx, "/tailnet/{tailnet}/keys", []byte(testCreateJSONPayload), resource.NewPropertyMapFromMap(inputs))
 	assert.Nil(t, err)
 	assert.NotNil(t, httpReq)
@@ -50,10 +50,33 @@ func TestRemovePathParamsFromRequestBody(t *testing.T) {
 	assert.False(t, ok, "Expected tailnet to be removed from the HTTP request body since it is a path param.")
 }
 
+func TestProviderGlobalPathParams(t *testing.T) {
+	ctx := context.Background()
+	testCreateJSONPayload := `{}`
+
+	expectedBaseID := "fake-base-id"
+
+	var inputs map[string]interface{}
+	if err := json.Unmarshal([]byte(testCreateJSONPayload), &inputs); err != nil {
+		t.Fatalf("Failed to unmarshal test payload: %v", err)
+	}
+
+	p := makeTestGenericProvider(ctx, t, nil, &fakeProviderCallback{
+		globalPathParams: map[string]string{
+			"baseId": expectedBaseID,
+		},
+	})
+
+	httpReq, err := p.(Request).CreatePostRequest(ctx, "/v2/{baseId}/fakeresource", []byte(testCreateJSONPayload), resource.NewPropertyMapFromMap(inputs))
+	assert.Nil(t, err)
+	assert.NotNil(t, httpReq)
+	assert.Equal(t, httpReq.URL.Path, "/v2/"+expectedBaseID+"/fakeresource")
+}
+
 func TestLastPathParamIsResourceId(t *testing.T) {
 	ctx := context.Background()
 
-	p := makeTestGenericProvider(ctx, t, nil)
+	p := makeTestGenericProvider(ctx, t, nil, nil)
 
 	properties := map[string]interface{}{
 		"id": "fake-id",

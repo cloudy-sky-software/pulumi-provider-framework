@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"slices"
 	"strings"
@@ -193,16 +192,14 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 	}
 
 	if apiHost != "" {
-		logging.V(3).Infof("ApiHost overridden to %s", apiHost)
-		baseURL, err := url.Parse(p.baseURL)
-		if err != nil {
-			return nil, err
+		if !strings.HasPrefix(p.baseURL, "/") {
+			// The provider is already relative
+			return nil, errors.Errorf("cannot override ApiHost when Open API server URL is not a base path e.g. /api/v1 - currently set to %s", p.baseURL)
+		} else {
+			logging.V(3).Infof("ApiHost overridden to %s", apiHost)
+			p.baseURL = fmt.Sprintf("https://%s%s", apiHost, p.baseURL)
+			logging.V(3).Infof("Full API URL now %s", p.baseURL)
 		}
-
-		baseURL.Host = apiHost
-		p.baseURL = baseURL.String()
-
-		logging.V(3).Infof("Full API URL now %s", p.baseURL)
 	}
 
 	return &pulumirpc.ConfigureResponse{

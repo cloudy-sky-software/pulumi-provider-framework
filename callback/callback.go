@@ -2,7 +2,6 @@ package callback
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -73,7 +72,9 @@ type ProviderCallback interface {
 type UnimplementedProviderCallback struct{}
 
 func (UnimplementedProviderCallback) OnConfigure(context.Context, *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
-	return nil, errors.New("OnConfigure not implemented")
+	return &pulumirpc.ConfigureResponse{
+		AcceptSecrets: true,
+	}, nil
 }
 
 func (UnimplementedProviderCallback) GetGlobalPathParams(context.Context, *pulumirpc.ConfigureRequest) (map[string]string, error) {
@@ -81,45 +82,45 @@ func (UnimplementedProviderCallback) GetGlobalPathParams(context.Context, *pulum
 }
 
 func (UnimplementedProviderCallback) OnPreInvoke(context.Context, *pulumirpc.InvokeRequest, *http.Request) error {
-	return errors.New("OnPreInvoke not implemented")
+	return nil
 }
 
-func (UnimplementedProviderCallback) OnPostInvoke(context.Context, *pulumirpc.InvokeRequest, interface{}) (map[string]interface{}, error) {
-	return nil, errors.New("OnPostInvoke not implemented")
+func (UnimplementedProviderCallback) OnPostInvoke(_ context.Context, _ *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
 }
 
 func (UnimplementedProviderCallback) OnDiff(context.Context, *pulumirpc.DiffRequest, string, *resource.ObjectDiff, *openapi3.MediaType) (*pulumirpc.DiffResponse, error) {
-	return nil, errors.New("OnDiff not implemented")
+	return nil, nil
 }
 
 func (UnimplementedProviderCallback) OnPreCreate(context.Context, *pulumirpc.CreateRequest, *http.Request) error {
-	return errors.New("OnPreCreate not implemented")
+	return nil
 }
 
-func (UnimplementedProviderCallback) OnPostCreate(context.Context, *pulumirpc.CreateRequest, interface{}) (map[string]interface{}, error) {
-	return nil, errors.New("OnPostCreate not implemented")
+func (UnimplementedProviderCallback) OnPostCreate(_ context.Context, _ *pulumirpc.CreateRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
 }
 
 func (UnimplementedProviderCallback) OnPreRead(context.Context, *pulumirpc.ReadRequest, *http.Request) error {
-	return errors.New("OnPreRead not implemented")
+	return nil
 }
 
-func (UnimplementedProviderCallback) OnPostRead(context.Context, *pulumirpc.ReadRequest, interface{}) (map[string]interface{}, error) {
-	return nil, errors.New("OnPostRead not implemented")
+func (UnimplementedProviderCallback) OnPostRead(_ context.Context, _ *pulumirpc.ReadRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
 }
 
 func (UnimplementedProviderCallback) OnPreUpdate(context.Context, *pulumirpc.UpdateRequest, *http.Request) error {
-	return errors.New("OnPreUpdate not implemented")
+	return nil
 }
 
-func (UnimplementedProviderCallback) OnPostUpdate(context.Context, *pulumirpc.UpdateRequest, http.Request, interface{}) (map[string]interface{}, error) {
-	return nil, errors.New("OnPostUpdate not implemented")
+func (UnimplementedProviderCallback) OnPostUpdate(_ context.Context, _ *pulumirpc.UpdateRequest, _ http.Request, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
 }
 
 func (UnimplementedProviderCallback) OnPreDelete(context.Context, *pulumirpc.DeleteRequest, *http.Request) error {
-	return errors.New("OnPreDelete not implemented")
+	return nil
 }
 
 func (UnimplementedProviderCallback) OnPostDelete(context.Context, *pulumirpc.DeleteRequest) error {
-	return errors.New("OnPostDelete not implemented")
+	return nil
 }

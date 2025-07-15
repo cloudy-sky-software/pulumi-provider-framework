@@ -15,6 +15,7 @@ import (
 )
 
 type fakeProviderCallback struct {
+	globalPathParams map[string]string
 }
 
 var _ callback.ProviderCallback = &fakeProviderCallback{}
@@ -69,4 +70,8 @@ func (p *fakeProviderCallback) OnPreDelete(_ context.Context, _ *pulumirpc.Delet
 
 func (p *fakeProviderCallback) OnPostDelete(_ context.Context, _ *pulumirpc.DeleteRequest) error {
 	return nil
+}
+
+func (p *fakeProviderCallback) GetGlobalPathParams(_ context.Context, _ *pulumirpc.ConfigureRequest) (map[string]string, error) {
+	return p.globalPathParams, nil
 }

@@ -19,6 +19,10 @@ type ProviderCallback interface {
 	// Return a non-nil response to override the default behavior.
 	OnConfigure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error)
 
+	// GetGlobalPathParams returns a map of path parameters used across all (or most) requests
+	// This method is called during the Configure phase, but after the OnConfigure hook.
+	GetGlobalPathParams(ctx context.Context, req *pulumirpc.ConfigureRequest) (map[string]string, error)
+
 	OnPreInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, httpReq *http.Request) error
 	OnPostInvoke(ctx context.Context, req *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error)
 
@@ -63,4 +67,60 @@ type ProviderCallback interface {
 	OnPreDelete(ctx context.Context, req *pulumirpc.DeleteRequest, httpReq *http.Request) error
 	// OnPostDelete is a hook for modifying the outputs.
 	OnPostDelete(ctx context.Context, req *pulumirpc.DeleteRequest) error
+}
+
+type UnimplementedProviderCallback struct{}
+
+func (UnimplementedProviderCallback) OnConfigure(context.Context, *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
+	return &pulumirpc.ConfigureResponse{
+		AcceptSecrets: true,
+	}, nil
+}
+
+func (UnimplementedProviderCallback) GetGlobalPathParams(context.Context, *pulumirpc.ConfigureRequest) (map[string]string, error) {
+	return nil, nil
+}
+
+func (UnimplementedProviderCallback) OnPreInvoke(context.Context, *pulumirpc.InvokeRequest, *http.Request) error {
+	return nil
+}
+
+func (UnimplementedProviderCallback) OnPostInvoke(_ context.Context, _ *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
+}
+
+func (UnimplementedProviderCallback) OnDiff(context.Context, *pulumirpc.DiffRequest, string, *resource.ObjectDiff, *openapi3.MediaType) (*pulumirpc.DiffResponse, error) {
+	return nil, nil
+}
+
+func (UnimplementedProviderCallback) OnPreCreate(context.Context, *pulumirpc.CreateRequest, *http.Request) error {
+	return nil
+}
+
+func (UnimplementedProviderCallback) OnPostCreate(_ context.Context, _ *pulumirpc.CreateRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
+}
+
+func (UnimplementedProviderCallback) OnPreRead(context.Context, *pulumirpc.ReadRequest, *http.Request) error {
+	return nil
+}
+
+func (UnimplementedProviderCallback) OnPostRead(_ context.Context, _ *pulumirpc.ReadRequest, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
+}
+
+func (UnimplementedProviderCallback) OnPreUpdate(context.Context, *pulumirpc.UpdateRequest, *http.Request) error {
+	return nil
+}
+
+func (UnimplementedProviderCallback) OnPostUpdate(_ context.Context, _ *pulumirpc.UpdateRequest, _ http.Request, outputs interface{}) (map[string]interface{}, error) {
+	return outputs.(map[string]interface{}), nil
+}
+
+func (UnimplementedProviderCallback) OnPreDelete(context.Context, *pulumirpc.DeleteRequest, *http.Request) error {
+	return nil
+}
+
+func (UnimplementedProviderCallback) OnPostDelete(context.Context, *pulumirpc.DeleteRequest) error {
+	return nil
 }

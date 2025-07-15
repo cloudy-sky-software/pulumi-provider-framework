@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"net/http/httptest"
 	"testing"
 
@@ -18,7 +19,7 @@ import (
 //go:embed testdata/generic/openapi.yml
 var genericOpenAPIEmbed string
 
-func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *httptest.Server) pulumirpc.ResourceProviderServer {
+func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback) pulumirpc.ResourceProviderServer {
 	t.Helper()
 
 	openAPIBytes := []byte(genericOpenAPIEmbed)
@@ -28,7 +29,12 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 		openAPIDoc.Servers[0].URL = testServer.URL
 	}
 
-	fakeProvider := &fakeProviderCallback{}
+	var testProviderCallback callback.ProviderCallback
+	if providerCallback == nil {
+		testProviderCallback = &fakeProviderCallback{}
+	} else {
+		testProviderCallback = providerCallback
+	}
 
 	schemaSpec, metadata, updatedOpenAPIDoc := genericPulumiSchema(openAPIDoc)
 	schemaSpec.Version = ""
@@ -37,7 +43,7 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 	updatedOpenAPIDocBytes, _ := yaml.Marshal(updatedOpenAPIDoc)
 	metadataBytes, _ := json.Marshal(metadata)
 
-	p, err := MakeProvider(nil, "generic", "", schemaJSON, updatedOpenAPIDocBytes, metadataBytes, fakeProvider)
+	p, err := MakeProvider(nil, "generic", "", schemaJSON, updatedOpenAPIDocBytes, metadataBytes, testProviderCallback)
 
 	if err != nil {
 		t.Fatalf("Could not create a provider instance: %v", err)
@@ -57,7 +63,7 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 func TestTransformSDKNamestoAPINames(t *testing.T) {
 	ctx := context.Background()
 
-	p := makeTestGenericProvider(ctx, t, nil)
+	p := makeTestGenericProvider(ctx, t, nil, nil)
 
 	t.Run("SDKToAPINames", func(t *testing.T) {
 		bodyMap := make(map[string]interface{})

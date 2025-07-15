@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -31,7 +32,7 @@ var tailscaleMetadataEmbed string
 //go:embed testdata/tailscale/schema.json
 var tailscalePulSchemaEmbed string
 
-func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *httptest.Server) pulumirpc.ResourceProviderServer {
+func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback) pulumirpc.ResourceProviderServer {
 	t.Helper()
 
 	openapiBytes := []byte(tailscaleOpenAPIEmbed)
@@ -45,9 +46,14 @@ func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *ht
 		assert.Nil(t, err, "Failed to marshal updated OpenAPI doc: %v", err)
 	}
 
-	fakeProvider := &fakeProviderCallback{}
+	var testProviderCallback callback.ProviderCallback
+	if providerCallback == nil {
+		testProviderCallback = &fakeProviderCallback{}
+	} else {
+		testProviderCallback = providerCallback
+	}
 
-	p, err := MakeProvider(nil, "", "", []byte(tailscalePulSchemaEmbed), openapiBytes, []byte(tailscaleMetadataEmbed), fakeProvider)
+	p, err := MakeProvider(nil, "", "", []byte(tailscalePulSchemaEmbed), openapiBytes, []byte(tailscaleMetadataEmbed), testProviderCallback)
 
 	if err != nil {
 		t.Fatalf("Could not create a provider instance: %v", err)
@@ -119,7 +125,7 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 
 	defer testServer.Close()
 
-	p := makeTestTailscaleProvider(ctx, t, testServer)
+	p := makeTestTailscaleProvider(ctx, t, testServer, nil)
 
 	var inputs map[string]interface{}
 	if err := json.Unmarshal([]byte(inputsJSON), &inputs); err != nil {
@@ -185,7 +191,7 @@ func TestImports(t *testing.T) {
 
 	defer testServer.Close()
 
-	p := makeTestGenericProvider(ctx, t, testServer)
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
 		Id:         "/fake-id",
@@ -219,7 +225,7 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	}`
 	outputsJSON := `{"another_prop":"output value"}`
 
-	p := makeTestGenericProvider(ctx, t, nil)
+	p := makeTestGenericProvider(ctx, t, nil, nil)
 
 	newInputs, _ := getMarshaledProps(t, newInputsJSON)
 	oldInputs, oldInputsPropertyMap := getMarshaledProps(t, oldInputsJSON)
@@ -285,7 +291,7 @@ func TestCreateWithSecretInput(t *testing.T) {
 
 	defer testServer.Close()
 
-	p := makeTestGenericProvider(ctx, t, testServer)
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	propMap := resource.NewPropertyMapFromMap(map[string]interface{}{
 		"simpleProp": resource.NewSecretProperty(&resource.Secret{Element: resource.NewStringProperty(secretValue)}),
@@ -315,7 +321,7 @@ func TestApiHostOverride(t *testing.T) {
 	testServer.Start()
 
 	defer testServer.Close()
-	p := makeTestGenericProvider(ctx, t, testServer)
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	const expectedHost = "10.1.1.1"
 	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{
@@ -333,7 +339,7 @@ func TestApiHostOverrideViaEnvVar(t *testing.T) {
 	testServer.Start()
 
 	defer testServer.Close()
-	p := makeTestGenericProvider(ctx, t, testServer)
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	const expectedHost = "10.1.1.1"
 	t.Setenv("GENERIC_API_HOST", expectedHost)
@@ -350,7 +356,7 @@ func TestNoApiHostOverride(t *testing.T) {
 	testServer.Start()
 
 	defer testServer.Close()
-	p := makeTestGenericProvider(ctx, t, testServer)
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	expectedBaseURL := p.(*Provider).GetBaseURL()
 	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{})

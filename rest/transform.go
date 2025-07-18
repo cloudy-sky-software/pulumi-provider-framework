@@ -14,10 +14,7 @@ func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interfa
 	}
 
 	for sdkName, v := range bodyMap {
-		apiName := sdkName
-		if overriddenName, ok := lookupMap[sdkName]; ok {
-			apiName = overriddenName
-		}
+		apiName := GetOrKey(lookupMap, sdkName)
 
 		switch val := v.(type) {
 		case map[string]interface{}:
@@ -40,6 +37,16 @@ func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interfa
 
 		bodyMap[apiName] = v
 	}
+}
+
+// GetOrKey Lookup key in the map and return the value if it exists, or else return the key
+// This is useful when using the API to SDK name (and vice-versa) maps, where if the key
+// does not exist in the map, the key is the same in both SDK and API.
+func GetOrKey(m map[string]string, key string) string {
+	if val, ok := m[key]; ok {
+		return val
+	}
+	return key
 }
 
 func convertNumericIDToString(val interface{}) string {

@@ -209,11 +209,11 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 
 	if callbackResp != nil {
 		return callbackResp, nil
-	} else {
-		return &pulumirpc.ConfigureResponse{
-			AcceptSecrets: true,
-		}, nil
 	}
+
+	return &pulumirpc.ConfigureResponse{
+		AcceptSecrets: true,
+	}, nil
 }
 
 func (p *Provider) convertInvokeOutput(_ context.Context, req *pulumirpc.InvokeRequest, outputs interface{}) (map[string]interface{}, error) {

@@ -329,6 +329,11 @@ func TestApiHostOverride(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
+
+	// verify requests are still matched when using an overridden api host name
+	request, err := p.(*Provider).CreateGetRequest(ctx, "/v2/fakeresource/{resourceId}", resource.NewPropertyMapFromMap(map[string]interface{}{"resourceId": "12345"}))
+	assert.Nil(t, err)
+	assert.Equal(t, request.URL.String(), fmt.Sprintf("http://%s/v2/fakeresource/12345", expectedHost), "Expected request to be matched when using an overridden api host name")
 }
 
 func TestApiHostOverrideViaEnvVar(t *testing.T) {
@@ -346,6 +351,11 @@ func TestApiHostOverrideViaEnvVar(t *testing.T) {
 	_, err := p.Configure(ctx, &pulumirpc.ConfigureRequest{})
 	assert.Nil(t, err)
 	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
+
+	// verify requests are still matched when using an overridden api host name
+	request, err := p.(*Provider).CreateGetRequest(ctx, "/v2/fakeresource/{resourceId}", resource.NewPropertyMapFromMap(map[string]interface{}{"resourceId": "12345"}))
+	assert.Nil(t, err)
+	assert.Equal(t, request.URL.String(), fmt.Sprintf("http://%s/v2/fakeresource/12345", expectedHost), "Expected request to be matched when using an overridden api host name")
 }
 
 func TestNoApiHostOverride(t *testing.T) {

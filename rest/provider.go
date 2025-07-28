@@ -159,18 +159,6 @@ func (p *Provider) DiffConfig(_ context.Context, _ *pulumirpc.DiffRequest) (*pul
 
 // Configure configures the resource provider with "globals" that control its behavior.
 func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
-	callbackResp, err := p.providerCallback.OnConfigure(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	globalPathParams, err := p.providerCallback.GetGlobalPathParams(ctx, req)
-	if err != nil {
-		return nil, errors.Wrap(err, "getting global path params")
-	} else if globalPathParams != nil {
-		p.globalPathParams = globalPathParams
-	}
-
 	// Override the API host, if required. Intended for providers where the server names in the
 	// openapi spec will not match the API host that the provider needs to interact with during a deployment.
 	// To set via pulumi config, this will be "providername:apiHost"
@@ -206,6 +194,18 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 		return nil, errors.Wrap(err, "creating api router mux")
 	}
 	p.router = router
+
+	callbackResp, err := p.providerCallback.OnConfigure(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	globalPathParams, err := p.providerCallback.GetGlobalPathParams(ctx, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting global path params")
+	} else if globalPathParams != nil {
+		p.globalPathParams = globalPathParams
+	}
 
 	if callbackResp != nil {
 		return callbackResp, nil

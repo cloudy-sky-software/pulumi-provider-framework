@@ -16,7 +16,6 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
-
 	"github.com/pkg/errors"
 
 	pschema "github.com/pulumi/pulumi/pkg/v3/codegen/schema"
@@ -72,11 +71,6 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaBytes, openapiDocBytes, metadataBytes []byte, callback callback.ProviderCallback) (pulumirpc.ResourceProviderServer, error) {
 	openapiDoc := openapi.GetOpenAPISpec(openapiDocBytes)
 
-	router, err := gorillamux.NewRouter(openapiDoc)
-	if err != nil {
-		return nil, errors.Wrap(err, "creating api router mux")
-	}
-
 	var metadata providerGen.ProviderMetadata
 	if err := json.Unmarshal(metadataBytes, &metadata); err != nil {
 		return nil, errors.Wrap(err, "unmarshaling the metadata bytes to json")
@@ -116,7 +110,6 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 		baseURL:    openapiDoc.Servers[0].URL,
 		openAPIDoc: *openapiDoc,
 		metadata:   metadata,
-		router:     router,
 		httpClient: httpClient,
 
 		providerCallback: callback,
@@ -166,18 +159,6 @@ func (p *Provider) DiffConfig(_ context.Context, _ *pulumirpc.DiffRequest) (*pul
 
 // Configure configures the resource provider with "globals" that control its behavior.
 func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
-	resp, err := p.providerCallback.OnConfigure(ctx, req)
-	if err != nil || resp != nil {
-		return resp, err
-	}
-
-	globalPathParams, err := p.providerCallback.GetGlobalPathParams(ctx, req)
-	if err != nil {
-		return nil, errors.Wrap(err, "getting global path params")
-	} else if globalPathParams != nil {
-		p.globalPathParams = globalPathParams
-	}
-
 	// Override the API host, if required. Intended for providers where the server names in the
 	// openapi spec will not match the API host that the provider needs to interact with during a deployment.
 	// To set via pulumi config, this will be "providername:apiHost"
@@ -198,11 +179,36 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 		if err != nil {
 			return nil, err
 		}
-
 		baseURL.Host = apiHost
 		p.baseURL = baseURL.String()
 
+		// apply new base URL value to the openAPIDoc of the provider, so the router (created below) will use it
+		p.openAPIDoc.Servers[0].URL = p.baseURL
+
 		logging.V(3).Infof("Full API URL now %s", p.baseURL)
+	}
+
+	// the router creation is deferred to allow for api host name modifications through configuration
+	router, err := gorillamux.NewRouter(&p.openAPIDoc)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating api router mux")
+	}
+	p.router = router
+
+	callbackResp, err := p.providerCallback.OnConfigure(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	globalPathParams, err := p.providerCallback.GetGlobalPathParams(ctx, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting global path params")
+	} else if globalPathParams != nil {
+		p.globalPathParams = globalPathParams
+	}
+
+	if callbackResp != nil {
+		return callbackResp, nil
 	}
 
 	return &pulumirpc.ConfigureResponse{

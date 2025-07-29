@@ -308,7 +308,7 @@ func TestUpdateForUpdateableResource(t *testing.T) {
 
 	defer testServer.Close()
 
-	p := makeTestGenericProvider(ctx, t, testServer)
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	newInputs, _ := getMarshaledProps(t, newInputsJSON)
 	oldInputs, oldInputsPropertyMap := getMarshaledProps(t, oldInputsJSON)

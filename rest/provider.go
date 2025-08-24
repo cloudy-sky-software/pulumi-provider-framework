@@ -315,6 +315,8 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 		}
 	}
 
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
+
 	outputProperties, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")

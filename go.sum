@@ -162,6 +162,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20250811154507-e6b3a980cea5 h1:J
 github.com/cloudy-sky-software/pulschema v0.0.0-20250811154507-e6b3a980cea5/go.mod h1:F2IgQo2t1ADuI+oJCH11P1XikK9E9U6P6+aceAPtczs=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250814170500-c35c76db6afc h1:msTdj7YeVkfhKvGusHtkrqYzqruo/kePCyRM8VBlxys=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250814170500-c35c76db6afc/go.mod h1:+0krEDGzpb/FE2it+IHsb8uSDDtX38wQab1KzjD2/iQ=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250824215724-d08f3502036d h1:DKZAgGAGa8cHCCWtFnSjq6b/NFkbAGZL04Bn05xSLIc=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250824215724-d08f3502036d/go.mod h1:wsMpRFI25+TQpJ1yKgYO/mHNjqDLHvO3l16ikIEcKPk=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
@@ -416,6 +418,8 @@ github.com/pulumi/pulumi/pkg/v3 v3.188.0 h1:GkpGmQVw3miDYFnn0HYuXNs9JqIIvJMgcyhu
 github.com/pulumi/pulumi/pkg/v3 v3.188.0/go.mod h1:IxnuvbvW9COAVEFvqlWm3/qWibw8yl2k5GyIRFQWHlw=
 github.com/pulumi/pulumi/pkg/v3 v3.189.0 h1:GLxK1jekCLluN/S6S7iAX/MoKdhDC/9N4t/B1rBDsWk=
 github.com/pulumi/pulumi/pkg/v3 v3.189.0/go.mod h1:kQaEvMnFPrVT7+WVRmRgFP0NdZbjK+QglM/C0WSC2HE=
+github.com/pulumi/pulumi/pkg/v3 v3.191.0 h1:AIONP+ACReGWeIWq9U8yqZ15x3y00DZPLANVk+pGReo=
+github.com/pulumi/pulumi/pkg/v3 v3.191.0/go.mod h1:lOf/lnZK1HcJOrefdjkxctc8p0xDje91ub0kozzXLGs=
 github.com/pulumi/pulumi/sdk/v3 v3.159.0 h1:pfBVSqfRNM7X1RmxJzjLSsVQe6nv9cAdM207K5sE4Ck=
 github.com/pulumi/pulumi/sdk/v3 v3.159.0/go.mod h1:YEbbl0N7eVsgfsL7h5215dDf8GBSe4AnRon7Ya/KIVc=
 github.com/pulumi/pulumi/sdk/v3 v3.160.0 h1:OxeATnIEqWyu3KpTeLUmyJdZaSEE6yX7ECvfGhByb9w=
@@ -458,6 +462,8 @@ github.com/pulumi/pulumi/sdk/v3 v3.188.0 h1:rk6TGq6xyHtd1DhQ1R3uCeoPt3gGXIOciOYP
 github.com/pulumi/pulumi/sdk/v3 v3.188.0/go.mod h1:MjNoJsbSld/fwoQfIKJy9UT+PkEtyXDjBoiDNJHcGA0=
 github.com/pulumi/pulumi/sdk/v3 v3.189.0 h1:BZJFi1xlCvgxZXBSkCKZICcDfCg9jS7cYi9zPvGeI2s=
 github.com/pulumi/pulumi/sdk/v3 v3.189.0/go.mod h1:MjNoJsbSld/fwoQfIKJy9UT+PkEtyXDjBoiDNJHcGA0=
+github.com/pulumi/pulumi/sdk/v3 v3.191.0 h1:irZiK/9teTjVOVQLsz8+zqfyWBc0KU/L389gztK5BB0=
+github.com/pulumi/pulumi/sdk/v3 v3.191.0/go.mod h1:aV0+c5xpSYccWKmOjTZS9liYCqh7+peu3cQgSXu7CJw=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
@@ -495,6 +501,8 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/stretchr/testify v1.11.0 h1:ib4sjIrwZKxE5u/Japgo/7SJV3PvgjGiRNAvTVGqQl8=
+github.com/stretchr/testify v1.11.0/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/texttheater/golang-levenshtein v1.0.1 h1:+cRNoVrfiwufQPhoMzB6N0Yf/Mqajr6t1lOv8GyGE2U=
 github.com/texttheater/golang-levenshtein v1.0.1/go.mod h1:PYAKrbF5sAiq9wd+H82hs7gNaen0CplQ9uvm6+enD/8=
 github.com/uber/jaeger-client-go v2.30.0+incompatible h1:D6wyKGCecFaSRUpo8lCVbaOOb6ThwMmTEbhRwtKR97o=

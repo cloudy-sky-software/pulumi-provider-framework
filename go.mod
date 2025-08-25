@@ -5,8 +5,8 @@ go 1.23.11
 toolchain go1.24.6
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20250824215724-d08f3502036d
-	github.com/getkin/kin-openapi v0.132.0
+	github.com/cloudy-sky-software/pulschema v0.0.0-20250825170513-e09cfb83ad9c
+	github.com/getkin/kin-openapi v0.133.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi/pkg/v3 v3.191.0
@@ -111,6 +111,7 @@ require (
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
+	github.com/woodsbury/decimal128 v1.3.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
 	golang.org/x/crypto v0.40.0 // indirect

@@ -166,6 +166,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20250824215724-d08f3502036d h1:D
 github.com/cloudy-sky-software/pulschema v0.0.0-20250824215724-d08f3502036d/go.mod h1:wsMpRFI25+TQpJ1yKgYO/mHNjqDLHvO3l16ikIEcKPk=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250825170513-e09cfb83ad9c h1:4Fqk2zGAuOjajtsGXZ3Ml/hBUNXK5EYElpZGN6Zr3Fs=
 github.com/cloudy-sky-software/pulschema v0.0.0-20250825170513-e09cfb83ad9c/go.mod h1:jIhi2wxRpo4WTUK8s+I8V2kkvVZASxa2Kr51GVGPkw8=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250827181118-84de9f4ea0f6 h1:naNfs++CXa24LQ7WJKXhB4BM64F0FjMLcetgZWSmpso=
+github.com/cloudy-sky-software/pulschema v0.0.0-20250827181118-84de9f4ea0f6/go.mod h1:w39iAjxBBmGmvEjWAxMMDP5/uGqh12aOvJiwM29wHKU=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
@@ -507,6 +509,8 @@ github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOf
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/stretchr/testify v1.11.0 h1:ib4sjIrwZKxE5u/Japgo/7SJV3PvgjGiRNAvTVGqQl8=
 github.com/stretchr/testify v1.11.0/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
+github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
+github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/texttheater/golang-levenshtein v1.0.1 h1:+cRNoVrfiwufQPhoMzB6N0Yf/Mqajr6t1lOv8GyGE2U=
 github.com/texttheater/golang-levenshtein v1.0.1/go.mod h1:PYAKrbF5sAiq9wd+H82hs7gNaen0CplQ9uvm6+enD/8=
 github.com/uber/jaeger-client-go v2.30.0+incompatible h1:D6wyKGCecFaSRUpo8lCVbaOOb6ThwMmTEbhRwtKR97o=

@@ -2,7 +2,7 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 
 go 1.24.0
 
-toolchain go1.24.6
+toolchain go1.25.1
 
 require (
 	github.com/cloudy-sky-software/pulschema v0.0.0-20250904202625-e9c5d3d0fa78

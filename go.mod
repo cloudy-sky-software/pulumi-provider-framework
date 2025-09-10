@@ -13,7 +13,7 @@ require (
 	github.com/pulumi/pulumi/sdk/v3 v3.193.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.29.0
-	google.golang.org/grpc v1.75.0
+	google.golang.org/grpc v1.75.1
 )
 
 require (

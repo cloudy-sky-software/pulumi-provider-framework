@@ -27,6 +27,22 @@ components:
       properties:
         another_prop:
           $ref: "#/components/schemas/a_string_prop"
+    backgroundWorker:
+      type: object
+      title: BackgroundWorker
+      properties:
+        simple_prop:
+          $ref: "#/components/schemas/a_string_prop"
+        object_prop:
+          $ref: "#/components/schemas/an_object_prop"
+    cronJob:
+      type: object
+      title: CronJob
+      properties:
+        simple_prop:
+          $ref: "#/components/schemas/a_string_prop"
+        object_prop:
+          $ref: "#/components/schemas/an_object_prop"
   securitySchemes:
     BasicAuth:
       type: http
@@ -126,3 +142,91 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/response_object_type"
+
+  /v2/discriminatedresource:
+    post:
+      operationId: create_discriminated_resource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              discriminator:
+                mapping:
+                  background_worker: "#/components/schemas/backgroundWorker"
+                  cron_job: "#/components/schemas/cronJob"
+                propertyName: type
+              oneOf:
+                - $ref: "#/components/schemas/backgroundWorker"
+                - $ref: "#/components/schemas/cronJob"
+      responses:
+        "200":
+          description: The response for creating a discriminated resource.
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  mapping:
+                    background_worker: "#/components/schemas/backgroundWorker"
+                    cron_job: "#/components/schemas/cronJob"
+                  propertyName: type
+                oneOf:
+                  - $ref: "#/components/schemas/backgroundWorker"
+                  - $ref: "#/components/schemas/cronJob"
+
+  /v2/discriminatedresource/{resourceId}:
+    get:
+      operationId: get_discriminated_resource
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  mapping:
+                    background_worker: "#/components/schemas/backgroundWorker"
+                    cron_job: "#/components/schemas/cronJob"
+                  propertyName: type
+                oneOf:
+                  - $ref: "#/components/schemas/backgroundWorker"
+                  - $ref: "#/components/schemas/cronJob"
+    patch:
+      operationId: update_discriminated_resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              discriminator:
+                mapping:
+                  background_worker: "#/components/schemas/backgroundWorker"
+                  cron_job: "#/components/schemas/cronJob"
+                propertyName: type
+              oneOf:
+                - $ref: "#/components/schemas/backgroundWorker"
+                - $ref: "#/components/schemas/cronJob"
+      responses:
+        "200":
+          description: The response for updating discriminated resource.
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  mapping:
+                    background_worker: "#/components/schemas/backgroundWorker"
+                    cron_job: "#/components/schemas/cronJob"
+                  propertyName: type
+                oneOf:
+                  - $ref: "#/components/schemas/backgroundWorker"
+                  - $ref: "#/components/schemas/cronJob"

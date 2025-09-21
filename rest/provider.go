@@ -859,7 +859,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
 	if crudMap.U == nil && crudMap.P == nil {
-		return nil, errors.Errorf("neither resource update endpoints (update and put) are available for %s", resourceTypeToken)
+		return nil, errors.Errorf("neither update nor put endpoint path is available for %s", resourceTypeToken)
 	}
 
 	var httpEndpointPath string
@@ -867,6 +867,9 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	var httpReqErr error
 
 	if crudMap.U != nil {
+		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
+		httpEndpointPath = *crudMap.U
+
 		oldInputs, _ := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
 		diff := oldInputs.Diff(inputs)
 		inputsMap := inputs.Mappable()
@@ -877,13 +880,28 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			patchReqBody[propKey] = val
 		}
 
+		// TODO: Check if the request body has a top-level
+		// discriminator.
+		discriminatorPropName, err := p.getPatchRequestBodyDiscriminator(httpEndpointPath)
+		if err != nil {
+			return nil, errors.Wrap(err, "creating patch request")
+		}
+		if discriminatorPropName != "" {
+			val := oldInputs.Mappable()[discriminatorPropName]
+			if strVal, ok := val.(string); !ok {
+				return nil, fmt.Errorf("value of discriminator property %q is not a string", discriminatorPropName)
+			} else if strVal == "" {
+				return nil, fmt.Errorf("value of discriminator property %q is an empty string in old inputs", discriminatorPropName)
+			} else {
+				patchReqBody[discriminatorPropName] = val
+			}
+		}
+
 		bodyBytes, err := json.Marshal(patchReqBody)
 		if err != nil {
 			return nil, errors.Wrap(err, "marshaling inputs")
 		}
 
-		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
-		httpEndpointPath = *crudMap.U
 		httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating patch request (type token: %s)", resourceTypeToken)

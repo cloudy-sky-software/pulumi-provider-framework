@@ -880,7 +880,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			patchReqBody[propKey] = val
 		}
 
-		// TODO: Check if the request body has a top-level
+		// Check if the request body has a top-level
 		// discriminator.
 		discriminatorPropName, err := p.getPatchRequestBodyDiscriminator(httpEndpointPath)
 		if err != nil {

@@ -888,13 +888,14 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		}
 		if discriminatorPropName != "" {
 			val := oldInputs.Mappable()[discriminatorPropName]
-			if strVal, ok := val.(string); !ok {
+			strVal, ok := val.(string)
+			if !ok {
 				return nil, fmt.Errorf("value of discriminator property %q is not a string", discriminatorPropName)
 			} else if strVal == "" {
 				return nil, fmt.Errorf("value of discriminator property %q is an empty string in old inputs", discriminatorPropName)
-			} else {
-				patchReqBody[discriminatorPropName] = strVal
 			}
+
+			patchReqBody[discriminatorPropName] = strVal
 		}
 
 		bodyBytes, err := json.Marshal(patchReqBody)

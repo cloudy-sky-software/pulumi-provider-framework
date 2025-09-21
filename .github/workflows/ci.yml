@@ -31,9 +31,7 @@ jobs:
           # Use a commit hash from https://github.com/golangci/golangci-lint/commits/main.
           version: 96b640c21965f1ddcc2c4c55937a0cf8dcd82fb4
           install-mode: goinstall
-
-      - name: Lint
-        run: make lint
+          args: --config=.golangci.yaml --timeout=10m
 
       - name: Test
         run: make test

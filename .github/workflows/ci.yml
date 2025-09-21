@@ -28,7 +28,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: f08454af877ea2a5246a58683951857b61853eab
+          # Use a commit hash from https://github.com/golangci/golangci-lint/commits/main.
+          version: 96b640c21965f1ddcc2c4c55937a0cf8dcd82fb4
           install-mode: goinstall
 
       - name: Lint

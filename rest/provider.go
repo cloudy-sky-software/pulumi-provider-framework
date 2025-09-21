@@ -859,12 +859,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
 	if crudMap.U == nil && crudMap.P == nil {
-		return nil, errors.Errorf("neither resource update endpoints (update and put) are available for %s", resourceTypeToken)
-	}
-
-	bodyBytes, err := json.Marshal(inputs.Mappable())
-	if err != nil {
-		return nil, errors.Wrap(err, "marshaling inputs")
+		return nil, errors.Errorf("neither update nor put endpoint path is available for %s", resourceTypeToken)
 	}
 
 	var httpEndpointPath string
@@ -874,11 +869,50 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	if crudMap.U != nil {
 		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.U
+
+		oldInputs, _ := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+		diff := oldInputs.Diff(inputs)
+		inputsMap := inputs.Mappable()
+		patchReqBody := make(map[string]any)
+		for _, prop := range diff.ChangedKeys() {
+			propKey := string(prop)
+			val := inputsMap[propKey]
+			patchReqBody[propKey] = val
+		}
+
+		// TODO: Check if the request body has a top-level
+		// discriminator.
+		discriminatorPropName, err := p.getPatchRequestBodyDiscriminator(httpEndpointPath)
+		if err != nil {
+			return nil, errors.Wrap(err, "creating patch request")
+		}
+		if discriminatorPropName != "" {
+			val := oldInputs.Mappable()[discriminatorPropName]
+			strVal, ok := val.(string)
+			if !ok {
+				return nil, fmt.Errorf("value of discriminator property %q is not a string", discriminatorPropName)
+			} else if strVal == "" {
+				return nil, fmt.Errorf("value of discriminator property %q is an empty string in old inputs", discriminatorPropName)
+			}
+
+			patchReqBody[discriminatorPropName] = strVal
+		}
+
+		bodyBytes, err := json.Marshal(patchReqBody)
+		if err != nil {
+			return nil, errors.Wrap(err, "marshaling inputs")
+		}
+
 		httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating patch request (type token: %s)", resourceTypeToken)
 		}
 	} else {
+		bodyBytes, err := json.Marshal(inputs.Mappable())
+		if err != nil {
+			return nil, errors.Wrap(err, "marshaling inputs")
+		}
+
 		logging.V(3).Infof("Using PUT endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.P
 		httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)

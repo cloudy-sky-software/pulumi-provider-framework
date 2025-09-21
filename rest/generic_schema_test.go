@@ -106,6 +106,6 @@ func rawMessage(v interface{}) pschema.RawMessage {
 	encoder := json.NewEncoder(&out)
 	encoder.SetEscapeHTML(false)
 	err := encoder.Encode(v)
-	contract.Assert(err == nil)
+	contract.Assertf(err == nil, "error encoding value to json")
 	return out.Bytes()
 }

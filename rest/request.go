@@ -432,7 +432,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		// If the added property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
 
-		if _, ok := properties[GetOrKey(apiNameLookupMap, prop)]; !ok {
+		if _, ok := properties[getOrKey(apiNameLookupMap, prop)]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)
@@ -443,7 +443,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the updated property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[GetOrKey(apiNameLookupMap, prop)]; !ok {
+		if _, ok := properties[getOrKey(apiNameLookupMap, prop)]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)
@@ -454,7 +454,7 @@ func (p *Provider) determineDiffsAndReplacements(d *resource.ObjectDiff, schemaR
 		prop := string(propKey)
 		// If the deleted property is not part of the PATCH operation schema,
 		// then suggest a replacement triggered by this property.
-		if _, ok := properties[GetOrKey(apiNameLookupMap, prop)]; !ok {
+		if _, ok := properties[getOrKey(apiNameLookupMap, prop)]; !ok {
 			replaces = append(replaces, prop)
 		} else {
 			diffs = append(diffs, prop)
@@ -528,4 +528,28 @@ func (p *Provider) additionsArePathParams(diff *resource.ObjectDiff, news resour
 	}
 
 	return false, nil
+}
+
+func (p *Provider) getPatchRequestBodyDiscriminator(endpointPath string) (string, error) {
+	patchOp := p.openAPIDoc.Paths.Find(endpointPath).Patch
+	if patchOp == nil {
+		return "", fmt.Errorf("endpoint path %q does not have a patch operation", endpointPath)
+	}
+
+	jsonReq := patchOp.RequestBody.Value.Content.Get(jsonMimeType)
+	if jsonReq == nil {
+		return "", fmt.Errorf("endpoint path %q does not have a json request body", endpointPath)
+	}
+
+	discriminator := jsonReq.Schema.Value.Discriminator
+	if discriminator == nil {
+		return "", nil
+	}
+
+	propName := discriminator.PropertyName
+	if sdkName, ok := p.metadata.APIToSDKNameMap[propName]; ok {
+		return sdkName, nil
+	}
+
+	return propName, nil
 }

@@ -893,7 +893,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			} else if strVal == "" {
 				return nil, fmt.Errorf("value of discriminator property %q is an empty string in old inputs", discriminatorPropName)
 			} else {
-				patchReqBody[discriminatorPropName] = val
+				patchReqBody[discriminatorPropName] = strVal
 			}
 		}
 

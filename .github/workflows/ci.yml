@@ -29,7 +29,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: f08454af877ea2a5246a58683951857b61853eab
-          installmode: goinstall
+          install-mode: goinstall
 
       - name: Lint
         run: make lint

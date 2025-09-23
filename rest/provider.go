@@ -292,7 +292,7 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 		return nil, errors.Wrap(err, "reading response body")
 	}
 
-	httpResp.Body.Close()
+	defer httpResp.Body.Close()
 
 	var outputs interface{}
 	if err := json.Unmarshal(body, &outputs); err != nil {
@@ -603,7 +603,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Wrap(err, "reading response body")
 	}
 
-	httpResp.Body.Close()
+	defer httpResp.Body.Close()
 
 	var outputs interface{}
 	if err := json.Unmarshal(body, &outputs); err != nil {
@@ -730,7 +730,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.Wrap(err, "reading response body")
 	}
 
-	httpResp.Body.Close()
+	defer httpResp.Body.Close()
 
 	var outputs interface{}
 	if err := json.Unmarshal(body, &outputs); err != nil {
@@ -1014,7 +1014,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		return nil, errors.Errorf("http request failed: %v. expected one of %v but got %d", err, validStatusCodesForDelete, httpResp.StatusCode)
 	}
 
-	httpResp.Body.Close()
+	defer httpResp.Body.Close()
 
 	postDeleteErr := p.providerCallback.OnPostDelete(ctx, req)
 	if postDeleteErr != nil {

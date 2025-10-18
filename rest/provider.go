@@ -386,14 +386,9 @@ func (p *Provider) Check(_ context.Context, req *pulumirpc.CheckRequest) (*pulum
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
 func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.GetOlds(), state.HTTPRequestBodyUnmarshalOpts)
+	olds, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, err
-	}
-
-	olds := state.GetOldInputs(oldState)
-	if olds == nil {
-		return nil, errors.New("fetching old inputs from the state")
 	}
 
 	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
@@ -843,7 +838,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 // Update updates an existing resource with new values.
 func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.Olds, state.HTTPRequestBodyUnmarshalOpts)
+	oldState, err := plugin.UnmarshalProperties(req.OldInputs, state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal olds as propertymap")
 	}

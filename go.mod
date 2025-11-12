@@ -7,7 +7,7 @@ require (
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.201.0
+	github.com/pulumi/pulumi/pkg/v3 v3.207.0
 	github.com/pulumi/pulumi/sdk/v3 v3.201.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.30.0

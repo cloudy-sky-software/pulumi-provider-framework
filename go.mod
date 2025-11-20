@@ -10,7 +10,7 @@ require (
 	github.com/pulumi/pulumi/pkg/v3 v3.201.0
 	github.com/pulumi/pulumi/sdk/v3 v3.201.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/text v0.30.0
+	golang.org/x/text v0.31.0
 	google.golang.org/grpc v1.76.0
 )
 
@@ -61,9 +61,9 @@ require (
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/mod v0.28.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/tools v0.37.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1
@@ -112,10 +112,10 @@ require (
 	github.com/woodsbury/decimal128 v1.3.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
-	golang.org/x/crypto v0.42.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.44.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/term v0.35.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/term v0.36.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b // indirect
 )

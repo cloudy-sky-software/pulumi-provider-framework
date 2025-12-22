@@ -641,7 +641,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 // Read the current live state associated with a resource.
 func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
+	currentState, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal current state as propertymap")
 	}
@@ -657,10 +657,10 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 	httpEndpointPath := *crudMap.R
 
-	if len(oldState) == 0 {
+	if len(currentState) == 0 {
 		if req.GetInputs() != nil {
 			logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
-			oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+			currentState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
 			if err != nil {
 				return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 			}
@@ -673,9 +673,9 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 					return nil, errors.Wrapf(err, "mapping import id %s to path params", id)
 				}
 
-				oldState = resource.NewPropertyMapFromMap(pathParams)
+				currentState = resource.NewPropertyMapFromMap(pathParams)
 			} else {
-				oldState = resource.NewPropertyMapFromMap(
+				currentState = resource.NewPropertyMapFromMap(
 					map[string]interface{}{
 						"id": id,
 					})
@@ -683,15 +683,15 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		}
 	}
 
-	logging.V(3).Infof("Resource read will use state: %v", oldState)
+	logging.V(3).Infof("Resource read will use state: %v", currentState)
 
-	if !oldState.HasValue("id") {
+	if !currentState.HasValue("id") {
 		// Add the id property to the state map since our HTTP request creation will
 		// look for it in the inputs map.
-		oldState["id"] = resource.NewPropertyValue(req.GetId())
+		currentState["id"] = resource.NewPropertyValue(req.GetId())
 	}
 
-	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, oldState)
+	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, currentState)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", resourceTypeToken)
 	}
@@ -737,10 +737,10 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, postReadErr
 	}
 
-	inputs := state.GetOldInputs(oldState)
+	var inputs resource.PropertyMap
 	// If there is no old state, then persist the current outputs as the
 	// "old" inputs going forward for this resource.
-	if inputs == nil {
+	if len(currentState) == 0 {
 		inputs = resource.NewPropertyMapFromMap(outputsMap)
 		// Filter out read-only properties from the inputs.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
@@ -766,6 +766,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		p.TransformBody(ctx, inputsMappable, p.metadata.APIToSDKNameMap)
 		inputs = resource.NewPropertyMapFromMap(inputsMappable)
 	} else {
+		inputs = state.GetOldInputs(currentState)
 		// Take the values from outputs and apply them to the inputs
 		// so that the checkpoint is in-sync with the state in the
 		// cloud provider.
@@ -802,7 +803,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	// For example, resources like keys, secrets would return the actual secret
 	// payload on creation but on subsequent reads, they won't be returned by
 	// APIs, so we should maintain those in the outputs.
-	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputsMap), oldState)
+	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputsMap), currentState)
 
 	outputsMap = updatedOutputsMap.Mappable()
 

@@ -72,7 +72,7 @@ func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *ht
 	return p
 }
 
-func getMarshaledProps(t *testing.T, jsonStr string) (*structpb.Struct, resource.PropertyMap) {
+func getMarshaledProps(t *testing.T, jsonStr string) *structpb.Struct {
 	t.Helper()
 
 	var inputs map[string]any
@@ -86,7 +86,7 @@ func getMarshaledProps(t *testing.T, jsonStr string) (*structpb.Struct, resource
 		t.Fatalf("Failed to marshal input map: %v", err)
 	}
 
-	return inputsRecord, inputsPropertyMap
+	return inputsRecord
 }
 
 func TestResourceReadResultsInNoChanges(t *testing.T) {
@@ -223,8 +223,8 @@ func TestDiffForUpdateableResource(t *testing.T) {
 
 	p := makeTestGenericProvider(ctx, t, nil, nil)
 
-	newInputs, _ := getMarshaledProps(t, newInputsJSON)
-	oldInputs, _ := getMarshaledProps(t, oldInputsJSON)
+	newInputs := getMarshaledProps(t, newInputsJSON)
+	oldInputs := getMarshaledProps(t, oldInputsJSON)
 
 	var outputsMap map[string]any
 	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
@@ -343,16 +343,15 @@ func TestUpdateForUpdateableResource(t *testing.T) {
 		oldInputsJSON := test.oldInputsJSON
 
 		newInputsJSON := test.newInputsJSON
-		newInputs, _ := getMarshaledProps(t, newInputsJSON)
-		oldInputs, oldInputsPropertyMap := getMarshaledProps(t, oldInputsJSON)
+		newInputs := getMarshaledProps(t, newInputsJSON)
+		oldInputs := getMarshaledProps(t, oldInputsJSON)
 
 		var outputsMap map[string]any
 		if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
 			t.Fatalf("Failed to unmarshal test payload: %v", err)
 		}
 
-		expectedOutputState := state.GetResourceState(outputsMap, oldInputsPropertyMap)
-		serializedOutputState, err := plugin.MarshalProperties(expectedOutputState, state.DefaultMarshalOpts)
+		serializedOutputState, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
 		if err != nil {
 			t.Fatalf("Marshaling the output properties map: %v", err)
 		}

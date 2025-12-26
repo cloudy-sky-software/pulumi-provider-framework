@@ -34,6 +34,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 )
@@ -61,6 +62,9 @@ type Provider struct {
 	// Global path params for this provider - for path params that are fixed
 	// for a provider. Can be configured during the OnConfigure callback func
 	globalPathParams map[string]string
+
+	engineSendsOldInputs         bool
+	engineSendsOldInputsOnDelete bool
 }
 
 func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
@@ -210,6 +214,9 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 	if callbackResp != nil {
 		return callbackResp, nil
 	}
+
+	p.engineSendsOldInputs = req.SendsOldInputs
+	p.engineSendsOldInputsOnDelete = req.SendsOldInputsToDelete
 
 	return &pulumirpc.ConfigureResponse{
 		AcceptSecrets: true,
@@ -745,7 +752,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	var inputs resource.PropertyMap
 	// If there is no old state, then persist the current outputs as the
 	// "old" inputs for this resource.
-	if len(currentState) == 0 {
+	if req.GetInputs() == nil {
 		inputs = resource.NewPropertyMapFromMap(outputsMap)
 		// Filter out read-only properties from the inputs.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
@@ -772,7 +779,10 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		p.TransformBody(ctx, inputsMappable, p.metadata.APIToSDKNameMap)
 		inputs = resource.NewPropertyMapFromMap(inputsMappable)
 	} else {
-		inputs = state.GetOldInputs(currentState)
+		inputs, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+		if err != nil {
+			return nil, errors.Wrap(err, "unmarshal current inputs")
+		}
 		// Take the values from outputs and apply them to the inputs
 		// so that the checkpoint is in-sync with the state in the
 		// cloud provider.
@@ -816,8 +826,14 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	// Stash a copy of the current inputs in the serialized outputs.
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	var outputProperties *structpb.Struct
+	if !p.engineSendsOldInputs {
+		// Stash a copy of the current inputs in the serialized outputs.
+		outputProperties, err = plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	} else {
+		outputProperties, err = plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
@@ -965,8 +981,13 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
-	outputProperties, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	var outputProperties *structpb.Struct
+	if !p.engineSendsOldInputs {
+		// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
+		outputProperties, err = plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	} else {
+		outputProperties, err = plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}

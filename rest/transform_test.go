@@ -4,9 +4,10 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 
 	"gopkg.in/yaml.v3"
 
@@ -50,7 +51,9 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 	}
 
 	_, err = p.Configure(ctx, &pulumirpc.ConfigureRequest{
-		Variables: map[string]string{"generic:config:apiKey": "fakeapikey"},
+		Variables:              map[string]string{"generic:config:apiKey": "fakeapikey"},
+		SendsOldInputs:         true,
+		SendsOldInputsToDelete: true,
 	})
 
 	if err != nil {

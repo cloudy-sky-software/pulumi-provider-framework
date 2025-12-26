@@ -60,7 +60,9 @@ func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *ht
 	}
 
 	_, err = p.Configure(ctx, &pulumirpc.ConfigureRequest{
-		Variables: map[string]string{"tailscale:config:apiKey": "fakeapikey"},
+		Variables:              map[string]string{"tailscale:config:apiKey": "fakeapikey"},
+		SendsOldInputs:         true,
+		SendsOldInputsToDelete: true,
 	})
 
 	if err != nil {

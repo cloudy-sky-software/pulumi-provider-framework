@@ -624,7 +624,13 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	outputProperties, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	var outputProperties *structpb.Struct
+	if !p.engineSendsOldInputs {
+		outputProperties, err = plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	} else {
+		outputProperties, err = plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}

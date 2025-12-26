@@ -163,6 +163,9 @@ func (p *Provider) DiffConfig(_ context.Context, _ *pulumirpc.DiffRequest) (*pul
 
 // Configure configures the resource provider with "globals" that control its behavior.
 func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
+	p.engineSendsOldInputs = req.SendsOldInputs
+	p.engineSendsOldInputsOnDelete = req.SendsOldInputsToDelete
+
 	// Override the API host, if required. Intended for providers where the server names in the
 	// openapi spec will not match the API host that the provider needs to interact with during a deployment.
 	// To set via pulumi config, this will be "providername:apiHost"
@@ -215,9 +218,6 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 		return callbackResp, nil
 	}
 
-	p.engineSendsOldInputs = req.SendsOldInputs
-	p.engineSendsOldInputsOnDelete = req.SendsOldInputsToDelete
-
 	return &pulumirpc.ConfigureResponse{
 		AcceptSecrets: true,
 	}, nil
@@ -269,7 +269,7 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 
 	httpEndpointPath := *crudMap.R
 
-	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, args)
+	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, args, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", invokeTypeToken)
 	}
@@ -654,6 +654,11 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 // Read the current live state associated with a resource.
 func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
+	inputs, err := plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal current inputs")
+	}
+
 	currentState, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal current state as propertymap")
@@ -709,7 +714,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		currentState["id"] = resource.NewPropertyValue(req.GetId())
 	}
 
-	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, currentState)
+	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, inputs, &currentState)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", resourceTypeToken)
 	}
@@ -755,10 +760,9 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, postReadErr
 	}
 
-	var inputs resource.PropertyMap
 	// If there is no old state, then persist the current outputs as the
 	// "old" inputs for this resource.
-	if req.GetInputs() == nil {
+	if len(inputs) == 0 {
 		inputs = resource.NewPropertyMapFromMap(outputsMap)
 		// Filter out read-only properties from the inputs.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
@@ -785,10 +789,6 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		p.TransformBody(ctx, inputsMappable, p.metadata.APIToSDKNameMap)
 		inputs = resource.NewPropertyMapFromMap(inputsMappable)
 	} else {
-		inputs, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
-		if err != nil {
-			return nil, errors.Wrap(err, "unmarshal current inputs")
-		}
 		// Take the values from outputs and apply them to the inputs
 		// so that the checkpoint is in-sync with the state in the
 		// cloud provider.

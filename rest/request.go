@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"strings"
 
@@ -36,7 +37,7 @@ var titleCaser = cases.Title(language.AmericanEnglish)
 // CRUD operations using RESTful APIs.
 type Request interface {
 	CreateDeleteRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
-	CreateGetRequest(ctx context.Context, httpEndpointPath string, inputs resource.PropertyMap) (*http.Request, error)
+	CreateGetRequest(ctx context.Context, httpEndpointPath string, inputs resource.PropertyMap, currentState *resource.PropertyMap) (*http.Request, error)
 	CreatePatchRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 	CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
 	CreatePutRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error)
@@ -84,7 +85,8 @@ func (p *Provider) getSupportedAuthSchemes() []string {
 func (p *Provider) CreateGetRequest(
 	ctx context.Context,
 	httpEndpointPath string,
-	inputs resource.PropertyMap) (*http.Request, error) {
+	inputs resource.PropertyMap,
+	currentState *resource.PropertyMap) (*http.Request, error) {
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.baseURL+httpEndpointPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
@@ -101,7 +103,11 @@ func (p *Provider) CreateGetRequest(
 	if hasPathParams {
 		var err error
 
-		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodGet, inputs)
+		m := inputs
+		if currentState != nil {
+			maps.Copy(m, *currentState)
+		}
+		pathParams, err = p.getPathParamsMap(httpEndpointPath, http.MethodGet, m)
 		if err != nil {
 			return nil, errors.Wrap(err, "getting path params")
 		}

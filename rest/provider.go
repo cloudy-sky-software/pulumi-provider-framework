@@ -617,7 +617,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	outputProperties, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
@@ -665,8 +665,13 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 				return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 			}
 		} else {
-			// This is a request to import a resource.
+			// This is more than likely a request to import a resource.
 			id := req.GetId()
+
+			// Import IDs can be separated by a `/`,
+			// in case when a resource is nested under
+			// parent resource(s). We'll need the
+			// resource IDs of those parents too.
 			if strings.Contains(id, "/") {
 				pathParams, err := p.mapImportIDToPathParams(id, httpEndpointPath)
 				if err != nil {
@@ -739,7 +744,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 	var inputs resource.PropertyMap
 	// If there is no old state, then persist the current outputs as the
-	// "old" inputs going forward for this resource.
+	// "old" inputs for this resource.
 	if len(currentState) == 0 {
 		inputs = resource.NewPropertyMapFromMap(outputsMap)
 		// Filter out read-only properties from the inputs.
@@ -761,7 +766,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		}
 		openapi.FilterReadOnlyProperties(ctx, requestBodySchema, inputs, dv)
 
-		// Transform the inputs to match the API to SDK name map, which is assumed in later operations
+		// Transform the inputs to match the API to SDK name map,
+		// which is assumed in later operations.
 		var inputsMappable = inputs.Mappable()
 		p.TransformBody(ctx, inputsMappable, p.metadata.APIToSDKNameMap)
 		inputs = resource.NewPropertyMapFromMap(inputsMappable)
@@ -771,8 +777,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		// so that the checkpoint is in-sync with the state in the
 		// cloud provider.
 		newState := resource.NewPropertyMapFromMap(outputsMap)
-		// Filter out read-only properties before we apply the cloud provider
-		// state to our input state.
+		// Filter out read-only properties before we apply
+		// the cloud provider state to our input state.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
 		var operation *openapi3.Operation
 		if pathItem.Post != nil {
@@ -791,7 +797,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		}
 		openapi.FilterReadOnlyProperties(ctx, requestBodySchema, newState, dv)
 
-		// Transform the newState to match the API to SDK name map, which the inputs being diff'd with certainly will be
+		// Transform the newState to match the API to SDK name map,
+		// which the inputs being diff'd with certainly will be.
 		var newStateMappable = newState.Mappable()
 		p.TransformBody(ctx, newStateMappable, p.metadata.APIToSDKNameMap)
 		newState = resource.NewPropertyMapFromMap(newStateMappable)
@@ -809,6 +816,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
+	// Stash a copy of the current inputs in the serialized outputs.
 	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
@@ -839,7 +847,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 // Update updates an existing resource with new values.
 func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.OldInputs, state.HTTPRequestBodyUnmarshalOpts)
+	oldState, err := plugin.UnmarshalProperties(req.GetOlds(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal olds as propertymap")
 	}
@@ -958,7 +966,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
 	// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	outputProperties, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}

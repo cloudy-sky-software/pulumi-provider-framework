@@ -145,8 +145,7 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 		t.Fatalf("Failed to unmarshal test payload: %v", err)
 	}
 
-	expectedOutputState := state.GetResourceState(outputsMap, inputsPropertyMap)
-	serializedOutputState, err := plugin.MarshalProperties(expectedOutputState, state.DefaultMarshalOpts)
+	serializedOutputState, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
 	if err != nil {
 		t.Fatalf("Marshaling the output properties map: %v", err)
 	}
@@ -162,13 +161,8 @@ func TestResourceReadResultsInNoChanges(t *testing.T) {
 
 	actualOutputState, err := plugin.UnmarshalProperties(readResp.GetProperties(), state.DefaultUnmarshalOpts)
 	assert.Nil(t, err, "Failed to unmarshal output properties struct: %v", err)
-	actualStashedInputState := state.GetOldInputs(actualOutputState)
 
-	// The read operation should not have modified the stashed inputs
-	// because the read would have returned read-only properties
-	// in the response which should not be serialized into
-	// the stashed inputs.
-	assert.Equal(t, inputsPropertyMap, actualStashedInputState, "Expected the stashed inputs to match the origin inputs")
+	assert.Equal(t, resource.NewPropertyMapFromMap(outputsMap), actualOutputState)
 }
 
 func TestImports(t *testing.T) {
@@ -230,15 +224,14 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, nil, nil)
 
 	newInputs, _ := getMarshaledProps(t, newInputsJSON)
-	oldInputs, oldInputsPropertyMap := getMarshaledProps(t, oldInputsJSON)
+	oldInputs, _ := getMarshaledProps(t, oldInputsJSON)
 
 	var outputsMap map[string]any
 	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
 		t.Fatalf("Failed to unmarshal test payload: %v", err)
 	}
 
-	expectedOutputState := state.GetResourceState(outputsMap, oldInputsPropertyMap)
-	serializedOutputState, err := plugin.MarshalProperties(expectedOutputState, state.DefaultMarshalOpts)
+	serializedOutputState, err := plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
 	if err != nil {
 		t.Fatalf("Marshaling the output properties map: %v", err)
 	}
@@ -454,7 +447,7 @@ func TestApiHostOverride(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
 
 	// verify requests are still matched when using an overridden api host name
-	request, err := p.(*Provider).CreateGetRequest(ctx, "/v2/fakeresource/{resourceId}", resource.NewPropertyMapFromMap(map[string]any{"resourceId": "12345"}))
+	request, err := p.(*Provider).CreateGetRequest(ctx, "/v2/fakeresource/{resourceId}", resource.NewPropertyMapFromMap(map[string]any{"resourceId": "12345"}), nil)
 	assert.Nil(t, err)
 	assert.Equal(t, request.URL.String(), fmt.Sprintf("http://%s/v2/fakeresource/12345", expectedHost), "Expected request to be matched when using an overridden api host name")
 }
@@ -476,7 +469,7 @@ func TestApiHostOverrideViaEnvVar(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("http://%s", expectedHost), p.(*Provider).GetBaseURL())
 
 	// verify requests are still matched when using an overridden api host name
-	request, err := p.(*Provider).CreateGetRequest(ctx, "/v2/fakeresource/{resourceId}", resource.NewPropertyMapFromMap(map[string]any{"resourceId": "12345"}))
+	request, err := p.(*Provider).CreateGetRequest(ctx, "/v2/fakeresource/{resourceId}", resource.NewPropertyMapFromMap(map[string]any{"resourceId": "12345"}), nil)
 	assert.Nil(t, err)
 	assert.Equal(t, request.URL.String(), fmt.Sprintf("http://%s/v2/fakeresource/12345", expectedHost), "Expected request to be matched when using an overridden api host name")
 }

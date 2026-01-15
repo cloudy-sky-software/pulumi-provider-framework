@@ -82,7 +82,7 @@ func TestLastPathParamIsResourceId(t *testing.T) {
 		"id": "fake-id",
 	}
 
-	httpReq, err := p.(Request).CreateGetRequest(ctx, "/v2/anotherfakeresource/{some_id}", resource.NewPropertyMapFromMap(properties))
+	httpReq, err := p.(Request).CreateGetRequest(ctx, "/v2/anotherfakeresource/{some_id}", resource.NewPropertyMapFromMap(properties), nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, httpReq)
 

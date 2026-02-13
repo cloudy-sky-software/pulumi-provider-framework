@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/cloudy-sky-software/pulumi-provider-framework)
+
 # Pulumi Provider Framework
 
 A framework for building native Pulumi providers from OpenAPI. This library handles the duties of a Pulumi resource provider server and exposing a simple callback-like mechanism for providers wanting to control the outcome of CRUD operations on resources.

@@ -25,7 +25,7 @@ the request body.
 These files contain methods for handling response transformation before delivering the response
 to the Pulumi engine which subsequently end up in the Pulumi checkpoint file.
 
-## Adding Tests
+## Tests
 
 The `testdata` folder contains test OpenAPI specs.
 For convenience, there is a `generic` provider that is initialized

@@ -1168,6 +1168,7 @@ func (p *Provider) pollResourceUntilReady(ctx context.Context, getEndpointPath s
 			return nil, errors.Wrap(err, "creating get request during polling")
 		}
 
+		// nolint: gosec
 		httpResp, err := p.httpClient.Do(httpReq)
 		if err != nil {
 			if pollCtx.Err() != nil {

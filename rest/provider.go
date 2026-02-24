@@ -79,17 +79,20 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 	httpClient := &http.Client{
 		// The transport is mostly a copy of the http.DefaultTransport
 		// with the exception of ForceAttemptHTTP2 set to false.
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: defaultTransportDialContext(&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}),
-			ForceAttemptHTTP2:     false,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
+		// It is wrapped with rateLimitTransport to handle HTTP 429 responses.
+		Transport: &rateLimitTransport{
+			wrapped: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				DialContext: defaultTransportDialContext(&net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}),
+				ForceAttemptHTTP2:     false,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
 		},
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return errors.New("unable to handle redirects")
@@ -272,6 +275,7 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 	}
 
 	// Read the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -581,6 +585,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	}
 
 	// Create the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -710,6 +715,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	// Read the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -927,6 +933,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	}
 
 	// Update the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -1005,6 +1012,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 	}
 
 	// Delete the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")

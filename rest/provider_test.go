@@ -34,6 +34,7 @@ var tailscaleMetadataEmbed string
 var tailscalePulSchemaEmbed string
 
 const fakeResourceBaseURLPath = "/v2/fakeresource"
+const fakeResourceID = "fake-id"
 
 func makeTestTailscaleProviderWithOpts(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback, sendsOldInputs bool) pulumirpc.ResourceProviderServer {
 	t.Helper()
@@ -198,7 +199,7 @@ func TestImports(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
-		Id:         "/fake-id",
+		Id:         fmt.Sprintf("/%s", fakeResourceID),
 		Inputs:     nil,
 		Properties: nil,
 		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
@@ -245,7 +246,7 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	}
 
 	diffResp, err := p.Diff(ctx, &pulumirpc.DiffRequest{
-		Id:        "fake-id",
+		Id:        fakeResourceID,
 		Olds:      serializedOutputState,
 		News:      newInputs,
 		OldInputs: oldInputs,
@@ -261,8 +262,7 @@ func TestDiffForUpdateableResource(t *testing.T) {
 func TestUpdateForUpdateableResource(t *testing.T) {
 	ctx := context.Background()
 
-	id := "fake-id"
-	outputsJSON := fmt.Sprintf(`{"id":"%s", "another_prop":"output value"}`, id)
+	outputsJSON := fmt.Sprintf(`{"id":"%s", "another_prop":"output value"}`, fakeResourceID)
 
 	validateDiscriminatedRequest := false
 
@@ -365,7 +365,7 @@ func TestUpdateForUpdateableResource(t *testing.T) {
 		}
 
 		updateResp, err := p.Update(ctx, &pulumirpc.UpdateRequest{
-			Id:        id,
+			Id:        fakeResourceID,
 			Olds:      serializedOutputState,
 			News:      newInputs,
 			OldInputs: oldInputs,
@@ -623,12 +623,12 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	})
 
 	getCallCount := 0
-	expectedResourceId := "fake-id"
+	expectedResourceID := fakeResourceID
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
 			w.WriteHeader(http.StatusAccepted)
-			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceId))
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceID))
 			return
 		}
 
@@ -640,7 +640,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 				return
 			}
 			// Return 200 on the third call.
-			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceId))
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceID))
 			return
 		}
 
@@ -667,7 +667,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, createResp)
-	assert.Equal(t, expectedResourceId, createResp.GetId())
+	assert.Equal(t, expectedResourceID, createResp.GetId())
 	assert.Equal(t, 3, getCallCount, "Expected exactly 3 GET calls (2 with 404, 1 with 200)")
 }
 
@@ -689,7 +689,7 @@ func TestCreateWith202TimesOut(t *testing.T) {
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
 			w.WriteHeader(http.StatusAccepted)
-			_, _ = io.WriteString(w, `{"id":"fake-id"}`)
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s"}`, fakeResourceID))
 			return
 		}
 
@@ -747,7 +747,6 @@ func TestUpdateWith202PollsUntilReady(t *testing.T) {
 		maxPollingInterval = origMax
 	})
 
-	id := "fake-id"
 	getCallCount := 0
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -758,7 +757,7 @@ func TestUpdateWith202PollsUntilReady(t *testing.T) {
 			return
 		}
 
-		if r.URL.Path == fmt.Sprintf("/v2/fakeresource/%s", id) && r.Method == http.MethodGet {
+		if r.URL.Path == fmt.Sprintf("/v2/fakeresource/%s", fakeResourceID) && r.Method == http.MethodGet {
 			getCallCount++
 			if getCallCount < 2 {
 				// Return 404 for the first call.
@@ -766,7 +765,7 @@ func TestUpdateWith202PollsUntilReady(t *testing.T) {
 				return
 			}
 			// Return 200 on the second call.
-			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"updated-value"}`, id))
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"updated-value"}`, fakeResourceID))
 			return
 		}
 
@@ -780,7 +779,7 @@ func TestUpdateWith202PollsUntilReady(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	oldInputsJSON := `{"object_prop":{"another_prop":"old-value"}}`
-	outputsJSON := fmt.Sprintf(`{"id":"%s","another_prop":"old-value"}`, id)
+	outputsJSON := fmt.Sprintf(`{"id":"%s","another_prop":"old-value"}`, fakeResourceID)
 	newInputsJSON := `{"object_prop":{"another_prop":"old-value"},"simple_prop":"updated-value"}`
 
 	newInputs := getMarshaledProps(t, newInputsJSON)
@@ -804,7 +803,7 @@ func TestUpdateWith202PollsUntilReady(t *testing.T) {
 	}
 
 	updateResp, err := p.Update(ctx, &pulumirpc.UpdateRequest{
-		Id:        id,
+		Id:        fakeResourceID,
 		Olds:      serializedOutputState,
 		News:      newInputs,
 		OldInputs: oldInputs,

@@ -79,17 +79,20 @@ func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaB
 	httpClient := &http.Client{
 		// The transport is mostly a copy of the http.DefaultTransport
 		// with the exception of ForceAttemptHTTP2 set to false.
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: defaultTransportDialContext(&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}),
-			ForceAttemptHTTP2:     false,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
+		// It is wrapped with rateLimitTransport to handle HTTP 429 responses.
+		Transport: &rateLimitTransport{
+			wrapped: &http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				DialContext: defaultTransportDialContext(&net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}),
+				ForceAttemptHTTP2:     false,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
 		},
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return errors.New("unable to handle redirects")

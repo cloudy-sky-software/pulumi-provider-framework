@@ -612,6 +612,21 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
 
+	// If the server returned 202 Accepted, the resource is not yet ready.
+	// Poll the GET endpoint until the resource is ready or the timeout is exceeded.
+	if httpResp.StatusCode == http.StatusAccepted {
+		initialOutputsMap, ok := outputs.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("expected the 202 response body to be a JSON object")
+		}
+
+		polledOutputs, pollErr := p.pollResourceUntilReady(ctx, resourceTypeToken, initialOutputsMap, inputs, req.GetTimeout())
+		if pollErr != nil {
+			return nil, pollErr
+		}
+		outputs = polledOutputs
+	}
+
 	outputsMap, postCreateErr := p.providerCallback.OnPostCreate(ctx, req, outputs)
 	if postCreateErr != nil {
 		// TODO: returning a nil CreateResponse will mean that Pulumi will consider
@@ -932,8 +947,10 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Wrap(err, "executing http request")
 	}
 
-	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-		return nil, errors.Errorf("http request failed: %v. expected 200 or 204 but got %d", err, httpResp.StatusCode)
+	if httpResp.StatusCode != http.StatusOK &&
+		httpResp.StatusCode != http.StatusNoContent &&
+		httpResp.StatusCode != http.StatusAccepted {
+		return nil, errors.Errorf("http request failed: %v. expected 200, 202, or 204 but got %d", err, httpResp.StatusCode)
 	}
 
 	body, err := io.ReadAll(httpResp.Body)
@@ -953,6 +970,22 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	}
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
+
+	// If the server returned 202 Accepted, the resource update is not yet complete.
+	// Poll the GET endpoint until the resource is ready or the timeout is exceeded.
+	if httpResp.StatusCode == http.StatusAccepted {
+		initialOutputsMap, ok := outputs.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("expected the 202 response body to be a JSON object")
+		}
+
+		// Use oldState for path params resolution since it has the existing resource id.
+		polledOutputs, pollErr := p.pollResourceUntilReady(ctx, resourceTypeToken, initialOutputsMap, oldState, req.GetTimeout())
+		if pollErr != nil {
+			return nil, pollErr
+		}
+		outputs = polledOutputs
+	}
 
 	outputsMap, postUpdateErr := p.providerCallback.OnPostUpdate(ctx, req, *httpReq, outputs)
 	if postUpdateErr != nil {
@@ -1022,6 +1055,101 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 	}
 
 	return &pbempty.Empty{}, nil
+}
+
+// defaultPollingInterval is the interval between polling attempts for resources
+// that returned a 202 Accepted status. It is a variable to allow overriding in tests.
+var defaultPollingInterval = 5 * time.Second
+
+const defaultPollingTimeout = 10 * time.Minute
+
+// pollResourceUntilReady polls the GET endpoint for the given resource type token
+// until the resource is ready (200 OK), not found (404), or the timeout is exceeded.
+// It returns the final outputs map from the GET response.
+func (p *Provider) pollResourceUntilReady(ctx context.Context, resourceTypeToken string, outputs map[string]interface{}, inputs resource.PropertyMap, timeoutSecs float64) (map[string]interface{}, error) {
+	crudMap, ok := p.metadata.ResourceCRUDMap[resourceTypeToken]
+	if !ok {
+		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
+	}
+	if crudMap.R == nil {
+		return nil, errors.Errorf("resource read endpoint is unknown for %s, cannot poll for readiness", resourceTypeToken)
+	}
+
+	getEndpointPath := *crudMap.R
+
+	var timeout time.Duration
+	if timeoutSecs > 0 {
+		timeout = time.Duration(timeoutSecs) * time.Second
+	} else {
+		timeout = defaultPollingTimeout
+	}
+
+	pollCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	// Build the property map for the GET request from the 202 response outputs.
+	// Merge with inputs so path params can be resolved.
+	mergedProps := resource.NewPropertyMapFromMap(outputs)
+	for k, v := range inputs {
+		if _, exists := mergedProps[k]; !exists {
+			mergedProps[k] = v
+		}
+	}
+
+	logging.V(3).Infof("Polling resource %s for readiness (timeout: %s)", resourceTypeToken, timeout)
+
+	for {
+		select {
+		case <-pollCtx.Done():
+			if pollCtx.Err() == context.DeadlineExceeded {
+				return nil, errors.Errorf("timed out waiting for resource %s to become ready after %s", resourceTypeToken, timeout)
+			}
+			return nil, pollCtx.Err()
+		case <-time.After(defaultPollingInterval):
+		}
+
+		getReq, err := p.CreateGetRequest(pollCtx, getEndpointPath, mergedProps)
+		if err != nil {
+			return nil, errors.Wrapf(err, "creating get request while polling (type token: %s)", resourceTypeToken)
+		}
+
+		logging.V(3).Infof("Polling GET %s", getReq.URL.String())
+
+		getResp, err := p.httpClient.Do(getReq)
+		if err != nil {
+			return nil, errors.Wrap(err, "executing get request while polling")
+		}
+
+		if getResp.StatusCode == http.StatusNotFound {
+			getResp.Body.Close()
+			return nil, errors.Errorf("resource %s returned 404 while polling for readiness", resourceTypeToken)
+		}
+
+		if getResp.StatusCode == http.StatusOK {
+			body, err := io.ReadAll(getResp.Body)
+			getResp.Body.Close()
+			if err != nil {
+				return nil, errors.Wrap(err, "reading get response body while polling")
+			}
+
+			var pollOutputs interface{}
+			if err := json.Unmarshal(body, &pollOutputs); err != nil {
+				return nil, errors.Wrap(err, "unmarshaling get response body while polling")
+			}
+
+			pollOutputsMap, ok := pollOutputs.(map[string]interface{})
+			if !ok {
+				return nil, errors.New("expected the get response body to be a JSON object while polling")
+			}
+
+			logging.V(3).Infof("Resource %s is ready, got 200 OK while polling", resourceTypeToken)
+			return pollOutputsMap, nil
+		}
+
+		// For any other status code, log and keep polling.
+		getResp.Body.Close()
+		logging.V(3).Infof("Polling resource %s: got status %d, will retry", resourceTypeToken, getResp.StatusCode)
+	}
 }
 
 // GetPluginInfo returns generic information about this plugin, like its version.

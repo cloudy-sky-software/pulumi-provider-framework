@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
@@ -432,6 +433,189 @@ func TestCreateWithSecretInput(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, createResp)
 	assert.Contains(t, createResp.GetProperties().AsMap(), "anotherProp")
+}
+
+func TestCreateWith202PollsUntilReady(t *testing.T) {
+	ctx := context.Background()
+
+	getCallCount := 0
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+			w.WriteHeader(http.StatusAccepted)
+			_, err := io.WriteString(w, `{"id":"fakeId", "another_prop":"pending"}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		if r.URL.Path == "/v2/fakeresource/fakeId" && r.Method == "GET" {
+			getCallCount++
+			if getCallCount < 2 {
+				// Return 202 on the first poll to simulate resource still provisioning.
+				w.WriteHeader(http.StatusAccepted)
+				_, err := io.WriteString(w, `{}`)
+				if err != nil {
+					t.Errorf("Error writing string to the response stream: %v", err)
+				}
+				return
+			}
+			// Return 200 on subsequent polls.
+			_, err := io.WriteString(w, `{"id":"fakeId", "another_prop":"ready"}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		w.WriteHeader(http.StatusNotFound)
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+	defer testServer.Close()
+
+	// Use a very short polling interval so the test finishes quickly.
+	oldPollingInterval := defaultPollingInterval
+	defaultPollingInterval = 50 * time.Millisecond
+	defer func() { defaultPollingInterval = oldPollingInterval }()
+
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]any{
+		"simpleProp": resource.NewStringProperty("someValue"),
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       "myResource",
+		Properties: props,
+		Type:       "fakeresource/v2:FakeResource",
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Timeout:    300,
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, createResp)
+	assert.Equal(t, "fakeId", createResp.GetId())
+	assert.Equal(t, "ready", createResp.GetProperties().AsMap()["anotherProp"])
+	assert.GreaterOrEqual(t, getCallCount, 2, "Expected at least 2 GET calls during polling")
+}
+
+func TestCreateWith202And404StopsPolling(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+			w.WriteHeader(http.StatusAccepted)
+			_, err := io.WriteString(w, `{"id":"fakeId", "another_prop":"pending"}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		if r.URL.Path == "/v2/fakeresource/fakeId" && r.Method == "GET" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		w.WriteHeader(http.StatusNotFound)
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+	defer testServer.Close()
+
+	// Use a very short polling interval so the test finishes quickly.
+	oldPollingInterval := defaultPollingInterval
+	defaultPollingInterval = 50 * time.Millisecond
+	defer func() { defaultPollingInterval = oldPollingInterval }()
+
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]any{
+		"simpleProp": resource.NewStringProperty("someValue"),
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	_, err = p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       "myResource",
+		Properties: props,
+		Type:       "fakeresource/v2:FakeResource",
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Timeout:    300,
+	})
+	assert.NotNil(t, err, "Expected an error when the GET endpoint returns 404")
+	assert.Contains(t, err.Error(), "404")
+}
+
+func TestCreateWith202TimesOut(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+			w.WriteHeader(http.StatusAccepted)
+			_, err := io.WriteString(w, `{"id":"fakeId", "another_prop":"pending"}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		if r.URL.Path == "/v2/fakeresource/fakeId" && r.Method == "GET" {
+			// Always return 202 to simulate the resource never becoming ready.
+			w.WriteHeader(http.StatusAccepted)
+			_, err := io.WriteString(w, `{}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		w.WriteHeader(http.StatusNotFound)
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+	defer testServer.Close()
+
+	// Use a long polling interval but a very short timeout so the test reliably
+	// hits the deadline well before the first poll attempt.
+	oldPollingInterval := defaultPollingInterval
+	defaultPollingInterval = 500 * time.Millisecond
+	defer func() { defaultPollingInterval = oldPollingInterval }()
+
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]any{
+		"simpleProp": resource.NewStringProperty("someValue"),
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	// Use a very short timeout (1ms) so the context deadline fires well before
+	// the 500ms poll interval, making this test fast and reliable.
+	_, err = p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       "myResource",
+		Properties: props,
+		Type:       "fakeresource/v2:FakeResource",
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Timeout:    0.001,
+	})
+	assert.NotNil(t, err, "Expected a timeout error")
+	assert.Contains(t, err.Error(), "timed out")
 }
 
 func TestApiHostOverride(t *testing.T) {

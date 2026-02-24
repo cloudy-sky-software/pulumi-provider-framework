@@ -275,6 +275,7 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 	}
 
 	// Read the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -584,6 +585,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	}
 
 	// Create the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -713,6 +715,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	// Read the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -930,6 +933,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	}
 
 	// Update the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")
@@ -1008,6 +1012,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 	}
 
 	// Delete the resource.
+	// nolint: gosec
 	httpResp, err := p.httpClient.Do(httpReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "executing http request")

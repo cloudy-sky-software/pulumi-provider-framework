@@ -384,7 +384,7 @@ func TestCreateWithSecretInput(t *testing.T) {
 	secretValue := "secretValue"
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == fakeResourceBaseURLPath && r.Method == "POST" {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
 			b, _ := io.ReadAll(r.Body)
 			var reqBody map[string]any
 			err := json.Unmarshal(b, &reqBody)
@@ -623,15 +623,16 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	})
 
 	getCallCount := 0
+	expectedResourceId := "fake-id"
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == fakeResourceBaseURLPath && r.Method == "POST" {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
 			w.WriteHeader(http.StatusAccepted)
-			_, _ = io.WriteString(w, `{"id":"fakeId","another_prop":"somevalue"}`)
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceId))
 			return
 		}
 
-		if r.URL.Path == "/v2/fakeresource/fakeId" && r.Method == "GET" {
+		if r.URL.Path == fakeResourceByIDURLPath && r.Method == http.MethodGet {
 			getCallCount++
 			if getCallCount < 3 {
 				// Return 404 for the first two calls.
@@ -639,7 +640,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 				return
 			}
 			// Return 200 on the third call.
-			_, _ = io.WriteString(w, `{"id":"fakeId","another_prop":"somevalue"}`)
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceId))
 			return
 		}
 
@@ -666,7 +667,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, createResp)
-	assert.Equal(t, "fakeId", createResp.GetId())
+	assert.Equal(t, expectedResourceId, createResp.GetId())
 	assert.Equal(t, 3, getCallCount, "Expected exactly 3 GET calls (2 with 404, 1 with 200)")
 }
 
@@ -686,13 +687,13 @@ func TestCreateWith202TimesOut(t *testing.T) {
 	})
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == fakeResourceBaseURLPath && r.Method == "POST" {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
 			w.WriteHeader(http.StatusAccepted)
-			_, _ = io.WriteString(w, `{"id":"fakeId"}`)
+			_, _ = io.WriteString(w, `{"id":"fake-id"}`)
 			return
 		}
 
-		if r.URL.Path == "/v2/fakeresource/fakeId" && r.Method == "GET" {
+		if r.URL.Path == fakeResourceByIDURLPath && r.Method == http.MethodGet {
 			// Always return 404 — resource never becomes ready.
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -757,7 +758,7 @@ func TestUpdateWith202PollsUntilReady(t *testing.T) {
 			return
 		}
 
-		if r.URL.Path == fmt.Sprintf("/v2/fakeresource/%s", id) && r.Method == "GET" {
+		if r.URL.Path == fmt.Sprintf("/v2/fakeresource/%s", id) && r.Method == http.MethodGet {
 			getCallCount++
 			if getCallCount < 2 {
 				// Return 404 for the first call.

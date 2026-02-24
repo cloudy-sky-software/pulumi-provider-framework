@@ -39,6 +39,15 @@ import (
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 )
 
+var (
+	// defaultPollingTimeout is used when the request does not specify a timeout.
+	defaultPollingTimeout = 10 * time.Minute
+	// initialPollingInterval is the starting backoff interval for exponential backoff.
+	initialPollingInterval = 1 * time.Second
+	// maxPollingInterval caps the exponential backoff growth.
+	maxPollingInterval = 30 * time.Second
+)
+
 // Provider implements Pulumi's `ResourceProviderServer` interface.
 // The implemented methods assume that the cloud provider supports RESTful
 // APIs that accept a content-type of `application/json`.
@@ -613,8 +622,39 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	defer httpResp.Body.Close()
 
 	var outputs interface{}
-	if err := json.Unmarshal(body, &outputs); err != nil {
-		return nil, errors.Wrap(err, "unmarshaling the response")
+	if httpResp.StatusCode == http.StatusAccepted {
+		// 202: Resource creation was accepted but not yet complete.
+		// Poll the GET endpoint until the resource is ready (200) or the timeout is exceeded.
+		if crudMap.R == nil {
+			return nil, errors.Errorf("resource accepted (202) but no read endpoint is available for %s", resourceTypeToken)
+		}
+
+		// Merge the 202 response body into inputs so path params (e.g. the resource id)
+		// can be resolved when constructing the GET request.
+		if len(body) > 0 {
+			var respBodyMap map[string]interface{}
+			if err := json.Unmarshal(body, &respBodyMap); err != nil {
+				return nil, errors.Wrap(err, "unmarshaling 202 response body")
+			}
+			for k, v := range respBodyMap {
+				inputs[resource.PropertyKey(k)] = resource.NewPropertyValue(v)
+			}
+		}
+
+		var pollTimeout time.Duration
+		if req.GetTimeout() > 0 {
+			pollTimeout = time.Duration(req.GetTimeout()) * time.Second
+		}
+
+		pollOutputs, pollErr := p.pollResourceUntilReady(ctx, *crudMap.R, inputs, pollTimeout)
+		if pollErr != nil {
+			return nil, errors.Wrap(pollErr, "polling resource after 202 response")
+		}
+		outputs = pollOutputs
+	} else {
+		if err := json.Unmarshal(body, &outputs); err != nil {
+			return nil, errors.Wrap(err, "unmarshaling the response")
+		}
 	}
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
@@ -982,8 +1022,8 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Wrap(err, "executing http request")
 	}
 
-	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-		return nil, errors.Errorf("http request failed: %v. expected 200 or 204 but got %d", err, httpResp.StatusCode)
+	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent && httpResp.StatusCode != http.StatusAccepted {
+		return nil, errors.Errorf("http request failed: %v. expected 200, 202 or 204 but got %d", err, httpResp.StatusCode)
 	}
 
 	body, err := io.ReadAll(httpResp.Body)
@@ -998,8 +1038,27 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	}
 
 	var outputs interface{}
-	if err := json.Unmarshal(body, &outputs); err != nil {
-		return nil, errors.Wrap(err, "unmarshaling the response")
+	if httpResp.StatusCode == http.StatusAccepted {
+		// 202: Resource update was accepted but not yet complete.
+		// Poll the GET endpoint until the resource is ready (200) or the timeout is exceeded.
+		if crudMap.R == nil {
+			return nil, errors.Errorf("resource update accepted (202) but no read endpoint is available for %s", resourceTypeToken)
+		}
+
+		var pollTimeout time.Duration
+		if req.GetTimeout() > 0 {
+			pollTimeout = time.Duration(req.GetTimeout()) * time.Second
+		}
+
+		pollOutputs, pollErr := p.pollResourceUntilReady(ctx, *crudMap.R, oldState, pollTimeout)
+		if pollErr != nil {
+			return nil, errors.Wrap(pollErr, "polling resource after 202 response")
+		}
+		outputs = pollOutputs
+	} else {
+		if err := json.Unmarshal(body, &outputs); err != nil {
+			return nil, errors.Wrap(err, "unmarshaling the response")
+		}
 	}
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
@@ -1087,6 +1146,78 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 	}
 
 	return &pbempty.Empty{}, nil
+}
+
+// pollResourceUntilReady polls the GET endpoint for the resource until it returns 200 OK
+// or the context times out. Polling continues while the GET endpoint returns 404 (resource
+// not yet created) and stops when 200 is returned (resource exists). Uses exponential
+// backoff between poll attempts.
+func (p *Provider) pollResourceUntilReady(ctx context.Context, getEndpointPath string, inputs resource.PropertyMap, timeout time.Duration) (map[string]interface{}, error) {
+	if timeout <= 0 {
+		timeout = defaultPollingTimeout
+	}
+
+	pollCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	interval := initialPollingInterval
+
+	for {
+		httpReq, err := p.CreateGetRequest(pollCtx, getEndpointPath, inputs, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "creating get request during polling")
+		}
+
+		httpResp, err := p.httpClient.Do(httpReq)
+		if err != nil {
+			if pollCtx.Err() != nil {
+				return nil, errors.Wrap(pollCtx.Err(), "polling timed out")
+			}
+			return nil, errors.Wrap(err, "executing http request during polling")
+		}
+
+		switch httpResp.StatusCode {
+		case http.StatusOK:
+			// Resource is ready — read the body and return.
+			body, readErr := io.ReadAll(httpResp.Body)
+			httpResp.Body.Close()
+			if readErr != nil {
+				return nil, errors.Wrap(readErr, "reading response body during polling")
+			}
+			var outputs interface{}
+			if err := json.Unmarshal(body, &outputs); err != nil {
+				return nil, errors.Wrap(err, "unmarshaling response during polling")
+			}
+			return outputs.(map[string]interface{}), nil
+
+		case http.StatusNotFound:
+			// Resource not yet created — continue polling.
+			httpResp.Body.Close()
+			logging.V(3).Infof("pollResourceUntilReady: resource not yet ready (404), will retry in %s", interval)
+
+		default:
+			// Unexpected status code — return an error.
+			body, readErr := io.ReadAll(httpResp.Body)
+			httpResp.Body.Close()
+			if readErr != nil {
+				return nil, errors.Errorf("polling returned unexpected status %s and body could not be read", httpResp.Status)
+			}
+			return nil, errors.Errorf("polling returned unexpected status %s: %s", httpResp.Status, string(body))
+		}
+
+		// Wait with exponential backoff before the next poll attempt.
+		select {
+		case <-pollCtx.Done():
+			return nil, errors.Wrap(pollCtx.Err(), "polling timed out waiting for resource to become ready")
+		case <-time.After(interval):
+		}
+
+		// Double the interval, capped at maxPollingInterval.
+		interval *= 2
+		if interval > maxPollingInterval {
+			interval = maxPollingInterval
+		}
+	}
 }
 
 // GetPluginInfo returns generic information about this plugin, like its version.

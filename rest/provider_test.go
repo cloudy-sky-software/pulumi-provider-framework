@@ -173,7 +173,7 @@ func TestImports(t *testing.T) {
 	ctx := context.Background()
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v2/fakeresource/fake-id" {
+		if r.URL.Path == fakeResourceURLPath {
 			_, err := io.WriteString(w, `{"another_prop":"somevalue"}`)
 			if err != nil {
 				t.Errorf("Error writing string to the response stream: %v", err)

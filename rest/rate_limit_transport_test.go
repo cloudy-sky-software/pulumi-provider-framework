@@ -16,7 +16,7 @@ import (
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
 
-const fakeResourceURLPath = "/v2/fakeresource/fake-id"
+const fakeResourceByIDURLPath = "/v2/fakeresource/fake-id"
 
 // TestRateLimitTransportRetryWithRetryAfterInteger verifies that when a 429
 // response is received with a valid non-negative integer Retry-After header,
@@ -29,7 +29,7 @@ func TestRateLimitTransportRetryWithRetryAfterInteger(t *testing.T) {
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		count := requestCount.Add(1)
-		if r.URL.Path == fakeResourceURLPath {
+		if r.URL.Path == fakeResourceByIDURLPath {
 			if count == 1 {
 				// Return 429 on the first request with Retry-After: 0
 				w.Header().Set("Retry-After", "0")
@@ -80,7 +80,7 @@ func TestRateLimitTransportNoRetryWithoutRetryAfterHeader(t *testing.T) {
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount.Add(1)
-		if r.URL.Path == fakeResourceURLPath {
+		if r.URL.Path == fakeResourceByIDURLPath {
 			w.WriteHeader(http.StatusTooManyRequests)
 			_, _ = io.WriteString(w, `{"message":"rate limited"}`)
 			return
@@ -120,7 +120,7 @@ func TestRateLimitTransportNoRetryWithNegativeRetryAfter(t *testing.T) {
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount.Add(1)
-		if r.URL.Path == fakeResourceURLPath {
+		if r.URL.Path == fakeResourceByIDURLPath {
 			w.Header().Set("Retry-After", "-1")
 			w.WriteHeader(http.StatusTooManyRequests)
 			_, _ = io.WriteString(w, `{"message":"rate limited"}`)
@@ -160,7 +160,7 @@ func TestRateLimitTransportNoRetryWithNonIntegerRetryAfter(t *testing.T) {
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount.Add(1)
-		if r.URL.Path == fakeResourceURLPath {
+		if r.URL.Path == fakeResourceByIDURLPath {
 			w.Header().Set("Retry-After", "Wed, 21 Oct 2015 07:28:00 GMT")
 			w.WriteHeader(http.StatusTooManyRequests)
 			_, _ = io.WriteString(w, `{"message":"rate limited"}`)

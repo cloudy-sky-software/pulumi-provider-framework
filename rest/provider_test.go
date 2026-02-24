@@ -33,6 +33,8 @@ var tailscaleMetadataEmbed string
 //go:embed testdata/tailscale/schema.json
 var tailscalePulSchemaEmbed string
 
+const fakeResourceBaseURLPath = "/v2/fakeresource"
+
 func makeTestTailscaleProviderWithOpts(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback, sendsOldInputs bool) pulumirpc.ResourceProviderServer {
 	t.Helper()
 
@@ -175,7 +177,7 @@ func TestImports(t *testing.T) {
 	ctx := context.Background()
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == fakeResourceURLPath {
+		if r.URL.Path == fakeResourceByIDURLPath {
 			_, err := io.WriteString(w, `{"another_prop":"somevalue"}`)
 			if err != nil {
 				t.Errorf("Error writing string to the response stream: %v", err)
@@ -382,7 +384,7 @@ func TestCreateWithSecretInput(t *testing.T) {
 	secretValue := "secretValue"
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == "POST" {
 			b, _ := io.ReadAll(r.Body)
 			var reqBody map[string]any
 			err := json.Unmarshal(b, &reqBody)
@@ -623,7 +625,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	getCallCount := 0
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == "POST" {
 			w.WriteHeader(http.StatusAccepted)
 			_, _ = io.WriteString(w, `{"id":"fakeId","another_prop":"somevalue"}`)
 			return
@@ -684,7 +686,7 @@ func TestCreateWith202TimesOut(t *testing.T) {
 	})
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == "POST" {
 			w.WriteHeader(http.StatusAccepted)
 			_, _ = io.WriteString(w, `{"id":"fakeId"}`)
 			return

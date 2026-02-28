@@ -3,12 +3,12 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 go 1.25.7
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20260225154300-a8b55c5aff54
+	github.com/cloudy-sky-software/pulschema v0.0.0-20260228180255-b15371a6f8fb
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.223.0
-	github.com/pulumi/pulumi/sdk/v3 v3.223.0
+	github.com/pulumi/pulumi/pkg/v3 v3.224.0
+	github.com/pulumi/pulumi/sdk/v3 v3.224.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.34.0
 	google.golang.org/grpc v1.79.1
@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/djherbis/times v1.6.0 // indirect
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
@@ -78,6 +78,8 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/bubbles v1.0.0 // indirect
 	github.com/charmbracelet/bubbletea v1.3.10 // indirect
 	github.com/charmbracelet/colorprofile v0.4.2 // indirect
@@ -85,15 +87,23 @@ require (
 	github.com/charmbracelet/x/ansi v0.11.6 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
-	github.com/clipperhouse/displaywidth v0.10.0 // indirect
+	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
+	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.20 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
@@ -101,10 +111,12 @@ require (
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pgavlin/fx v0.1.6 // indirect
+	github.com/pgavlin/fx/v2 v2.0.10 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
-	github.com/pulumi/esc v0.17.0 // indirect
+	github.com/pulumi/esc v0.22.0 // indirect
 	github.com/pulumi/inflector v0.2.1 // indirect
+	github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.101.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	github.com/segmentio/encoding v0.4.1 // indirect
@@ -114,10 +126,22 @@ require (
 	github.com/woodsbury/decimal128 v1.3.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
+	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
+	go.opentelemetry.io/collector/featuregate v1.52.0 // indirect
+	go.opentelemetry.io/collector/pdata v1.52.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.40.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792 // indirect
+	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/term v0.40.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260217215200-42d3e9bedb6d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260223185530-2f722ef697dc // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260223185530-2f722ef697dc // indirect
 )

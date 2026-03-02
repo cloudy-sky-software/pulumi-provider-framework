@@ -32,7 +32,7 @@ var tailscaleMetadataEmbed string
 //go:embed testdata/tailscale/schema.json
 var tailscalePulSchemaEmbed string
 
-func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback) pulumirpc.ResourceProviderServer {
+func makeTestTailscaleProviderWithOpts(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback, sendsOldInputs bool) pulumirpc.ResourceProviderServer {
 	t.Helper()
 
 	openapiBytes := []byte(tailscaleOpenAPIEmbed)
@@ -61,8 +61,8 @@ func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *ht
 
 	_, err = p.Configure(ctx, &pulumirpc.ConfigureRequest{
 		Variables:              map[string]string{"tailscale:config:apiKey": "fakeapikey"},
-		SendsOldInputs:         true,
-		SendsOldInputsToDelete: true,
+		SendsOldInputs:         sendsOldInputs,
+		SendsOldInputsToDelete: sendsOldInputs,
 	})
 
 	if err != nil {
@@ -70,6 +70,11 @@ func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *ht
 	}
 
 	return p
+}
+
+func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback) pulumirpc.ResourceProviderServer {
+	t.Helper()
+	return makeTestTailscaleProviderWithOpts(ctx, t, testServer, providerCallback, true)
 }
 
 func getMarshaledProps(t *testing.T, jsonStr string) *structpb.Struct {
@@ -488,4 +493,112 @@ func TestNoApiHostOverride(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, expectedBaseURL, p.(*Provider).GetBaseURL())
+}
+
+func TestCreateLegacyPath(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+			_, err := io.WriteString(w, `{"id":"fakeId", "another_prop":"somevalue"}`)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+
+	p := makeTestGenericProviderWithOpts(ctx, t, testServer, nil, false)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]any{
+		"simpleProp": resource.NewStringProperty("somevalue"),
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       "myResource",
+		Properties: props,
+		Type:       "fakeresource/v2:FakeResource",
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, createResp)
+
+	// When engineSendsOldInputs is false, the output state should contain the __inputs key.
+	outputState, err := plugin.UnmarshalProperties(createResp.GetProperties(), state.DefaultUnmarshalOpts)
+	assert.Nil(t, err)
+	assert.Contains(t, outputState, resource.PropertyKey("__inputs"), "Legacy path should embed __inputs in output state")
+}
+
+func TestUpdateLegacyPath(t *testing.T) {
+	ctx := context.Background()
+
+	id := "fake-id"
+	outputsJSON := fmt.Sprintf(`{"id":"%s", "another_prop":"output value"}`, id)
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "PATCH" {
+			_, err := io.WriteString(w, outputsJSON)
+			if err != nil {
+				t.Errorf("Error writing string to the response stream: %v", err)
+			}
+			return
+		}
+
+		_, err := io.WriteString(w, "Unknown path")
+		if err != nil {
+			t.Errorf("Error writing string to the response stream: %v", err)
+		}
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+
+	defer testServer.Close()
+
+	p := makeTestGenericProviderWithOpts(ctx, t, testServer, nil, false)
+
+	oldInputsJSON := `{"object_prop": {"another_prop": "a value"}}`
+	newInputsJSON := `{"object_prop": {"another_prop": "a value"}, "simple_prop": "new value"}`
+
+	newInputs := getMarshaledProps(t, newInputsJSON)
+	oldInputs := getMarshaledProps(t, oldInputsJSON)
+
+	var outputsMap map[string]any
+	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
+		t.Fatalf("Failed to unmarshal test payload: %v", err)
+	}
+
+	serializedOutputState, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, resource.NewPropertyMapFromMap(map[string]any{
+		"object_prop": map[string]any{"another_prop": "a value"},
+	})), state.DefaultMarshalOpts)
+	if err != nil {
+		t.Fatalf("Marshaling the output properties map: %v", err)
+	}
+
+	updateResp, err := p.Update(ctx, &pulumirpc.UpdateRequest{
+		Id:        id,
+		Olds:      serializedOutputState,
+		News:      newInputs,
+		OldInputs: oldInputs,
+		Type:      "generic:fakeresource/v2:FakeResource",
+		Name:      "myResource",
+		Urn:       "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, updateResp)
+
+	// When engineSendsOldInputs is false, the output state should contain the __inputs key.
+	outputState, err := plugin.UnmarshalProperties(updateResp.GetProperties(), state.DefaultUnmarshalOpts)
+	assert.Nil(t, err)
+	assert.Contains(t, outputState, resource.PropertyKey("__inputs"), "Legacy path should embed __inputs in output state")
 }

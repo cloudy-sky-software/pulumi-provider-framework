@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
@@ -31,6 +32,9 @@ var tailscaleMetadataEmbed string
 
 //go:embed testdata/tailscale/schema.json
 var tailscalePulSchemaEmbed string
+
+const fakeResourceBaseURLPath = "/v2/fakeresource"
+const fakeResourceID = "fake-id"
 
 func makeTestTailscaleProvider(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback) pulumirpc.ResourceProviderServer {
 	t.Helper()
@@ -173,7 +177,7 @@ func TestImports(t *testing.T) {
 	ctx := context.Background()
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == fakeResourceURLPath {
+		if r.URL.Path == fakeResourceByIDURLPath {
 			_, err := io.WriteString(w, `{"another_prop":"somevalue"}`)
 			if err != nil {
 				t.Errorf("Error writing string to the response stream: %v", err)
@@ -194,7 +198,7 @@ func TestImports(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
-		Id:         "/fake-id",
+		Id:         fmt.Sprintf("/%s", fakeResourceID),
 		Inputs:     nil,
 		Properties: nil,
 		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
@@ -242,7 +246,7 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	}
 
 	diffResp, err := p.Diff(ctx, &pulumirpc.DiffRequest{
-		Id:        "fake-id",
+		Id:        fakeResourceID,
 		Olds:      serializedOutputState,
 		News:      newInputs,
 		OldInputs: oldInputs,
@@ -258,8 +262,7 @@ func TestDiffForUpdateableResource(t *testing.T) {
 func TestUpdateForUpdateableResource(t *testing.T) {
 	ctx := context.Background()
 
-	id := "fake-id"
-	outputsJSON := fmt.Sprintf(`{"id":"%s", "another_prop":"output value"}`, id)
+	outputsJSON := fmt.Sprintf(`{"id":"%s", "another_prop":"output value"}`, fakeResourceID)
 
 	validateDiscriminatedRequest := false
 
@@ -363,7 +366,7 @@ func TestUpdateForUpdateableResource(t *testing.T) {
 		}
 
 		updateResp, err := p.Update(ctx, &pulumirpc.UpdateRequest{
-			Id:        id,
+			Id:        fakeResourceID,
 			Olds:      serializedOutputState,
 			News:      newInputs,
 			OldInputs: oldInputs,
@@ -382,7 +385,7 @@ func TestCreateWithSecretInput(t *testing.T) {
 	secretValue := "secretValue"
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v2/fakeresource" && r.Method == "POST" {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
 			b, _ := io.ReadAll(r.Body)
 			var reqBody map[string]any
 			err := json.Unmarshal(b, &reqBody)
@@ -494,4 +497,208 @@ func TestNoApiHostOverride(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, expectedBaseURL, p.(*Provider).GetBaseURL())
+}
+
+// TestCreateWith202PollsUntilReady verifies that when a Create returns 202,
+// the provider polls the GET endpoint. Polling continues while GET returns 404
+// (resource not yet created) and stops when GET returns 200 (resource ready).
+func TestCreateWith202PollsUntilReady(t *testing.T) {
+	ctx := context.Background()
+
+	// Use short polling intervals so the test runs quickly.
+	origInitial := initialPollingInterval
+	origMax := maxPollingInterval
+	initialPollingInterval = 10 * time.Millisecond
+	maxPollingInterval = 50 * time.Millisecond
+	t.Cleanup(func() {
+		initialPollingInterval = origInitial
+		maxPollingInterval = origMax
+	})
+
+	getCallCount := 0
+	expectedResourceID := fakeResourceID
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusAccepted)
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceID))
+			return
+		}
+
+		if r.URL.Path == fakeResourceByIDURLPath && r.Method == http.MethodGet {
+			getCallCount++
+			if getCallCount < 3 {
+				// Return 404 for the first two calls.
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			// Return 200 on the third call.
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceID))
+			return
+		}
+
+		t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+	defer testServer.Close()
+
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]any{
+		"simpleProp": "some-value",
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       "myResource",
+		Properties: props,
+		Type:       "fakeresource/v2:FakeResource",
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, createResp)
+	assert.Equal(t, expectedResourceID, createResp.GetId())
+	assert.Equal(t, 3, getCallCount, "Expected exactly 3 GET calls (2 with 404, 1 with 200)")
+}
+
+// TestCreateWith202TimesOut verifies that when polling never transitions from 404 to 200,
+// the provider returns an error once the timeout is exceeded.
+func TestCreateWith202TimesOut(t *testing.T) {
+	ctx := context.Background()
+
+	// Use short polling intervals so the test runs quickly.
+	origInitial := initialPollingInterval
+	origMax := maxPollingInterval
+	initialPollingInterval = 10 * time.Millisecond
+	maxPollingInterval = 20 * time.Millisecond
+	t.Cleanup(func() {
+		initialPollingInterval = origInitial
+		maxPollingInterval = origMax
+	})
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusAccepted)
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s"}`, fakeResourceID))
+			return
+		}
+
+		if r.URL.Path == fakeResourceByIDURLPath && r.Method == http.MethodGet {
+			// Always return 404 — resource never becomes ready.
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+	defer testServer.Close()
+
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]any{
+		"simpleProp": "some-value",
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	// Use a 100ms timeout so the test finishes quickly.
+	// The CreateRequest.Timeout field is in seconds, so we use a small fractional
+	// value; however since time.Duration truncates floats to int, we set the
+	// defaultPollingTimeout directly for this test instead.
+	origDefault := defaultPollingTimeout
+	defaultPollingTimeout = 100 * time.Millisecond
+	t.Cleanup(func() { defaultPollingTimeout = origDefault })
+
+	_, err = p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       "myResource",
+		Properties: props,
+		Type:       "fakeresource/v2:FakeResource",
+		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "polling timed out")
+}
+
+// TestUpdateWith202PollsUntilReady verifies that when an Update returns 202,
+// the provider polls the GET endpoint using the old state for path param resolution.
+func TestUpdateWith202PollsUntilReady(t *testing.T) {
+	ctx := context.Background()
+
+	// Use short polling intervals so the test runs quickly.
+	origInitial := initialPollingInterval
+	origMax := maxPollingInterval
+	initialPollingInterval = 10 * time.Millisecond
+	maxPollingInterval = 50 * time.Millisecond
+	t.Cleanup(func() {
+		initialPollingInterval = origInitial
+		maxPollingInterval = origMax
+	})
+
+	getCallCount := 0
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The PATCH path param in the generic OpenAPI spec is named "id" but the URL
+		// template uses "{resourceId}", so the URL arrives unreplaced. Match by method only.
+		if r.Method == "PATCH" {
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+
+		if r.URL.Path == fmt.Sprintf("/v2/fakeresource/%s", fakeResourceID) && r.Method == http.MethodGet {
+			getCallCount++
+			if getCallCount < 2 {
+				// Return 404 for the first call.
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			// Return 200 on the second call.
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"updated-value"}`, fakeResourceID))
+			return
+		}
+
+		t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+	defer testServer.Close()
+
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
+
+	oldInputsJSON := `{"object_prop":{"another_prop":"old-value"}}`
+	outputsJSON := fmt.Sprintf(`{"id":"%s","another_prop":"old-value"}`, fakeResourceID)
+	newInputsJSON := `{"object_prop":{"another_prop":"old-value"},"simple_prop":"updated-value"}`
+
+	newInputs, _ := getMarshaledProps(t, newInputsJSON)
+	oldInputs, oldInputsPropertyMap := getMarshaledProps(t, oldInputsJSON)
+
+	var outputsMap map[string]any
+	if err := json.Unmarshal([]byte(outputsJSON), &outputsMap); err != nil {
+		t.Fatalf("Failed to unmarshal test payload: %v", err)
+	}
+
+	expectedOutputState := state.GetResourceState(outputsMap, oldInputsPropertyMap)
+	serializedOutputState, err := plugin.MarshalProperties(expectedOutputState, state.DefaultMarshalOpts)
+	if err != nil {
+		t.Fatalf("Marshaling the output properties map: %v", err)
+	}
+
+	updateResp, err := p.Update(ctx, &pulumirpc.UpdateRequest{
+		Id:        fakeResourceID,
+		Olds:      serializedOutputState,
+		News:      newInputs,
+		OldInputs: oldInputs,
+		Type:      "generic:fakeresource/v2:FakeResource",
+		Name:      "myResource",
+		Urn:       "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, updateResp)
+	assert.Equal(t, 2, getCallCount, "Expected exactly 2 GET calls (1 with 404, 1 with 200)")
 }

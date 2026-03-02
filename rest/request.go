@@ -124,7 +124,7 @@ func (p *Provider) CreateGetRequest(
 	return httpReq, nil
 }
 
-func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
+func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap, oldInputs ...resource.PropertyMap) (*http.Request, error) {
 	if reqBody == nil {
 		logging.V(3).Infof("REQUEST BODY is nil for %s", httpEndpointPath)
 	} else {
@@ -145,7 +145,7 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 	// for the param names.
 	if hasPathParams {
 		var err error
-		pathParams, err = p.getPathParamsMap(httpEndpointPath, httpMethod, inputs)
+		pathParams, err = p.getPathParamsMap(httpEndpointPath, httpMethod, inputs, oldInputs...)
 		if err != nil {
 			return nil, errors.Wrap(err, "getting path params")
 		}
@@ -283,7 +283,7 @@ func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, p
 	return nil
 }
 
-func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap) (map[string]string, error) {
+func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties resource.PropertyMap, oldInputs ...resource.PropertyMap) (map[string]string, error) {
 	pathParams := make(map[string]string)
 
 	parameters := p.openAPIDoc.Paths.Find(apiPath).Parameters
@@ -303,7 +303,12 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 		return pathParams, nil
 	}
 
-	oldInputs := state.GetOldInputs(properties)
+	var resolvedOldInputs resource.PropertyMap
+	if len(oldInputs) > 0 && oldInputs[0] != nil {
+		resolvedOldInputs = oldInputs[0]
+	} else {
+		resolvedOldInputs = state.GetOldInputs(properties)
+	}
 
 	logging.V(3).Infof("Process path parameters with %v", properties)
 	count := 0
@@ -324,7 +329,7 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 		// If there is no such property in the properties map,
 		// check if the param is an id-like param.
 		if _, ok := properties[resource.PropertyKey(sdkName)]; !ok && sdkName != "id" {
-			if _, ok := oldInputs[resource.PropertyKey(sdkName)]; !ok {
+			if _, ok := resolvedOldInputs[resource.PropertyKey(sdkName)]; !ok {
 				// If this is the last path param in the URI,
 				// it's likely to be the `id` of the resource
 				// that the endpoint is targeting.
@@ -355,11 +360,11 @@ func (p *Provider) getPathParamsMap(apiPath, requestMethod string, properties re
 					V: globalPathParam,
 				}
 			} else {
-				if oldInputs == nil {
+				if resolvedOldInputs == nil {
 					return nil, errors.Errorf("did not find value for path param %s in output props (old inputs was nil)", paramName)
 				}
 
-				property, ok = oldInputs[resource.PropertyKey(sdkName)]
+				property, ok = resolvedOldInputs[resource.PropertyKey(sdkName)]
 				if !ok {
 					return nil, errors.Errorf("did not find value for path param %s in output props and old inputs", paramName)
 				}

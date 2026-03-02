@@ -895,11 +895,15 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	var httpReq *http.Request
 	var httpReqErr error
 
+	oldInputs, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal old inputs as propertymap")
+	}
+
 	if crudMap.U != nil {
 		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.U
 
-		oldInputs, _ := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
 		diff := oldInputs.Diff(inputs)
 		inputsMap := inputs.Mappable()
 		patchReqBody := make(map[string]any)
@@ -932,7 +936,11 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			return nil, errors.Wrap(err, "marshaling inputs")
 		}
 
-		httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		if p.engineSendsOldInputs {
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, bodyBytes, oldState, oldInputs)
+		} else {
+			httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		}
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating patch request (type token: %s)", resourceTypeToken)
 		}
@@ -944,7 +952,11 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 
 		logging.V(3).Infof("Using PUT endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.P
-		httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		if p.engineSendsOldInputs {
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, bodyBytes, oldState, oldInputs)
+		} else {
+			httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		}
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
 		}
@@ -1028,7 +1040,17 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 
 	logging.V(3).Infof("Using DELETE endpoint to delete resource %s", resourceTypeToken)
 	var httpEndpointPath = *crudMap.D
-	var httpReq, httpReqErr = p.CreateDeleteRequest(ctx, httpEndpointPath, nil, inputs)
+	var httpReq *http.Request
+	var httpReqErr error
+	if p.engineSendsOldInputs {
+		oldInputs, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+		if err != nil {
+			return nil, errors.Wrap(err, "unmarshal old inputs as propertymap")
+		}
+		httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, nil, inputs, oldInputs)
+	} else {
+		httpReq, httpReqErr = p.CreateDeleteRequest(ctx, httpEndpointPath, nil, inputs)
+	}
 	if httpReqErr != nil {
 		return nil, errors.Wrapf(httpReqErr, "creating delete request (type token: %s)", resourceTypeToken)
 	}

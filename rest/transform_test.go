@@ -4,9 +4,10 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 
 	"gopkg.in/yaml.v3"
 
@@ -19,7 +20,7 @@ import (
 //go:embed testdata/generic/openapi.yml
 var genericOpenAPIEmbed string
 
-func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback) pulumirpc.ResourceProviderServer {
+func makeTestGenericProviderWithOpts(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback, sendsOldInputs bool) pulumirpc.ResourceProviderServer {
 	t.Helper()
 
 	openAPIBytes := []byte(genericOpenAPIEmbed)
@@ -50,7 +51,9 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 	}
 
 	_, err = p.Configure(ctx, &pulumirpc.ConfigureRequest{
-		Variables: map[string]string{"generic:config:apiKey": "fakeapikey"},
+		Variables:              map[string]string{"generic:config:apiKey": "fakeapikey"},
+		SendsOldInputs:         sendsOldInputs,
+		SendsOldInputsToDelete: sendsOldInputs,
 	})
 
 	if err != nil {
@@ -58,6 +61,11 @@ func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *http
 	}
 
 	return p
+}
+
+func makeTestGenericProvider(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback) pulumirpc.ResourceProviderServer {
+	t.Helper()
+	return makeTestGenericProviderWithOpts(ctx, t, testServer, providerCallback, true)
 }
 
 func TestTransformSDKNamestoAPINames(t *testing.T) {

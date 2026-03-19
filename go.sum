@@ -120,6 +120,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20260306013349-517b6a603efe h1:f
 github.com/cloudy-sky-software/pulschema v0.0.0-20260306013349-517b6a603efe/go.mod h1:M9hJgjrOeF5revkq4tLP0vAKJRXMeV8adEMpqTkO+wk=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260318175259-ad3b18de82ac h1:IxeTvSbl3yXgCUY21taNpEEgA4jjg4Eo3WPnwaxFszY=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260318175259-ad3b18de82ac/go.mod h1:wSzc+r2sjXR7/30zVw0Q2QhrLlZMOacWRoDVXcinnU4=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260319025941-c0263c231377 h1:cK4d12EEj+nVEGmKWEjENNvNzOq6H2iJNnNtPjWZ5So=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260319025941-c0263c231377/go.mod h1:hS1WZcDZZbm4Gn/zfM8oh0t/YmJl203NLMTmuzmHx04=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=

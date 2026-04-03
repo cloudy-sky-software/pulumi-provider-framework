@@ -1,14 +1,14 @@
 module github.com/cloudy-sky-software/pulumi-provider-framework
 
-go 1.25.7
+go 1.25.8
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20260319025941-c0263c231377
+	github.com/cloudy-sky-software/pulschema v0.0.0-20260403002453-9f33caa14a95
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.226.0
-	github.com/pulumi/pulumi/sdk/v3 v3.226.0
+	github.com/pulumi/pulumi/pkg/v3 v3.229.0
+	github.com/pulumi/pulumi/sdk/v3 v3.229.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.35.0
 	google.golang.org/grpc v1.80.0
@@ -24,8 +24,8 @@ require (
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.6.2 // indirect
-	github.com/go-git/go-git/v5 v5.16.5 // indirect
+	github.com/go-git/go-billy/v5 v5.8.0 // indirect
+	github.com/go-git/go-git/v5 v5.17.1 // indirect
 	github.com/go-openapi/jsonpointer v0.21.1 // indirect
 	github.com/go-openapi/swag v0.23.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -95,11 +95,11 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
-	github.com/hashicorp/go-version v1.8.0 // indirect
+	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -127,9 +127,10 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/collector/featuregate v1.53.0 // indirect
-	go.opentelemetry.io/collector/pdata v1.53.0 // indirect
+	go.opentelemetry.io/collector/featuregate v1.55.0 // indirect
+	go.opentelemetry.io/collector/pdata v1.55.0 // indirect
 	go.opentelemetry.io/otel v1.42.0 // indirect
+	go.opentelemetry.io/otel/bridge/opentracing v1.33.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.42.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.42.0 // indirect
 	go.opentelemetry.io/otel/metric v1.42.0 // indirect
@@ -142,6 +143,6 @@ require (
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/term v0.41.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260311181403-84a4fc48630c // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260311181403-84a4fc48630c // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
 )

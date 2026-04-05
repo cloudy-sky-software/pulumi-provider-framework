@@ -31,7 +31,9 @@ const (
 	parameterLocationPath  = "path"
 )
 
-var titleCaser = cases.Title(language.AmericanEnglish)
+func newTitleCaser() cases.Caser {
+	return cases.Title(language.AmericanEnglish)
+}
 
 // Request interface is implemented by REST-based providers that perform
 // CRUD operations using RESTful APIs.
@@ -66,7 +68,7 @@ func (p *Provider) getSupportedAuthSchemes() []string {
 	schemes := make([]string, 0, len(p.openAPIDoc.Components.SecuritySchemes))
 
 	for _, securitySchemeRef := range p.openAPIDoc.Components.SecuritySchemes {
-		scheme := titleCaser.String(securitySchemeRef.Value.Scheme)
+		scheme := newTitleCaser().String(securitySchemeRef.Value.Scheme)
 		if scheme == "" && strings.ToLower(securitySchemeRef.Value.Type) == "oauth2" {
 			scheme = "Bearer"
 		}

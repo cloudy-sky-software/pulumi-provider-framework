@@ -36,7 +36,7 @@ func FilterReadOnlyProperties(ctx context.Context, doc openapi3.Schema, inputs r
 		case doc.Discriminator != nil:
 			mappingRefName := doc.Discriminator.Mapping[*discriminatedValue]
 			for _, schema := range doc.OneOf {
-				if schema.Ref != mappingRefName {
+				if schema.Ref != mappingRefName.Ref {
 					continue
 				}
 

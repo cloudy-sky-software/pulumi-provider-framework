@@ -169,6 +169,8 @@ func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureReques
 	p.engineSendsOldInputs = req.SendsOldInputs
 	p.engineSendsOldInputsOnDelete = req.SendsOldInputsToDelete
 
+	logging.V(3).Infof("Engine configuration: engineSendsOldInputs: %t, engineSendsOldInputsOnDelete: %t", p.engineSendsOldInputs, p.engineSendsOldInputsOnDelete)
+
 	// Override the API host, if required. Intended for providers where the server names in the
 	// openapi spec will not match the API host that the provider needs to interact with during a deployment.
 	// To set via pulumi config, this will be "providername:apiHost"

@@ -103,7 +103,7 @@ func (p *Provider) CreateGetRequest(
 	if hasPathParams {
 		var err error
 
-		m := inputs
+		m := maps.Clone(inputs)
 		if currentState != nil {
 			maps.Copy(m, *currentState)
 		}

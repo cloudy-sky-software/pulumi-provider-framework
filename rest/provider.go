@@ -824,7 +824,14 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		p.TransformBody(ctx, newStateMappable, p.metadata.APIToSDKNameMap)
 		newState = resource.NewPropertyMapFromMap(newStateMappable)
 
-		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
+		// Only update values of properties that already exist in inputs.
+		// Don't add new properties from the cloud that the user never specified,
+		// as those would show up as deletions on the next diff.
+		for k, v := range newState {
+			if _, exists := inputs[k]; exists {
+				inputs[k] = v
+			}
+		}
 	}
 
 	// Make sure that the original output properties still remain in the state.

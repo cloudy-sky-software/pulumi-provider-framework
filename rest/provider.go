@@ -34,6 +34,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	pbempty "github.com/golang/protobuf/ptypes/empty"
 )
@@ -61,6 +62,9 @@ type Provider struct {
 	// Global path params for this provider - for path params that are fixed
 	// for a provider. Can be configured during the OnConfigure callback func
 	globalPathParams map[string]string
+
+	engineSendsOldInputs         bool
+	engineSendsOldInputsOnDelete bool
 }
 
 func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
@@ -162,6 +166,11 @@ func (p *Provider) DiffConfig(_ context.Context, _ *pulumirpc.DiffRequest) (*pul
 
 // Configure configures the resource provider with "globals" that control its behavior.
 func (p *Provider) Configure(ctx context.Context, req *pulumirpc.ConfigureRequest) (*pulumirpc.ConfigureResponse, error) {
+	p.engineSendsOldInputs = req.SendsOldInputs
+	p.engineSendsOldInputsOnDelete = req.SendsOldInputsToDelete
+
+	logging.V(3).Infof("Engine configuration: engineSendsOldInputs: %t, engineSendsOldInputsOnDelete: %t", p.engineSendsOldInputs, p.engineSendsOldInputsOnDelete)
+
 	// Override the API host, if required. Intended for providers where the server names in the
 	// openapi spec will not match the API host that the provider needs to interact with during a deployment.
 	// To set via pulumi config, this will be "providername:apiHost"
@@ -265,7 +274,7 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 
 	httpEndpointPath := *crudMap.R
 
-	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, args)
+	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, args, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", invokeTypeToken)
 	}
@@ -389,14 +398,9 @@ func (p *Provider) Check(_ context.Context, req *pulumirpc.CheckRequest) (*pulum
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
 func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulumirpc.DiffResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.GetOlds(), state.HTTPRequestBodyUnmarshalOpts)
+	olds, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, err
-	}
-
-	olds := state.GetOldInputs(oldState)
-	if olds == nil {
-		return nil, errors.New("fetching old inputs from the state")
 	}
 
 	resourceTypeToken := GetResourceTypeToken(req.GetUrn())
@@ -625,7 +629,13 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	var outputProperties *structpb.Struct
+	if !p.engineSendsOldInputs {
+		outputProperties, err = plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	} else {
+		outputProperties, err = plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
@@ -649,7 +659,12 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 // Read the current live state associated with a resource.
 func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulumirpc.ReadResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
+	inputs, err := plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal current inputs")
+	}
+
+	currentState, err := plugin.UnmarshalProperties(req.GetProperties(), state.DefaultUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal current state as propertymap")
 	}
@@ -665,25 +680,30 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 	httpEndpointPath := *crudMap.R
 
-	if len(oldState) == 0 {
+	if len(currentState) == 0 {
 		if req.GetInputs() != nil {
 			logging.V(3).Infoln("Resource does not have existing state. Will use input properties as existing state instead...")
-			oldState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
+			currentState, err = plugin.UnmarshalProperties(req.GetInputs(), state.DefaultUnmarshalOpts)
 			if err != nil {
 				return nil, errors.Wrap(err, "unmarshal input properties as propertymap")
 			}
 		} else {
-			// This is a request to import a resource.
+			// This is more than likely a request to import a resource.
 			id := req.GetId()
+
+			// Import IDs can be separated by a `/`,
+			// in case when a resource is nested under
+			// parent resource(s). We'll need the
+			// resource IDs of those parents too.
 			if strings.Contains(id, "/") {
 				pathParams, err := p.mapImportIDToPathParams(id, httpEndpointPath)
 				if err != nil {
 					return nil, errors.Wrapf(err, "mapping import id %s to path params", id)
 				}
 
-				oldState = resource.NewPropertyMapFromMap(pathParams)
+				currentState = resource.NewPropertyMapFromMap(pathParams)
 			} else {
-				oldState = resource.NewPropertyMapFromMap(
+				currentState = resource.NewPropertyMapFromMap(
 					map[string]interface{}{
 						"id": id,
 					})
@@ -691,15 +711,15 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		}
 	}
 
-	logging.V(3).Infof("Resource read will use state: %v", oldState)
+	logging.V(3).Infof("Resource read will use state: %v", currentState)
 
-	if !oldState.HasValue("id") {
+	if !currentState.HasValue("id") {
 		// Add the id property to the state map since our HTTP request creation will
 		// look for it in the inputs map.
-		oldState["id"] = resource.NewPropertyValue(req.GetId())
+		currentState["id"] = resource.NewPropertyValue(req.GetId())
 	}
 
-	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, oldState)
+	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, inputs, &currentState)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", resourceTypeToken)
 	}
@@ -745,10 +765,9 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, postReadErr
 	}
 
-	inputs := state.GetOldInputs(oldState)
 	// If there is no old state, then persist the current outputs as the
-	// "old" inputs going forward for this resource.
-	if inputs == nil {
+	// "old" inputs for this resource.
+	if len(inputs) == 0 {
 		inputs = resource.NewPropertyMapFromMap(outputsMap)
 		// Filter out read-only properties from the inputs.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
@@ -769,7 +788,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		}
 		openapi.FilterReadOnlyProperties(ctx, requestBodySchema, inputs, dv)
 
-		// Transform the inputs to match the API to SDK name map, which is assumed in later operations
+		// Transform the inputs to match the API to SDK name map,
+		// which is assumed in later operations.
 		var inputsMappable = inputs.Mappable()
 		p.TransformBody(ctx, inputsMappable, p.metadata.APIToSDKNameMap)
 		inputs = resource.NewPropertyMapFromMap(inputsMappable)
@@ -778,8 +798,8 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		// so that the checkpoint is in-sync with the state in the
 		// cloud provider.
 		newState := resource.NewPropertyMapFromMap(outputsMap)
-		// Filter out read-only properties before we apply the cloud provider
-		// state to our input state.
+		// Filter out read-only properties before we apply
+		// the cloud provider state to our input state.
 		pathItem := p.openAPIDoc.Paths.Find(*crudMap.C)
 		var operation *openapi3.Operation
 		if pathItem.Post != nil {
@@ -798,25 +818,40 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		}
 		openapi.FilterReadOnlyProperties(ctx, requestBodySchema, newState, dv)
 
-		// Transform the newState to match the API to SDK name map, which the inputs being diff'd with certainly will be
+		// Transform the newState to match the API to SDK name map,
+		// which the inputs being diff'd with certainly will be.
 		var newStateMappable = newState.Mappable()
 		p.TransformBody(ctx, newStateMappable, p.metadata.APIToSDKNameMap)
 		newState = resource.NewPropertyMapFromMap(newStateMappable)
 
-		inputs = state.ApplyDiffFromCloudProvider(newState, inputs)
+		// Only update values of properties that already exist in inputs.
+		// Don't add new properties from the cloud that the user never specified,
+		// as those would show up as deletions on the next diff.
+		for k, v := range newState {
+			if _, exists := inputs[k]; exists {
+				inputs[k] = v
+			}
+		}
 	}
 
 	// Make sure that the original output properties still remain in the state.
 	// For example, resources like keys, secrets would return the actual secret
 	// payload on creation but on subsequent reads, they won't be returned by
 	// APIs, so we should maintain those in the outputs.
-	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputsMap), oldState)
+	updatedOutputsMap := state.ApplyDiffFromCloudProvider(resource.NewPropertyMapFromMap(outputsMap), currentState)
 
 	outputsMap = updatedOutputsMap.Mappable()
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	var outputProperties *structpb.Struct
+	if !p.engineSendsOldInputs {
+		// Stash a copy of the current inputs in the serialized outputs.
+		outputProperties, err = plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	} else {
+		outputProperties, err = plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
@@ -846,7 +881,7 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 
 // Update updates an existing resource with new values.
 func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*pulumirpc.UpdateResponse, error) {
-	oldState, err := plugin.UnmarshalProperties(req.Olds, state.HTTPRequestBodyUnmarshalOpts)
+	oldState, err := plugin.UnmarshalProperties(req.GetOlds(), state.HTTPRequestBodyUnmarshalOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "unmarshal olds as propertymap")
 	}
@@ -869,11 +904,15 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	var httpReq *http.Request
 	var httpReqErr error
 
+	oldInputs, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal old inputs as propertymap")
+	}
+
 	if crudMap.U != nil {
 		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.U
 
-		oldInputs, _ := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
 		diff := oldInputs.Diff(inputs)
 		inputsMap := inputs.Mappable()
 		patchReqBody := make(map[string]any)
@@ -906,7 +945,11 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			return nil, errors.Wrap(err, "marshaling inputs")
 		}
 
-		httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		if p.engineSendsOldInputs {
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, bodyBytes, oldState, oldInputs)
+		} else {
+			httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		}
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating patch request (type token: %s)", resourceTypeToken)
 		}
@@ -918,7 +961,11 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 
 		logging.V(3).Infof("Using PUT endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.P
-		httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		if p.engineSendsOldInputs {
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, bodyBytes, oldState, oldInputs)
+		} else {
+			httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+		}
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
 		}
@@ -964,8 +1011,13 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
-	outputProperties, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	var outputProperties *structpb.Struct
+	if !p.engineSendsOldInputs {
+		// TODO: Could this erase refreshed inputs that were previously saved in outputs state?
+		outputProperties, err = plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
+	} else {
+		outputProperties, err = plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
@@ -997,7 +1049,17 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 
 	logging.V(3).Infof("Using DELETE endpoint to delete resource %s", resourceTypeToken)
 	var httpEndpointPath = *crudMap.D
-	var httpReq, httpReqErr = p.CreateDeleteRequest(ctx, httpEndpointPath, nil, inputs)
+	var httpReq *http.Request
+	var httpReqErr error
+	if p.engineSendsOldInputs {
+		oldInputs, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+		if err != nil {
+			return nil, errors.Wrap(err, "unmarshal old inputs as propertymap")
+		}
+		httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, nil, inputs, oldInputs)
+	} else {
+		httpReq, httpReqErr = p.CreateDeleteRequest(ctx, httpEndpointPath, nil, inputs)
+	}
 	if httpReqErr != nil {
 		return nil, errors.Wrapf(httpReqErr, "creating delete request (type token: %s)", resourceTypeToken)
 	}

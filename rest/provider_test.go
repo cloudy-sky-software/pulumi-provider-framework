@@ -267,7 +267,7 @@ func TestUpdateForUpdateableResource(t *testing.T) {
 	validateDiscriminatedRequest := false
 
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "PATCH" {
+		if r.Method == http.MethodPatch {
 			b, _ := io.ReadAll(r.Body)
 			var reqBody map[string]any
 			err := json.Unmarshal(b, &reqBody)

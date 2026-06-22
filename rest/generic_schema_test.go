@@ -45,7 +45,7 @@ func genericPulumiSchema(openapiDoc *openapi3.T) (pschema.PackageSpec, openapige
 			},
 		},
 
-		Provider: pschema.ResourceSpec{
+		Provider: &pschema.ResourceSpec{
 			ObjectTypeSpec: pschema.ObjectTypeSpec{
 				Description: "The provider type for the Generic package.",
 				Type:        "object",

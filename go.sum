@@ -139,6 +139,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20260618200922-64f4ce75f2c9 h1:c
 github.com/cloudy-sky-software/pulschema v0.0.0-20260618200922-64f4ce75f2c9/go.mod h1:6WUM5/nzNgdAdutcTEC5oIuWEd0VDBoSC6bx8QRdnak=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260622175119-9e53b5f4ce43 h1:NL20/OCANfpy8MgjSGsU72LdqOPYWBPy7gHx8Lbjo10=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260622175119-9e53b5f4ce43/go.mod h1:raLR901i0f5sL95cQppcCrtYjn1Idr+uDPOWqvVjLko=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260624233646-8c9461623867 h1:yDElqas34lkkp2xOEpOyk7ncSUFKue8h2uZf6AeikUg=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260624233646-8c9461623867/go.mod h1:bUDQSZyIwemrSwlLU5S08la1LHDldwh0Df0Ui8Gaxuw=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
@@ -445,6 +447,8 @@ github.com/pulumi/pulumi/pkg/v3 v3.246.0 h1:KzgE+Tz39xx9BblV+zvk6Ktans0+ADKnTU/v
 github.com/pulumi/pulumi/pkg/v3 v3.246.0/go.mod h1:DTwOcCIS741JhBZ7pE2yFfQIBCgyQR3i/aXQhxXjzoA=
 github.com/pulumi/pulumi/pkg/v3 v3.247.0 h1:80M0NOTlLppzmXCxJZ6Rw3SkHSRfgc6nOxebqNJxu/U=
 github.com/pulumi/pulumi/pkg/v3 v3.247.0/go.mod h1:3CAS3XJiNMpVd3namRqa3eJSKiGiHvwrwM+r7tN9MMY=
+github.com/pulumi/pulumi/pkg/v3 v3.248.0 h1:MkvI29cYE3QUEvSl+7kZrV5lQ6CBIt54WjYt2HEXDSg=
+github.com/pulumi/pulumi/pkg/v3 v3.248.0/go.mod h1:NBqXwZgQ9XVbqBQrxzrPPHttFCXg2Qe9rIZP/0NGMOk=
 github.com/pulumi/pulumi/sdk/v3 v3.229.0 h1:jsAw5lXiHN22YQeo4bZHZBAG/DUlEnzsFWg5MuHnTSs=
 github.com/pulumi/pulumi/sdk/v3 v3.229.0/go.mod h1:PAqB2+8gnxqk+QrFdXL3fSjsLIjtlBIcy5KLZ//4WSk=
 github.com/pulumi/pulumi/sdk/v3 v3.230.0 h1:0TtF82Hlor39DLU0QtM7RZPwRaOmjn5UtQKPi1Mxo9M=
@@ -455,6 +459,8 @@ github.com/pulumi/pulumi/sdk/v3 v3.246.0 h1:n7aigZmbyzVNz6mWpcA8f+0SMHRcBWZn/OlY
 github.com/pulumi/pulumi/sdk/v3 v3.246.0/go.mod h1:BPWWuYPXcPH5YbXGoyy9Rrfa+evrh6IdM51AjDhcDpM=
 github.com/pulumi/pulumi/sdk/v3 v3.247.0 h1:AlQeVeyzc7kotvOIUBEjajESN7717sy15KC1asG4ZWI=
 github.com/pulumi/pulumi/sdk/v3 v3.247.0/go.mod h1:67RnWlA0uRHJKjbOkk1Hqz8BNefYv8csNLgln1EmmII=
+github.com/pulumi/pulumi/sdk/v3 v3.248.0 h1:TwY9uuToQO8xIey4a7awRzNX7iJ/doDmZkl1MzxULCE=
+github.com/pulumi/pulumi/sdk/v3 v3.248.0/go.mod h1:67RnWlA0uRHJKjbOkk1Hqz8BNefYv8csNLgln1EmmII=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
@@ -534,6 +540,8 @@ go.opentelemetry.io/collector/featuregate v1.59.0 h1:pu70/9eWRjAjzGnr3VmqwY+k6fm
 go.opentelemetry.io/collector/featuregate v1.59.0/go.mod h1:4ga1QBMPEejXXmpyJS8lmaRpknJ3Lb9Bvk6e420bUFU=
 go.opentelemetry.io/collector/featuregate v1.60.0 h1:/HxHB8hq4N5Fhq5N0C8G6xbXTHxnGcWIryyJzmP7pdc=
 go.opentelemetry.io/collector/featuregate v1.60.0/go.mod h1:4ga1QBMPEejXXmpyJS8lmaRpknJ3Lb9Bvk6e420bUFU=
+go.opentelemetry.io/collector/featuregate v1.61.0 h1:XtnQ/XPHLmw9zgg4Cjq/f0rgdqn7z1M10wnmGhgNbYk=
+go.opentelemetry.io/collector/featuregate v1.61.0/go.mod h1:4ga1QBMPEejXXmpyJS8lmaRpknJ3Lb9Bvk6e420bUFU=
 go.opentelemetry.io/collector/internal/testutil v0.149.0 h1:OWfUPO3NFKSaJtz/SBZph/2ENHbr/VbzzlBadKUhm8o=
 go.opentelemetry.io/collector/internal/testutil v0.149.0/go.mod h1:Jkjs6rkqs973LqgZ0Fe3zrokQRKULYXPIf4HuqStiEE=
 go.opentelemetry.io/collector/pdata v1.55.0 h1:WBgye8bo8koUyV9Vmp/r2Q3lgDezdsgfKDQAaM1oT2I=
@@ -542,6 +550,8 @@ go.opentelemetry.io/collector/pdata v1.59.0 h1:lO1IcaO9+HUVdFh+RATCUG3oTP+uCZzsE
 go.opentelemetry.io/collector/pdata v1.59.0/go.mod h1:AH6M14C6qhesnUpcvigkvFMiX9KtdSWQENMBNyNhe7I=
 go.opentelemetry.io/collector/pdata v1.60.0 h1:YcGMHzeJucHen41AoR4mxHro8reUr9SVqt7P0KacKzQ=
 go.opentelemetry.io/collector/pdata v1.60.0/go.mod h1:Ca8VgZX2wOr6wW4nihPWaCpkJVvzeo6Txa7BJ7/WO90=
+go.opentelemetry.io/collector/pdata v1.61.0 h1:EVfGB/9dcyMXhMsZ5kzKeGFJj8QWqvmZjgg4RMjnRhE=
+go.opentelemetry.io/collector/pdata v1.61.0/go.mod h1:qYEsyeIJ9tWHb2jSR5HQ9/VmbCGVca+G+ZDAB8dFCMc=
 go.opentelemetry.io/contrib/bridges/otelslog v0.19.0 h1:5RgvxieNq9tS3ewrV1vnODvbHPfKUIJcYtF9Cvz+6aQ=
 go.opentelemetry.io/contrib/bridges/otelslog v0.19.0/go.mod h1:iTBIdNwx/xmUhfgJs6+84S4dIK059811cO1eUBjKcHY=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 h1:4Pp6oUg3+e/6M4C0A/3kJ2VYa++dsWVTtGgLVj5xtHg=
@@ -749,6 +759,8 @@ google.golang.org/genproto/googleapis/api v0.0.0-20260610212136-7ab31c22f7ad h1:
 google.golang.org/genproto/googleapis/api v0.0.0-20260610212136-7ab31c22f7ad/go.mod h1:KdNqO+rCIWgFumrNBSEDlDNrkrQnpkax7Tv1WxNY8V4=
 google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324 h1:g0RAkxK/smSu/iRwC/KIX1mwUoVJtk2OjbgaeS4DmUM=
 google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324/go.mod h1:Z4WJ5pJOYWFWcHEQUelD5QaZDknIQkpIL/+fyJOT9+A=
+google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d h1:xr2lwHI91bn3UiXcnyzRMQjp2LRiM8wEHzwUaE0YhTs=
+google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d/go.mod h1:O0ZOWSrfWfJ+Z5HbwZ+wNtHsg/vk1k2C/w67eww8PfQ=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 h1:m8qni9SQFH0tJc1X0vmnpw/0t+AImlSvp30sEupozUg=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260406210006-6f92a3bedf2d h1:wT2n40TBqFY6wiwazVK9/iTWbsQrgk5ZfCSVFLO9LQA=
@@ -759,6 +771,8 @@ google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad h1:
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 h1:9HZDLIdYBJXAnaFOr9WHrKVycfpY+75s9HGadC0305A=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d h1:mpAgMyM9vQHxycBlDq50y1VHpfSfVwzXvrQKtYbXuUY=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/grpc v1.80.0 h1:Xr6m2WmWZLETvUNvIUmeD5OAagMw3FiKmMlTdViWsHM=
 google.golang.org/grpc v1.80.0/go.mod h1:ho/dLnxwi3EDJA4Zghp7k2Ec1+c2jqup0bFkw07bwF4=
 google.golang.org/grpc v1.81.0 h1:W3G9N3KQf3BU+YuCtGKJk0CmxQNbAISICD/9AORxLIw=

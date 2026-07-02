@@ -453,6 +453,8 @@ github.com/pulumi/pulumi/pkg/v3 v3.247.0 h1:80M0NOTlLppzmXCxJZ6Rw3SkHSRfgc6nOxeb
 github.com/pulumi/pulumi/pkg/v3 v3.247.0/go.mod h1:3CAS3XJiNMpVd3namRqa3eJSKiGiHvwrwM+r7tN9MMY=
 github.com/pulumi/pulumi/pkg/v3 v3.248.0 h1:MkvI29cYE3QUEvSl+7kZrV5lQ6CBIt54WjYt2HEXDSg=
 github.com/pulumi/pulumi/pkg/v3 v3.248.0/go.mod h1:NBqXwZgQ9XVbqBQrxzrPPHttFCXg2Qe9rIZP/0NGMOk=
+github.com/pulumi/pulumi/pkg/v3 v3.250.0 h1:T2eQ5Ujv3+H2FUqYuJ5pwUtKFDazdvkyG5P3V3iEt0I=
+github.com/pulumi/pulumi/pkg/v3 v3.250.0/go.mod h1:kQbUKTlGS7n83eVx7X8zrhusm5lC2gIBGR1F4WR31yM=
 github.com/pulumi/pulumi/sdk/v3 v3.229.0 h1:jsAw5lXiHN22YQeo4bZHZBAG/DUlEnzsFWg5MuHnTSs=
 github.com/pulumi/pulumi/sdk/v3 v3.229.0/go.mod h1:PAqB2+8gnxqk+QrFdXL3fSjsLIjtlBIcy5KLZ//4WSk=
 github.com/pulumi/pulumi/sdk/v3 v3.230.0 h1:0TtF82Hlor39DLU0QtM7RZPwRaOmjn5UtQKPi1Mxo9M=
@@ -465,6 +467,8 @@ github.com/pulumi/pulumi/sdk/v3 v3.247.0 h1:AlQeVeyzc7kotvOIUBEjajESN7717sy15KC1
 github.com/pulumi/pulumi/sdk/v3 v3.247.0/go.mod h1:67RnWlA0uRHJKjbOkk1Hqz8BNefYv8csNLgln1EmmII=
 github.com/pulumi/pulumi/sdk/v3 v3.248.0 h1:TwY9uuToQO8xIey4a7awRzNX7iJ/doDmZkl1MzxULCE=
 github.com/pulumi/pulumi/sdk/v3 v3.248.0/go.mod h1:67RnWlA0uRHJKjbOkk1Hqz8BNefYv8csNLgln1EmmII=
+github.com/pulumi/pulumi/sdk/v3 v3.250.0 h1:J9KDqsFS5rknqym7uVNjtcBF3M+9laOvpDAtY4xmaEg=
+github.com/pulumi/pulumi/sdk/v3 v3.250.0/go.mod h1:lzcc9vPbkWn3TLD4ZJTiz0lixYM3a/9pSNwsBLLmUEE=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
@@ -765,6 +769,8 @@ google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324 h1:
 google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324/go.mod h1:Z4WJ5pJOYWFWcHEQUelD5QaZDknIQkpIL/+fyJOT9+A=
 google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d h1:xr2lwHI91bn3UiXcnyzRMQjp2LRiM8wEHzwUaE0YhTs=
 google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d/go.mod h1:O0ZOWSrfWfJ+Z5HbwZ+wNtHsg/vk1k2C/w67eww8PfQ=
+google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7 h1:jQ9p21COKWjP3VwuFrNRiiOTMh3mPpN45R7SLrH/HUU=
+google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7/go.mod h1:KqHwBx2upmfa1XSi1WuRvC+2VGCLtooKkfmyvRbUmqA=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 h1:m8qni9SQFH0tJc1X0vmnpw/0t+AImlSvp30sEupozUg=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260406210006-6f92a3bedf2d h1:wT2n40TBqFY6wiwazVK9/iTWbsQrgk5ZfCSVFLO9LQA=
@@ -777,6 +783,8 @@ google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 h1:
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d h1:mpAgMyM9vQHxycBlDq50y1VHpfSfVwzXvrQKtYbXuUY=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7 h1:eM/YSd5bBFagF51o1E745Ta7RwzpW0h+z+QDNZOgmQ8=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/grpc v1.80.0 h1:Xr6m2WmWZLETvUNvIUmeD5OAagMw3FiKmMlTdViWsHM=
 google.golang.org/grpc v1.80.0/go.mod h1:ho/dLnxwi3EDJA4Zghp7k2Ec1+c2jqup0bFkw07bwF4=
 google.golang.org/grpc v1.81.0 h1:W3G9N3KQf3BU+YuCtGKJk0CmxQNbAISICD/9AORxLIw=

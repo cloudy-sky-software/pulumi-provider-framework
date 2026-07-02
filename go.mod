@@ -3,12 +3,12 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 go 1.26
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20260630205520-4f32a4411242
+	github.com/cloudy-sky-software/pulschema v0.0.0-20260702150229-dfdfa17259b1
 	github.com/getkin/kin-openapi v0.140.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi/pkg/v3 v3.248.0
-	github.com/pulumi/pulumi/sdk/v3 v3.248.0
+	github.com/pulumi/pulumi/pkg/v3 v3.250.0
+	github.com/pulumi/pulumi/sdk/v3 v3.250.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.38.0
 	google.golang.org/grpc v1.82.0
@@ -153,6 +153,6 @@ require (
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7 // indirect
 )

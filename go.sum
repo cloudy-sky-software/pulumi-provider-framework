@@ -155,6 +155,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20260714154458-718dcb9b6a6c h1:J
 github.com/cloudy-sky-software/pulschema v0.0.0-20260714154458-718dcb9b6a6c/go.mod h1:aOJB2HQxKrdWi/KzVYckudzsEuwC+bkpxrUOCri5OPc=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260716170100-bb8b6d5ae125 h1:sXs+13lZvKkJ4NBr3oVDCZCdq2HVFw1HZA9wvoN7P4o=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260716170100-bb8b6d5ae125/go.mod h1:aOJB2HQxKrdWi/KzVYckudzsEuwC+bkpxrUOCri5OPc=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260721150727-44bfa5c2e667 h1:7BsFEyuQrwKL/wz9EnkmfyjYVXyFnKjDvSlUzkYpjtE=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260721150727-44bfa5c2e667/go.mod h1:iYFLUpokL8rlTwklQXkOKiochYX3UpnvHFKh8DPmBMU=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
@@ -197,6 +199,8 @@ github.com/getkin/kin-openapi v0.141.0 h1:+iHRJ+BxtwBx82AkMoes6WDeicK8xxT9zyEkQd
 github.com/getkin/kin-openapi v0.141.0/go.mod h1:3BH9M9XDe/y9M5DSvEocVYAYq1w0qrhJHjC/vZi0AaY=
 github.com/getkin/kin-openapi v0.142.0 h1:izj0vBdFprMhitfzaX8sTqztsEQyvwhssBoB6n8NO7w=
 github.com/getkin/kin-openapi v0.142.0/go.mod h1:3BH9M9XDe/y9M5DSvEocVYAYq1w0qrhJHjC/vZi0AaY=
+github.com/getkin/kin-openapi v0.143.0 h1:mIrOpir9J5x2m1vdree2rhuJ/GYGwbTVBp1kuSCJ62Y=
+github.com/getkin/kin-openapi v0.143.0/go.mod h1:3BH9M9XDe/y9M5DSvEocVYAYq1w0qrhJHjC/vZi0AaY=
 github.com/git-pkgs/manifests v0.4.1 h1:CWml+TrRXVzrfNJ2pTNKLqyi+9y/BFiQP/BX3pL4pPQ=
 github.com/git-pkgs/manifests v0.4.1/go.mod h1:7SPFwU9diUG1Az682/p4ZupHJkfpbWKwRvNPwCcOeVs=
 github.com/git-pkgs/packageurl-go v0.2.1 h1:j6VnjJiYS9b1nTLfJGsG6SLaA7Nk6Io+ta8grOyTa4o=

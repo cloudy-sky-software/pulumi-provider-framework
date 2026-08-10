@@ -165,6 +165,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20260810001720-fa9c7dbeca63 h1:L
 github.com/cloudy-sky-software/pulschema v0.0.0-20260810001720-fa9c7dbeca63/go.mod h1:7Bwh8cyw01GvtnynFfsmzT+C18m4i2q7jXsvTzucpXg=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260810002112-e230b9f71b06 h1:ZKCLdOwfCmaPYRcg9Xn+BlkR0QtzQxtDChS2Ui2W5hY=
 github.com/cloudy-sky-software/pulschema v0.0.0-20260810002112-e230b9f71b06/go.mod h1:Hq2ph+9kBmbCZt8bGsQw62HqDNSGyt+exsvMHSB1LbU=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260810141725-aba9cd208501 h1:gtvYs1V1/3aHjkJwWTDYEfYYFnxB9v44K+QOS1s+qww=
+github.com/cloudy-sky-software/pulschema v0.0.0-20260810141725-aba9cd208501/go.mod h1:1o8lo4Ms4ZQM5+LQx8tTk4FvpnibJvZude3vrDeQJc8=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
@@ -491,6 +493,8 @@ github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.108.0 h1:TMHfHJWZaU
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.108.0/go.mod h1:NJZ7SYFH3qbMtDKC5diKle3Of5nsE/bvC3/5gdpONfw=
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.110.0 h1:3ZVrcJAP3ho1YSYT2n/UqlKBEjGY4ePfmjknjHXAXi0=
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.110.0/go.mod h1:sZ26/AWTq2jYFcc26sTFK+1mKiGsOETeFltYqpBN7E4=
+github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.111.0 h1:WisZ3KxurIjT3CzZ0XfDoxVRKN4rKFofc7Nk/pgY5Mo=
+github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.111.0/go.mod h1:l4SvcCEwJ1TqIIAgaXFRW9l013uU142c9bBK/wAIXGM=
 github.com/pulumi/pulumi/pkg/v3 v3.229.0 h1:bGna3zTOFLUpUd0M+GuLspOxjSaAhawXygG6+IAwajw=
 github.com/pulumi/pulumi/pkg/v3 v3.229.0/go.mod h1:pJ0GGK1+VpLZlTim1/Lqm/tZ6/XDJa8gHDdOtRJR5to=
 github.com/pulumi/pulumi/pkg/v3 v3.230.0 h1:SHjHvXskFXG/aSA2/f8ZTzHizX51nBoqzA76WpmYaRo=

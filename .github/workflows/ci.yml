@@ -23,13 +23,13 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v7
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: go.mod
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@36fe29c8f9dc696b104db0f7d49d1a87d2bbcd5b
+        uses: golangci/golangci-lint-action@f8208ee75bbfe589bb30d9a5f8646f8df0f1bca3
         with:
           # Use a commit hash from https://github.com/golangci/golangci-lint/commits/main.
-          version: 4fde6f7cf67bd4729e4c2f42e18f0fbdbb98fcfe
+          version: 8920f7a763476de3e0dc3d8e548641f1607aba91
           install-mode: goinstall
           args: --config=.golangci.yaml --timeout=10m
 

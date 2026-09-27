@@ -12,6 +12,7 @@ import (
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/rest/rest_test"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -195,10 +196,10 @@ func TestImports(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
-		Id:         "/fake-id",
+		Id:         fmt.Sprintf("/%s", rest_test.FakeID),
 		Inputs:     nil,
 		Properties: nil,
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Urn:        rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, readResp)
@@ -242,13 +243,13 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	}
 
 	diffResp, err := p.Diff(ctx, &pulumirpc.DiffRequest{
-		Id:        "fake-id",
+		Id:        rest_test.FakeID,
 		Olds:      serializedOutputState,
 		News:      newInputs,
 		OldInputs: oldInputs,
-		Type:      "generic:fakeresource/v2:FakeResource",
-		Name:      "myResource",
-		Urn:       "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Type:      rest_test.FakeResourceType,
+		Name:      rest_test.MyResource,
+		Urn:       rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, diffResp)
@@ -339,7 +340,7 @@ func TestUpdateForUpdateableResource(t *testing.T) {
 				},
 				"simple_prop": "new value"
 			}`,
-			resourceTypeToken: "generic:fakeresource/v2:FakeResource",
+			resourceTypeToken: rest_test.FakeResourceType,
 		},
 	}
 
@@ -367,7 +368,7 @@ func TestUpdateForUpdateableResource(t *testing.T) {
 			News:      newInputs,
 			OldInputs: oldInputs,
 			Type:      test.resourceTypeToken,
-			Name:      "myResource",
+			Name:      rest_test.MyResource,
 			Urn:       fmt.Sprintf("urn:pulumi:some-stack::some-project::%s::myResource", test.resourceTypeToken),
 		})
 		assert.Nil(t, err)
@@ -423,10 +424,10 @@ func TestCreateWithSecretInput(t *testing.T) {
 	assert.Nil(t, err)
 
 	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
-		Name:       "myResource",
+		Name:       rest_test.MyResource,
 		Properties: props,
 		Type:       "fakeresource/v2:FakeResource",
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Urn:        rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, createResp)
@@ -529,7 +530,7 @@ func TestCreateLegacyPath(t *testing.T) {
 		Name:       "myResource",
 		Properties: props,
 		Type:       "fakeresource/v2:FakeResource",
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Urn:        rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, createResp)
@@ -579,7 +580,7 @@ func TestUpdateLegacyPath(t *testing.T) {
 	}
 
 	serializedOutputState, err := plugin.MarshalProperties(state.GetResourceState(outputsMap, resource.NewPropertyMapFromMap(map[string]any{
-		"object_prop": map[string]any{"another_prop": "a value"},
+		"object_prop": map[string]any{"another_prop": rest_test.AStringValue},
 	})), state.DefaultMarshalOpts)
 	if err != nil {
 		t.Fatalf("Marshaling the output properties map: %v", err)
@@ -590,9 +591,9 @@ func TestUpdateLegacyPath(t *testing.T) {
 		Olds:      serializedOutputState,
 		News:      newInputs,
 		OldInputs: oldInputs,
-		Type:      "generic:fakeresource/v2:FakeResource",
-		Name:      "myResource",
-		Urn:       "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Type:      rest_test.FakeResourceType,
+		Name:      rest_test.MyResource,
+		Urn:       rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, updateResp)

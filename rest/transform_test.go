@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
+	"github.com/cloudy-sky-software/pulumi-provider-framework/rest/rest_test"
 
 	"gopkg.in/yaml.v3"
 
@@ -76,7 +77,7 @@ func TestTransformSDKNamestoAPINames(t *testing.T) {
 	t.Run("SDKToAPINames", func(t *testing.T) {
 		bodyMap := make(map[string]interface{})
 		bodyMap["simpleProp"] = "test"
-		bodyMap["objectProp"] = map[string]interface{}{"anotherProp": "a value"}
+		bodyMap["objectProp"] = map[string]interface{}{"anotherProp": rest_test.AStringValue}
 
 		provider := p.(*Provider)
 
@@ -93,7 +94,7 @@ func TestTransformSDKNamestoAPINames(t *testing.T) {
 	t.Run("APIToSDKNames", func(t *testing.T) {
 		bodyMap := make(map[string]interface{})
 		bodyMap["simple_prop"] = "test"
-		bodyMap["object_prop"] = map[string]interface{}{"another_prop": "a value"}
+		bodyMap["object_prop"] = map[string]interface{}{"another_prop": rest_test.AStringValue}
 
 		provider := p.(*Provider)
 

@@ -2,12 +2,14 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
 	"testing"
 
+	"github.com/cloudy-sky-software/pulumi-provider-framework/rest/rest_test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -55,10 +57,10 @@ func TestRateLimitTransportRetryWithRetryAfterInteger(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
-		Id:         "/fake-id",
+		Id:         fmt.Sprintf("/%s", rest_test.FakeID),
 		Inputs:     nil,
 		Properties: nil,
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Urn:        rest_test.MyResourceURN,
 	})
 
 	require.NoError(t, err)
@@ -96,10 +98,10 @@ func TestRateLimitTransportNoRetryWithoutRetryAfterHeader(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	readResp, err := p.Read(ctx, &pulumirpc.ReadRequest{
-		Id:         "/fake-id",
+		Id:         fmt.Sprintf("/%s", rest_test.FakeID),
 		Inputs:     nil,
 		Properties: nil,
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Urn:        rest_test.MyResourceURN,
 	})
 
 	assert.Error(t, err, "Expected an error when 429 has no Retry-After header")
@@ -140,7 +142,7 @@ func TestRateLimitTransportNoRetryWithNegativeRetryAfter(t *testing.T) {
 		Id:         "/fake-id",
 		Inputs:     nil,
 		Properties: nil,
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Urn:        rest_test.MyResourceURN,
 	})
 
 	assert.Error(t, err, "Expected an error when Retry-After is negative")
@@ -180,7 +182,7 @@ func TestRateLimitTransportNoRetryWithNonIntegerRetryAfter(t *testing.T) {
 		Id:         "/fake-id",
 		Inputs:     nil,
 		Properties: nil,
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Urn:        rest_test.MyResourceURN,
 	})
 
 	assert.Error(t, err, "Expected an error when Retry-After is an HTTP-date")

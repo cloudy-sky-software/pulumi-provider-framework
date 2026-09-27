@@ -8,6 +8,7 @@ import (
 
 	"testing"
 
+	"github.com/cloudy-sky-software/pulumi-provider-framework/rest/rest_test"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/stretchr/testify/assert"
 )
@@ -79,7 +80,7 @@ func TestLastPathParamIsResourceId(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, nil, nil)
 
 	properties := map[string]interface{}{
-		"id": "fake-id",
+		"id": rest_test.FakeID,
 	}
 
 	httpReq, err := p.(Request).CreateGetRequest(ctx, "/v2/anotherfakeresource/{some_id}", resource.NewPropertyMapFromMap(properties), nil)
@@ -89,5 +90,5 @@ func TestLastPathParamIsResourceId(t *testing.T) {
 	// The request's URL should have the correct ID since `{some_id}`
 	// is just points to the resource's `id` from its property
 	// map.
-	assert.Contains(t, httpReq.URL.Path, "fake-id")
+	assert.Contains(t, httpReq.URL.Path, rest_test.FakeID)
 }

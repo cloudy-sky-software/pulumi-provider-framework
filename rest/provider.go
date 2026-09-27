@@ -614,6 +614,10 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Errorf("http request failed (status: %s): %s", httpResp.Status, string(body))
 	}
 
+	// TODO: If the status code is one of the
+	// other 2xx (not 200 OK) codes we won't have
+	// a response body.
+
 	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading response body")

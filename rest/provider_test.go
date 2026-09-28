@@ -257,7 +257,7 @@ func TestDiffForUpdateableResource(t *testing.T) {
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, diffResp)
-	assert.Contains(t, diffResp.Diffs, "simpleProp")
+	assert.Contains(t, diffResp.Diffs, rest_test.SimpleProp)
 }
 
 func TestUpdateForUpdateableResource(t *testing.T) {
@@ -418,7 +418,7 @@ func TestCreateWithSecretInput(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	propMap := resource.NewPropertyMapFromMap(map[string]any{
-		"simpleProp": resource.NewSecretProperty(&resource.Secret{Element: resource.NewStringProperty(secretValue)}),
+		rest_test.SimpleProp: resource.NewSecretProperty(&resource.Secret{Element: resource.NewStringProperty(secretValue)}),
 		"objectProp": resource.NewPropertyMapFromMap(map[string]any{
 			"anotherProp": resource.NewStringProperty("plainValue"),
 		}),
@@ -429,7 +429,7 @@ func TestCreateWithSecretInput(t *testing.T) {
 	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
 		Name:       rest_test.MyResource,
 		Properties: props,
-		Type:       "fakeresource/v2:FakeResource",
+		Type:       rest_test.FakeResourceModule,
 		Urn:        rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
@@ -524,15 +524,15 @@ func TestCreateLegacyPath(t *testing.T) {
 	p := makeTestGenericProviderWithOpts(ctx, t, testServer, nil, false)
 
 	propMap := resource.NewPropertyMapFromMap(map[string]any{
-		"simpleProp": resource.NewStringProperty("somevalue"),
+		rest_test.SimpleProp: resource.NewStringProperty("somevalue"),
 	})
 	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
 	assert.Nil(t, err)
 
 	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
-		Name:       "myResource",
+		Name:       rest_test.MyResource,
 		Properties: props,
-		Type:       "fakeresource/v2:FakeResource",
+		Type:       rest_test.FakeResourceModule,
 		Urn:        rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
@@ -655,15 +655,15 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	propMap := resource.NewPropertyMapFromMap(map[string]any{
-		"simpleProp": "some-value",
+		rest_test.SimpleProp: "some-value",
 	})
 	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
 	assert.Nil(t, err)
 
 	createResp, err := p.Create(ctx, &pulumirpc.CreateRequest{
-		Name:       "myResource",
+		Name:       rest_test.MyResource,
 		Properties: props,
-		Type:       "fakeresource/v2:FakeResource",
+		Type:       rest_test.FakeResourceModule,
 		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
 	})
 	assert.Nil(t, err)
@@ -710,7 +710,7 @@ func TestCreateWith202TimesOut(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	propMap := resource.NewPropertyMapFromMap(map[string]any{
-		"simpleProp": "some-value",
+		rest_test.SimpleProp: "some-value",
 	})
 	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
 	assert.Nil(t, err)
@@ -724,10 +724,10 @@ func TestCreateWith202TimesOut(t *testing.T) {
 	t.Cleanup(func() { defaultPollingTimeout = origDefault })
 
 	_, err = p.Create(ctx, &pulumirpc.CreateRequest{
-		Name:       "myResource",
+		Name:       rest_test.MyResource,
 		Properties: props,
-		Type:       "fakeresource/v2:FakeResource",
-		Urn:        "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Type:       rest_test.FakeResourceModule,
+		Urn:        rest_test.MyResourceURN,
 	})
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "polling timed out")
@@ -809,8 +809,8 @@ func TestUpdateWith202PollsUntilReady(t *testing.T) {
 		News:      newInputs,
 		OldInputs: oldInputs,
 		Type:      "generic:fakeresource/v2:FakeResource",
-		Name:      "myResource",
-		Urn:       "urn:pulumi:some-stack::some-project::generic:fakeresource/v2:FakeResource::myResource",
+		Name:      rest_test.MyResource,
+		Urn:       rest_test.MyResourceURN,
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, updateResp)

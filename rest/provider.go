@@ -602,9 +602,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Wrap(err, "executing http request")
 	}
 
-	if httpResp.StatusCode != http.StatusOK &&
-		httpResp.StatusCode != http.StatusCreated &&
-		httpResp.StatusCode != http.StatusAccepted {
+	if !slices.Contains(validStatusCodesForCreate, httpResp.StatusCode) {
 		body, err := io.ReadAll(httpResp.Body)
 		if err != nil {
 			return nil, errors.Wrap(err, "http request failed and the error response could not be read")

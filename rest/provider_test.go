@@ -21,6 +21,7 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/plugin"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/rpcutil/rpcerror"
 
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 )
@@ -36,6 +37,7 @@ var tailscalePulSchemaEmbed string
 
 const fakeResourceBaseURLPath = "/v2/fakeresource"
 const fakeResourceID = "fake-id"
+const fakeSimplePropValue = "some-value"
 
 func makeTestTailscaleProviderWithOpts(ctx context.Context, t *testing.T, testServer *httptest.Server, providerCallback callback.ProviderCallback, sendsOldInputs bool) pulumirpc.ResourceProviderServer {
 	t.Helper()
@@ -629,7 +631,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
 			w.WriteHeader(http.StatusAccepted)
-			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceID))
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue","operation":"op-1"}`, expectedResourceID))
 			return
 		}
 
@@ -641,7 +643,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 				return
 			}
 			// Return 200 on the third call.
-			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"somevalue"}`, expectedResourceID))
+			_, _ = io.WriteString(w, fmt.Sprintf(`{"id":"%s","another_prop":"newvalue","status":"ready"}`, expectedResourceID))
 			return
 		}
 
@@ -655,7 +657,7 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	propMap := resource.NewPropertyMapFromMap(map[string]any{
-		rest_test.SimpleProp: "some-value",
+		rest_test.SimpleProp: fakeSimplePropValue,
 	})
 	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
 	assert.Nil(t, err)
@@ -670,6 +672,12 @@ func TestCreateWith202PollsUntilReady(t *testing.T) {
 	assert.NotNil(t, createResp)
 	assert.Equal(t, expectedResourceID, createResp.GetId())
 	assert.Equal(t, 3, getCallCount, "Expected exactly 3 GET calls (2 with 404, 1 with 200)")
+
+	// The outputs are the create response with the polled response merged on top of it.
+	outputs := createResp.GetProperties().AsMap()
+	assert.Equal(t, "op-1", outputs["operation"])
+	assert.Equal(t, "newvalue", outputs["anotherProp"])
+	assert.Equal(t, "ready", outputs["status"])
 }
 
 // TestCreateWith202TimesOut verifies that when polling never transitions from 404 to 200,
@@ -710,7 +718,7 @@ func TestCreateWith202TimesOut(t *testing.T) {
 	p := makeTestGenericProvider(ctx, t, testServer, nil)
 
 	propMap := resource.NewPropertyMapFromMap(map[string]any{
-		rest_test.SimpleProp: "some-value",
+		rest_test.SimpleProp: fakeSimplePropValue,
 	})
 	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
 	assert.Nil(t, err)
@@ -731,6 +739,53 @@ func TestCreateWith202TimesOut(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "polling timed out")
+
+	// The resource was accepted by the API, so the error should tell the engine
+	// that it exists so that it is saved in the state.
+	rpcErr, ok := rpcerror.FromError(err)
+	assert.True(t, ok)
+	assert.Len(t, rpcErr.Details(), 1)
+	initErr, ok := rpcErr.Details()[0].(*pulumirpc.ErrorResourceInitFailed)
+	assert.True(t, ok)
+	assert.Equal(t, fakeResourceID, initErr.GetId())
+	assert.True(t, initErr.GetRefreshBeforeUpdate())
+}
+
+// TestCreateWith202EmptyBodyFails verifies that when a Create returns 202 with
+// an empty body, the provider returns an error without polling since the id
+// of the resource is unknown.
+func TestCreateWith202EmptyBodyFails(t *testing.T) {
+	ctx := context.Background()
+
+	testServer := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == fakeResourceBaseURLPath && r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+
+		t.Errorf("Unexpected request: %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	testServer.EnableHTTP2 = true
+	testServer.Start()
+	defer testServer.Close()
+
+	p := makeTestGenericProvider(ctx, t, testServer, nil)
+
+	propMap := resource.NewPropertyMapFromMap(map[string]any{
+		rest_test.SimpleProp: fakeSimplePropValue,
+	})
+	props, err := plugin.MarshalProperties(propMap, state.DefaultMarshalOpts)
+	assert.Nil(t, err)
+
+	_, err = p.Create(ctx, &pulumirpc.CreateRequest{
+		Name:       rest_test.MyResource,
+		Properties: props,
+		Type:       rest_test.FakeResourceModule,
+		Urn:        rest_test.MyResourceURN,
+	})
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "response body was empty")
 }
 
 // TestUpdateWith202PollsUntilReady verifies that when an Update returns 202,

@@ -25,6 +25,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/plugin"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/rpcutil/rpcerror"
 	pulumirpc "github.com/pulumi/pulumi/sdk/v3/proto/go"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/callback"
@@ -620,12 +621,28 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	defer httpResp.Body.Close()
 
+	if httpResp.StatusCode == http.StatusAccepted && len(body) == 0 {
+		logging.V(3).Infof("Create returned 202 with an empty response body for %s", resourceTypeToken)
+		return nil, errors.Errorf("resource accepted (202) but the response body was empty, so the id of the resource is unknown and it cannot be polled (type token: %s)", resourceTypeToken)
+	}
+
 	var outputs interface{}
 	if err := json.Unmarshal(body, &outputs); err != nil {
 		return nil, errors.Wrap(err, "unmarshaling the response")
 	}
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
+
+	if httpResp.StatusCode == http.StatusAccepted {
+		createOutputs, ok := outputs.(map[string]interface{})
+		if !ok {
+			return nil, errors.Errorf("expected the 202 response body to be an object but got %T", outputs)
+		}
+
+		if err := p.waitForAcceptedCreate(ctx, req, crudMap.R, resourceTypeToken, createOutputs, inputs); err != nil {
+			return nil, err
+		}
+	}
 
 	outputsMap, postCreateErr := p.providerCallback.OnPostCreate(ctx, req, outputs)
 	if postCreateErr != nil {
@@ -637,70 +654,110 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
 
-	var outputProperties *structpb.Struct
-	if !p.engineSendsOldInputs {
-		outputProperties, err = plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
-	} else {
-		outputProperties, err = plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
-	}
-
+	outputProperties, err := p.marshalCreateOutputs(outputsMap, inputs)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshaling the output properties map")
 	}
 
-	id, ok := outputsMap["id"]
+	id, ok := getResourceID(outputsMap)
 	if !ok {
-		logging.V(3).Infof("id prop not found in top-level response. Checking if an embedded property has it...")
-		// Try plucking the id from top-level properties.
-		id, _, ok = tryPluckingProp("id", outputsMap)
-		if !ok {
-			// TODO: should we return the CreateResponse without the Id property here?
-			return nil, errors.New("resource may have been created successfully but the id was not present in the response")
-		}
+		// TODO: should we return the CreateResponse without the Id property here?
+		return nil, errors.New("resource may have been created successfully but the id was not present in the response")
 	}
 
-	pulCreateResp := &pulumirpc.CreateResponse{
+	return &pulumirpc.CreateResponse{
 		Id:                  convertNumericIDToString(id),
 		Properties:          outputProperties,
 		RefreshBeforeUpdate: false,
+	}, nil
+}
+
+// marshalCreateOutputs converts the outputs of a create operation into
+// the properties that are saved in the resource's state.
+func (p *Provider) marshalCreateOutputs(outputsMap map[string]interface{}, inputs resource.PropertyMap) (*structpb.Struct, error) {
+	if !p.engineSendsOldInputs {
+		return plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	}
 
-	if httpResp.StatusCode == http.StatusAccepted {
-		// 202: Resource creation was accepted but not yet complete.
-		// Poll the GET endpoint until the resource is ready (200) or the timeout is exceeded.
-		if crudMap.R == nil {
-			return nil, errors.Errorf("resource accepted (202) but no read endpoint is available for %s", resourceTypeToken)
-		}
+	return plugin.MarshalProperties(resource.NewPropertyMapFromMap(outputsMap), state.DefaultMarshalOpts)
+}
 
-		// Merge the 202 response body into inputs so path params (e.g. the resource id)
-		// can be resolved when constructing the GET request.
-		if len(body) > 0 {
-			var respBodyMap map[string]interface{}
-			if err := json.Unmarshal(body, &respBodyMap); err != nil {
-				return nil, errors.Wrap(err, "unmarshaling 202 response body")
-			}
-			for k, v := range respBodyMap {
-				inputs[resource.PropertyKey(k)] = resource.NewPropertyValue(v)
-			}
-		}
-
-		var pollTimeout time.Duration
-		if req.GetTimeout() > 0 {
-			pollTimeout = time.Duration(req.GetTimeout()) * time.Second
-		}
-
-		pollOutputs, pollErr := p.pollResourceUntilReady(ctx, *crudMap.R, inputs, pollTimeout)
-		if pollErr != nil {
-			return pulCreateResp, errors.Wrap(pollErr, "polling resource after 202 response")
-		}
-
-		if len(pollOutputs) > 0 {
-			p.TransformBody(ctx, pollOutputs, p.metadata.APIToSDKNameMap)
-			maps.Copy(outputs.(map[string]interface{}), pollOutputs)
-		}
+// getResourceID returns the id of a resource from the top-level
+// properties of outputsMap or, failing that, from an embedded property.
+func getResourceID(outputsMap map[string]interface{}) (interface{}, bool) {
+	if id, ok := outputsMap["id"]; ok {
+		return id, true
 	}
 
-	return pulCreateResp, nil
+	logging.V(3).Infof("id prop not found in top-level response. Checking if an embedded property has it...")
+	id, _, ok := tryPluckingProp("id", outputsMap)
+	return id, ok
+}
+
+// waitForAcceptedCreate polls the GET endpoint of a resource whose creation
+// was accepted (202) but not yet complete, until the resource is ready (200)
+// or the timeout is exceeded. The response of the GET endpoint is merged into
+// createOutputs, which is the response body of the create request.
+//
+// If polling fails, the returned error carries an ErrorResourceInitFailed
+// detail with the outputs of the create request, so that the engine records
+// the resource in the state instead of losing track of it.
+func (p *Provider) waitForAcceptedCreate(ctx context.Context, req *pulumirpc.CreateRequest, getEndpointPath *string, resourceTypeToken string, createOutputs map[string]interface{}, inputs resource.PropertyMap) error {
+	if getEndpointPath == nil {
+		err := errors.Errorf("resource accepted (202) but no read endpoint is available for %s", resourceTypeToken)
+		return p.newResourceInitFailedError(ctx, createOutputs, inputs, err)
+	}
+
+	// Merge the 202 response body into a copy of the inputs so path params
+	// (e.g. the resource id) can be resolved when constructing the GET request.
+	// A copy is used so that the response props are not saved as inputs in the state.
+	pollInputs := inputs.Copy()
+	for k, v := range createOutputs {
+		pollInputs[resource.PropertyKey(k)] = resource.NewPropertyValue(v)
+	}
+
+	var pollTimeout time.Duration
+	if req.GetTimeout() > 0 {
+		pollTimeout = time.Duration(req.GetTimeout()) * time.Second
+	}
+
+	pollOutputs, err := p.pollResourceUntilReady(ctx, *getEndpointPath, pollInputs, pollTimeout)
+	if err != nil {
+		err = errors.Wrap(err, "polling resource after 202 response")
+		return p.newResourceInitFailedError(ctx, createOutputs, inputs, err)
+	}
+
+	maps.Copy(createOutputs, pollOutputs)
+	return nil
+}
+
+// newResourceInitFailedError returns an error that tells the engine the
+// resource was created but did not finish initializing, using the partial
+// outputs that are known so far. If the id of the resource cannot be found
+// in outputsMap, cause is returned as-is.
+func (p *Provider) newResourceInitFailedError(ctx context.Context, outputsMap map[string]interface{}, inputs resource.PropertyMap, cause error) error {
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
+
+	id, ok := getResourceID(outputsMap)
+	if !ok {
+		return cause
+	}
+
+	outputProperties, err := p.marshalCreateOutputs(outputsMap, inputs)
+	if err != nil {
+		logging.V(3).Infof("Failed to marshal the partial outputs of resource %v: %v", id, err)
+		return cause
+	}
+
+	return rpcerror.WithDetails(
+		rpcerror.New(codes.Unknown, cause.Error()),
+		&pulumirpc.ErrorResourceInitFailed{
+			Id:         convertNumericIDToString(id),
+			Properties: outputProperties,
+			Reasons:    []string{cause.Error()},
+			// The saved state is incomplete, so refresh it before the next update.
+			RefreshBeforeUpdate: true,
+		})
 }
 
 // Read the current live state associated with a resource.
@@ -919,10 +976,9 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	return &pulumirpc.ReadResponse{
-		Id:                  convertNumericIDToString(id),
-		Inputs:              inputsRecord,
-		Properties:          outputProperties,
-		RefreshBeforeUpdate: false,
+		Id:         convertNumericIDToString(id),
+		Inputs:     inputsRecord,
+		Properties: outputProperties,
 	}, nil
 }
 
@@ -1193,11 +1249,11 @@ func (p *Provider) pollResourceUntilReady(ctx context.Context, getEndpointPath s
 			if readErr != nil {
 				return nil, errors.Wrap(readErr, "reading response body during polling")
 			}
-			var outputs interface{}
+			var outputs map[string]interface{}
 			if err := json.Unmarshal(body, &outputs); err != nil {
 				return nil, errors.Wrap(err, "unmarshaling response during polling")
 			}
-			return outputs.(map[string]interface{}), nil
+			return outputs, nil
 
 		case http.StatusNotFound:
 			// Resource not yet created — continue polling.

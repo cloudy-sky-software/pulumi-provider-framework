@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/url"
@@ -620,39 +621,8 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 	defer httpResp.Body.Close()
 
 	var outputs interface{}
-	if httpResp.StatusCode == http.StatusAccepted {
-		// 202: Resource creation was accepted but not yet complete.
-		// Poll the GET endpoint until the resource is ready (200) or the timeout is exceeded.
-		if crudMap.R == nil {
-			return nil, errors.Errorf("resource accepted (202) but no read endpoint is available for %s", resourceTypeToken)
-		}
-
-		// Merge the 202 response body into inputs so path params (e.g. the resource id)
-		// can be resolved when constructing the GET request.
-		if len(body) > 0 {
-			var respBodyMap map[string]interface{}
-			if err := json.Unmarshal(body, &respBodyMap); err != nil {
-				return nil, errors.Wrap(err, "unmarshaling 202 response body")
-			}
-			for k, v := range respBodyMap {
-				inputs[resource.PropertyKey(k)] = resource.NewPropertyValue(v)
-			}
-		}
-
-		var pollTimeout time.Duration
-		if req.GetTimeout() > 0 {
-			pollTimeout = time.Duration(req.GetTimeout()) * time.Second
-		}
-
-		pollOutputs, pollErr := p.pollResourceUntilReady(ctx, *crudMap.R, inputs, pollTimeout)
-		if pollErr != nil {
-			return nil, errors.Wrap(pollErr, "polling resource after 202 response")
-		}
-		outputs = pollOutputs
-	} else {
-		if err := json.Unmarshal(body, &outputs); err != nil {
-			return nil, errors.Wrap(err, "unmarshaling the response")
-		}
+	if err := json.Unmarshal(body, &outputs); err != nil {
+		return nil, errors.Wrap(err, "unmarshaling the response")
 	}
 
 	logging.V(3).Infof("RESPONSE BODY: %v", outputs)
@@ -689,10 +659,48 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		}
 	}
 
-	return &pulumirpc.CreateResponse{
-		Id:         convertNumericIDToString(id),
-		Properties: outputProperties,
-	}, nil
+	pulCreateResp := &pulumirpc.CreateResponse{
+		Id:                  convertNumericIDToString(id),
+		Properties:          outputProperties,
+		RefreshBeforeUpdate: false,
+	}
+
+	if httpResp.StatusCode == http.StatusAccepted {
+		// 202: Resource creation was accepted but not yet complete.
+		// Poll the GET endpoint until the resource is ready (200) or the timeout is exceeded.
+		if crudMap.R == nil {
+			return nil, errors.Errorf("resource accepted (202) but no read endpoint is available for %s", resourceTypeToken)
+		}
+
+		// Merge the 202 response body into inputs so path params (e.g. the resource id)
+		// can be resolved when constructing the GET request.
+		if len(body) > 0 {
+			var respBodyMap map[string]interface{}
+			if err := json.Unmarshal(body, &respBodyMap); err != nil {
+				return nil, errors.Wrap(err, "unmarshaling 202 response body")
+			}
+			for k, v := range respBodyMap {
+				inputs[resource.PropertyKey(k)] = resource.NewPropertyValue(v)
+			}
+		}
+
+		var pollTimeout time.Duration
+		if req.GetTimeout() > 0 {
+			pollTimeout = time.Duration(req.GetTimeout()) * time.Second
+		}
+
+		pollOutputs, pollErr := p.pollResourceUntilReady(ctx, *crudMap.R, inputs, pollTimeout)
+		if pollErr != nil {
+			return pulCreateResp, errors.Wrap(pollErr, "polling resource after 202 response")
+		}
+
+		if len(pollOutputs) > 0 {
+			p.TransformBody(ctx, pollOutputs, p.metadata.APIToSDKNameMap)
+			maps.Copy(outputs.(map[string]interface{}), pollOutputs)
+		}
+	}
+
+	return pulCreateResp, nil
 }
 
 // Read the current live state associated with a resource.
@@ -911,9 +919,10 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 	}
 
 	return &pulumirpc.ReadResponse{
-		Id:         convertNumericIDToString(id),
-		Inputs:     inputsRecord,
-		Properties: outputProperties,
+		Id:                  convertNumericIDToString(id),
+		Inputs:              inputsRecord,
+		Properties:          outputProperties,
+		RefreshBeforeUpdate: false,
 	}, nil
 }
 
@@ -1080,7 +1089,8 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	}
 
 	return &pulumirpc.UpdateResponse{
-		Properties: outputProperties,
+		Properties:          outputProperties,
+		RefreshBeforeUpdate: false,
 	}, nil
 }
 

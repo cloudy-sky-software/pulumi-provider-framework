@@ -6,7 +6,10 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
-var validStatusCodesForDelete = []int{http.StatusOK, http.StatusNoContent, http.StatusAccepted}
+var (
+	validStatusCodesForCreate = []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent}
+	validStatusCodesForDelete = []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent}
+)
 
 // tryPluckingProp does a shallow search for a prop in a map.
 // In other words, this only looks for the prop in top-level

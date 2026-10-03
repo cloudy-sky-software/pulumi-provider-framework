@@ -170,3 +170,32 @@ func (p *Provider) pollResourceUntilReady(ctx context.Context, getEndpointPath s
 		}
 	}
 }
+
+func (p *Provider) postCreate(ctx context.Context, req *pulumirpc.CreateRequest, inputs resource.PropertyMap, outputs any) (*pulumirpc.CreateResponse, error) {
+	outputsMap, postCreateErr := p.providerCallback.OnPostCreate(ctx, req, outputs)
+	if postCreateErr != nil {
+		// TODO: returning a nil CreateResponse will mean that Pulumi will consider
+		// this resource to not have been created. We should use the outputs we
+		// already have to create the response.
+		return nil, postCreateErr
+	}
+
+	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
+
+	outputProperties, err := p.marshalCreateOutputs(outputsMap, inputs)
+	if err != nil {
+		return nil, errors.Wrap(err, "marshaling the output properties map")
+	}
+
+	id, ok := getResourceID(outputsMap)
+	if !ok {
+		// TODO: should we return the CreateResponse without the Id property here?
+		return nil, errors.New("resource may have been created successfully but the id was not present in the response")
+	}
+
+	return &pulumirpc.CreateResponse{
+		Id:                  convertNumericIDToString(id),
+		Properties:          outputProperties,
+		RefreshBeforeUpdate: false,
+	}, nil
+}

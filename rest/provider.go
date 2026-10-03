@@ -584,9 +584,11 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Errorf("http request failed (status: %s): %s", httpResp.Status, string(body))
 	}
 
-	// TODO: If the status code is one of the
-	// other 2xx (not 200 OK) codes we won't have
-	// a response body.
+	if httpResp.StatusCode == http.StatusNoContent {
+		logging.V(3).Infof("Create return 204 NoContent response for %s", resourceTypeToken)
+		emptyMap := make(map[string]any)
+		return p.postCreate(ctx, req, inputs, emptyMap)
+	}
 
 	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
@@ -618,32 +620,7 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		}
 	}
 
-	outputsMap, postCreateErr := p.providerCallback.OnPostCreate(ctx, req, outputs)
-	if postCreateErr != nil {
-		// TODO: returning a nil CreateResponse will mean that Pulumi will consider
-		// this resource to not have been created. We should use the outputs we
-		// already have to create the response.
-		return nil, postCreateErr
-	}
-
-	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
-
-	outputProperties, err := p.marshalCreateOutputs(outputsMap, inputs)
-	if err != nil {
-		return nil, errors.Wrap(err, "marshaling the output properties map")
-	}
-
-	id, ok := getResourceID(outputsMap)
-	if !ok {
-		// TODO: should we return the CreateResponse without the Id property here?
-		return nil, errors.New("resource may have been created successfully but the id was not present in the response")
-	}
-
-	return &pulumirpc.CreateResponse{
-		Id:                  convertNumericIDToString(id),
-		Properties:          outputProperties,
-		RefreshBeforeUpdate: false,
-	}, nil
+	return p.postCreate(ctx, req, inputs, outputs)
 }
 
 // Read the current live state associated with a resource.

@@ -8,6 +8,18 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/logging"
 )
 
+// getResourceID returns the id of a resource from the top-level
+// properties of outputsMap or, failing that, from an embedded property.
+func getResourceID(outputsMap map[string]interface{}) (interface{}, bool) {
+	if id, ok := outputsMap["id"]; ok {
+		return id, true
+	}
+
+	logging.V(3).Infof("id prop not found in top-level response. Checking if an embedded property has it...")
+	id, _, ok := tryPluckingProp("id", outputsMap)
+	return id, ok
+}
+
 func (p *Provider) TransformBody(ctx context.Context, bodyMap map[string]interface{}, lookupMap map[string]string) {
 	if lookupMap == nil || bodyMap == nil {
 		return

@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	validStatusCodesForCreate = []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent}
+	validStatusCodesForCreate = []int{http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent}
 	validStatusCodesForDelete = []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent}
 )
 

@@ -9,6 +9,7 @@ import (
 var (
 	validStatusCodesForCreate = []int{http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent}
 	validStatusCodesForDelete = []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent}
+	validStatusCodesForUpdate = []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent}
 )
 
 // tryPluckingProp does a shallow search for a prop in a map.

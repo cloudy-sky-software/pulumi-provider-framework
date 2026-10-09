@@ -641,6 +641,14 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
 	if crudMap.R == nil {
+		if slices.Contains(p.metadata.AllowedResourcesWithoutReadEndpoint, resourceTypeToken) {
+			return &pulumirpc.ReadResponse{
+				Id:         req.GetId(),
+				Inputs:     req.GetInputs(),
+				Properties: req.GetProperties(),
+			}, nil
+		}
+
 		return nil, errors.Errorf("resource read endpoint is unknown for %s", resourceTypeToken)
 	}
 

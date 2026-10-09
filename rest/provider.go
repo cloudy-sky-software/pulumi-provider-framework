@@ -641,6 +641,14 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
 	if crudMap.R == nil {
+		if slices.Contains(p.metadata.AllowedResourcesWithoutReadEndpoint, resourceTypeToken) {
+			return &pulumirpc.ReadResponse{
+				Id:         req.GetId(),
+				Inputs:     req.GetInputs(),
+				Properties: req.GetProperties(),
+			}, nil
+		}
+
 		return nil, errors.Errorf("resource read endpoint is unknown for %s", resourceTypeToken)
 	}
 
@@ -948,8 +956,8 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		return nil, errors.Wrap(err, "executing http request")
 	}
 
-	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent && httpResp.StatusCode != http.StatusAccepted {
-		return nil, errors.Errorf("http request failed: %v. expected 200, 202 or 204 but got %d", err, httpResp.StatusCode)
+	if !slices.Contains(validStatusCodesForUpdate, httpResp.StatusCode) {
+		return nil, errors.Errorf("http request failed: %v. expected one of %v but got %d", err, validStatusCodesForUpdate, httpResp.StatusCode)
 	}
 
 	body, err := io.ReadAll(httpResp.Body)
@@ -1028,6 +1036,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
 	if crudMap.D == nil {
+		logging.V(3).Infof("Resource %s does not have a DELETE endpoint. Nothing to execute.", resourceTypeToken)
 		// Nothing to do to delete this resource,
 		// simply drop it from the state.
 		return &pbempty.Empty{}, nil

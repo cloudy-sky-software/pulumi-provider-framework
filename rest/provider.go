@@ -30,7 +30,7 @@ import (
 	"github.com/cloudy-sky-software/pulumi-provider-framework/openapi"
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
 
-	providerGen "github.com/cloudy-sky-software/pulschema/pkg"
+	pulschemaPkg "github.com/cloudy-sky-software/pulschema/pkg"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -58,7 +58,7 @@ type Provider struct {
 	name    string
 	version string
 
-	metadata providerGen.ProviderMetadata
+	metadata pulschemaPkg.ProviderMetadata
 	router   routers.Router
 
 	providerCallback callback.ProviderCallback
@@ -84,7 +84,7 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 func MakeProvider(host *provider.HostClient, name, version string, pulumiSchemaBytes, openapiDocBytes, metadataBytes []byte, callback callback.ProviderCallback) (pulumirpc.ResourceProviderServer, error) {
 	openapiDoc := openapi.GetOpenAPISpec(openapiDocBytes)
 
-	var metadata providerGen.ProviderMetadata
+	var metadata pulschemaPkg.ProviderMetadata
 	if err := json.Unmarshal(metadataBytes, &metadata); err != nil {
 		return nil, errors.Wrap(err, "unmarshaling the metadata bytes to json")
 	}
@@ -255,7 +255,12 @@ func (p *Provider) Invoke(ctx context.Context, req *pulumirpc.InvokeRequest) (*p
 
 	httpEndpointPath := *crudMap.R
 
-	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, args, nil)
+	queryParams, err := p.getFunctionQueryParams(args)
+	if err != nil {
+		return nil, errors.Wrapf(err, "getting query params (type token: %s)", invokeTypeToken)
+	}
+
+	httpReq, err := p.createGetRequest(ctx, httpEndpointPath, queryParams, args, nil)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", invokeTypeToken)
 	}
@@ -396,8 +401,20 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 	}
 
 	logging.V(3).Infof("Calculating diff: olds: %v; news: %v", olds, news)
-	diff := olds.Diff(news)
+	// Changes to query params only affect the requests made by the
+	// provider, so they never require the resource to be replaced.
+	// They are diffed separately from the rest of the properties.
+	queryParamsChanged := !olds[queryParamsPropKey].DeepEquals(news[queryParamsPropKey])
+	diff := withoutQueryParams(olds).Diff(withoutQueryParams(news))
 	if diff == nil || !diff.AnyChanges() {
+		if queryParamsChanged {
+			logging.V(3).Infof("Diff: only query params changed for %s", req.GetUrn())
+			return &pulumirpc.DiffResponse{
+				Changes: pulumirpc.DiffResponse_DIFF_SOME,
+				Diffs:   []string{pulschemaPkg.QueryParamsPropName},
+			}, nil
+		}
+
 		logging.V(3).Infof("Diff: no changes for %s", req.GetUrn())
 		return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
 	}
@@ -415,7 +432,7 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 
 		if ok {
 			logging.V(3).Infof("Reporting no diff for %s because all new additions were path params", req.GetUrn())
-			return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
+			return noDiffOrQueryParamsDiff(queryParamsChanged), nil
 		}
 
 		// If there is no PATCH or PUT endpoint for this type token,
@@ -430,12 +447,17 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 			replaces = append(replaces, string(prop))
 		}
 
-		logging.V(3).Infof("Diffs for properties: %v", replaces)
+		diffs := slices.Clone(replaces)
+		if queryParamsChanged {
+			diffs = append(diffs, pulschemaPkg.QueryParamsPropName)
+		}
+
+		logging.V(3).Infof("Diffs for properties: %v", diffs)
 
 		return &pulumirpc.DiffResponse{
 			Changes:  pulumirpc.DiffResponse_DIFF_SOME,
 			Replaces: replaces,
-			Diffs:    replaces,
+			Diffs:    diffs,
 		}, nil
 	}
 
@@ -476,7 +498,7 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 
 	if noChanges {
 		logging.V(3).Infof("Reporting no diff for %s because all new additions were path params", req.GetUrn())
-		return &pulumirpc.DiffResponse{Changes: pulumirpc.DiffResponse_DIFF_NONE}, nil
+		return noDiffOrQueryParamsDiff(queryParamsChanged), nil
 	}
 
 	var replaces []string
@@ -493,6 +515,10 @@ func (p *Provider) Diff(ctx context.Context, req *pulumirpc.DiffRequest) (*pulum
 		replaces, diffs = p.determineDiffsAndReplacements(diff, *patchReqSchema.Schema)
 	} else {
 		changes = pulumirpc.DiffResponse_DIFF_UNKNOWN
+	}
+
+	if queryParamsChanged {
+		diffs = append(diffs, pulschemaPkg.QueryParamsPropName)
 	}
 
 	logging.V(3).Infof("Diff response: replaces: %v; diffs: %v", replaces, diffs)
@@ -527,6 +553,11 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		return nil, errors.Wrap(err, "marshaling inputs to json")
 	}
 
+	queryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpCreate, inputs)
+	if err != nil {
+		return nil, errors.Wrapf(err, "getting query params (type token: %s)", resourceTypeToken)
+	}
+
 	var httpEndpointPath string
 	var httpReq *http.Request
 	var httpReqErr error
@@ -543,21 +574,21 @@ func (p *Provider) Create(ctx context.Context, req *pulumirpc.CreateRequest) (*p
 		if crudMap.C != nil && *crudMap.C != *crudMap.P {
 			logging.V(3).Infof("Using POST endpoint to create resource %s", resourceTypeToken)
 			httpEndpointPath = *crudMap.C
-			httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, bodyBytes, inputs)
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPost, bodyBytes, queryParams, inputs)
 			if httpReqErr != nil {
 				return nil, errors.Wrapf(httpReqErr, "creating post request (type token: %s)", resourceTypeToken)
 			}
 		} else {
 			logging.V(3).Infof("Using PUT endpoint to create resource %s", resourceTypeToken)
 			httpEndpointPath = *crudMap.P
-			httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, inputs)
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, bodyBytes, queryParams, inputs)
 			if httpReqErr != nil {
 				return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
 			}
 		}
 	case crudMap.C != nil:
 		httpEndpointPath = *crudMap.C
-		httpReq, httpReqErr = p.CreatePostRequest(ctx, httpEndpointPath, bodyBytes, inputs)
+		httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPost, bodyBytes, queryParams, inputs)
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating post request (type token: %s)", resourceTypeToken)
 		}
@@ -693,7 +724,12 @@ func (p *Provider) Read(ctx context.Context, req *pulumirpc.ReadRequest) (*pulum
 		currentState["id"] = resource.NewPropertyValue(req.GetId())
 	}
 
-	httpReq, err := p.CreateGetRequest(ctx, httpEndpointPath, inputs, &currentState)
+	queryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpRead, inputs, currentState)
+	if err != nil {
+		return nil, errors.Wrapf(err, "getting query params (type token: %s)", resourceTypeToken)
+	}
+
+	httpReq, err := p.createGetRequest(ctx, httpEndpointPath, queryParams, inputs, &currentState)
 	if err != nil {
 		return nil, errors.Wrapf(err, "creating get request (type token: %s)", resourceTypeToken)
 	}
@@ -870,6 +906,23 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	if !ok {
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
+
+	oldInputs, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unmarshal old inputs as propertymap")
+	}
+
+	prevInputs := oldInputs
+	if len(prevInputs) == 0 {
+		prevInputs = state.GetOldInputs(oldState)
+	}
+	if prevInputs != nil {
+		if d := withoutQueryParams(prevInputs).Diff(withoutQueryParams(inputs)); d == nil || !d.AnyChanges() {
+			logging.V(3).Infof("Only query params changed for %s. Updating the state without calling the API.", req.GetUrn())
+			return p.updateQueryParamsInState(req, inputs)
+		}
+	}
+
 	if crudMap.U == nil && crudMap.P == nil {
 		return nil, errors.Errorf("neither update nor put endpoint path is available for %s", resourceTypeToken)
 	}
@@ -878,14 +931,19 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	var httpReq *http.Request
 	var httpReqErr error
 
-	oldInputs, err := plugin.UnmarshalProperties(req.GetOldInputs(), state.HTTPRequestBodyUnmarshalOpts)
+	readQueryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpRead, inputs)
 	if err != nil {
-		return nil, errors.Wrap(err, "unmarshal old inputs as propertymap")
+		return nil, errors.Wrapf(err, "getting read query params (type token: %s)", resourceTypeToken)
 	}
 
 	if crudMap.U != nil {
 		logging.V(3).Infof("Using PATCH endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.U
+
+		queryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpUpdate, inputs)
+		if err != nil {
+			return nil, errors.Wrapf(err, "getting query params (type token: %s)", resourceTypeToken)
+		}
 
 		diff := oldInputs.Diff(inputs)
 		inputsMap := inputs.Mappable()
@@ -920,9 +978,9 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 		}
 
 		if p.engineSendsOldInputs {
-			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, bodyBytes, oldState, oldInputs)
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, bodyBytes, queryParams, oldState, oldInputs)
 		} else {
-			httpReq, httpReqErr = p.CreatePatchRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, bodyBytes, queryParams, oldState)
 		}
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating patch request (type token: %s)", resourceTypeToken)
@@ -933,12 +991,17 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			return nil, errors.Wrap(err, "marshaling inputs")
 		}
 
+		queryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpPut, inputs)
+		if err != nil {
+			return nil, errors.Wrapf(err, "getting query params (type token: %s)", resourceTypeToken)
+		}
+
 		logging.V(3).Infof("Using PUT endpoint to update resource %s", resourceTypeToken)
 		httpEndpointPath = *crudMap.P
 		if p.engineSendsOldInputs {
-			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, bodyBytes, oldState, oldInputs)
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, bodyBytes, queryParams, oldState, oldInputs)
 		} else {
-			httpReq, httpReqErr = p.CreatePutRequest(ctx, httpEndpointPath, bodyBytes, oldState)
+			httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, bodyBytes, queryParams, oldState)
 		}
 		if httpReqErr != nil {
 			return nil, errors.Wrapf(httpReqErr, "creating put request (type token: %s)", resourceTypeToken)
@@ -984,7 +1047,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 			pollTimeout = time.Duration(req.GetTimeout()) * time.Second
 		}
 
-		pollOutputs, pollErr := p.pollResourceUntilReady(ctx, *crudMap.R, oldState, pollTimeout)
+		pollOutputs, pollErr := p.pollResourceUntilReady(ctx, *crudMap.R, readQueryParams, oldState, pollTimeout)
 		if pollErr != nil {
 			return nil, errors.Wrap(pollErr, "polling resource after 202 response")
 		}
@@ -1003,6 +1066,7 @@ func (p *Provider) Update(ctx context.Context, req *pulumirpc.UpdateRequest) (*p
 	}
 
 	p.TransformBody(ctx, outputsMap, p.metadata.APIToSDKNameMap)
+	copyQueryParamsToOutputs(outputsMap, inputs)
 
 	var outputProperties *structpb.Struct
 	if !p.engineSendsOldInputs {
@@ -1051,9 +1115,20 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		if err != nil {
 			return nil, errors.Wrap(err, "unmarshal old inputs as propertymap")
 		}
-		httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, nil, inputs, oldInputs)
+
+		queryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpDelete, oldInputs, inputs)
+		if err != nil {
+			return nil, errors.Wrapf(err, "getting query params (type token: %s)", resourceTypeToken)
+		}
+
+		httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, nil, queryParams, inputs, oldInputs)
 	} else {
-		httpReq, httpReqErr = p.CreateDeleteRequest(ctx, httpEndpointPath, nil, inputs)
+		queryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpDelete, state.GetOldInputs(inputs), inputs)
+		if err != nil {
+			return nil, errors.Wrapf(err, "getting query params (type token: %s)", resourceTypeToken)
+		}
+
+		httpReq, httpReqErr = p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, nil, queryParams, inputs)
 	}
 	if httpReqErr != nil {
 		return nil, errors.Wrapf(httpReqErr, "creating delete request (type token: %s)", resourceTypeToken)

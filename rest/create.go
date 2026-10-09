@@ -6,6 +6,7 @@ import (
 	"io"
 	"maps"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,6 +15,8 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
+
+	pulschemaPkg "github.com/cloudy-sky-software/pulschema/pkg"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource/plugin"
@@ -25,6 +28,8 @@ import (
 // marshalCreateOutputs converts the outputs of a create operation into
 // the properties that are saved in the resource's state.
 func (p *Provider) marshalCreateOutputs(outputsMap map[string]interface{}, inputs resource.PropertyMap) (*structpb.Struct, error) {
+	copyQueryParamsToOutputs(outputsMap, inputs)
+
 	if !p.engineSendsOldInputs {
 		return plugin.MarshalProperties(state.GetResourceState(outputsMap, inputs), state.DefaultMarshalOpts)
 	}
@@ -59,7 +64,12 @@ func (p *Provider) waitForAcceptedCreate(ctx context.Context, req *pulumirpc.Cre
 		pollTimeout = time.Duration(req.GetTimeout()) * time.Second
 	}
 
-	pollOutputs, err := p.pollResourceUntilReady(ctx, *getEndpointPath, pollInputs, pollTimeout)
+	readQueryParams, err := p.getResourceQueryParams(pulschemaPkg.QueryParamsOpRead, inputs)
+	if err != nil {
+		return p.newResourceInitFailedError(ctx, createOutputs, inputs, errors.Wrap(err, "getting query params for read request"))
+	}
+
+	pollOutputs, err := p.pollResourceUntilReady(ctx, *getEndpointPath, readQueryParams, pollInputs, pollTimeout)
 	if err != nil {
 		err = errors.Wrap(err, "polling resource after 202 response")
 		return p.newResourceInitFailedError(ctx, createOutputs, inputs, err)
@@ -102,7 +112,7 @@ func (p *Provider) newResourceInitFailedError(ctx context.Context, outputsMap ma
 // or the context times out. Polling continues while the GET endpoint returns 404 (resource
 // not yet created) and stops when 200 is returned (resource exists). Uses exponential
 // backoff between poll attempts.
-func (p *Provider) pollResourceUntilReady(ctx context.Context, getEndpointPath string, inputs resource.PropertyMap, timeout time.Duration) (map[string]interface{}, error) {
+func (p *Provider) pollResourceUntilReady(ctx context.Context, getEndpointPath string, queryParams url.Values, inputs resource.PropertyMap, timeout time.Duration) (map[string]interface{}, error) {
 	if timeout <= 0 {
 		timeout = defaultPollingTimeout
 	}
@@ -113,7 +123,7 @@ func (p *Provider) pollResourceUntilReady(ctx context.Context, getEndpointPath s
 	interval := initialPollingInterval
 
 	for {
-		httpReq, err := p.CreateGetRequest(pollCtx, getEndpointPath, inputs, nil)
+		httpReq, err := p.createGetRequest(pollCtx, getEndpointPath, queryParams, inputs, nil)
 		if err != nil {
 			return nil, errors.Wrap(err, "creating get request during polling")
 		}

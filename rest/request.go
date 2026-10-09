@@ -8,12 +8,15 @@ import (
 	"io"
 	"maps"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
 	"github.com/cloudy-sky-software/pulumi-provider-framework/state"
+
+	pulschemaPkg "github.com/cloudy-sky-software/pulschema/pkg"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
@@ -89,6 +92,15 @@ func (p *Provider) CreateGetRequest(
 	httpEndpointPath string,
 	inputs resource.PropertyMap,
 	currentState *resource.PropertyMap) (*http.Request, error) {
+	return p.createGetRequest(ctx, httpEndpointPath, nil, inputs, currentState)
+}
+
+func (p *Provider) createGetRequest(
+	ctx context.Context,
+	httpEndpointPath string,
+	queryParams url.Values,
+	inputs resource.PropertyMap,
+	currentState *resource.PropertyMap) (*http.Request, error) {
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", p.baseURL+httpEndpointPath, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing request")
@@ -115,6 +127,8 @@ func (p *Provider) CreateGetRequest(
 		}
 	}
 
+	httpReq.URL.RawQuery = queryParams.Encode()
+
 	if err := p.validateRequest(ctx, httpReq, pathParams); err != nil {
 		return nil, errors.Wrap(err, "validate http request")
 	}
@@ -126,7 +140,7 @@ func (p *Provider) CreateGetRequest(
 	return httpReq, nil
 }
 
-func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, inputs resource.PropertyMap, oldInputs ...resource.PropertyMap) (*http.Request, error) {
+func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPath string, httpMethod string, reqBody []byte, queryParams url.Values, inputs resource.PropertyMap, oldInputs ...resource.PropertyMap) (*http.Request, error) {
 	if reqBody == nil {
 		logging.V(3).Infof("REQUEST BODY is nil for %s", httpEndpointPath)
 	} else {
@@ -141,6 +155,10 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 		if err := json.Unmarshal(reqBody, &bodyMap); err != nil {
 			return nil, errors.Wrap(err, "unmarshaling body")
 		}
+
+		// The queryParams input is sent as query params,
+		// not as part of the request body.
+		delete(bodyMap, pulschemaPkg.QueryParamsPropName)
 	}
 
 	// If the endpoint has path params, peek into the OpenAPI doc
@@ -176,6 +194,8 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 		return nil, errors.Wrap(err, "initializing request")
 	}
 
+	httpReq.URL.RawQuery = queryParams.Encode()
+
 	logging.V(3).Infof("URL: %s", httpReq.URL.String())
 
 	httpReq.Header.Add(p.getAuthHeaderName(), p.providerCallback.GetAuthorizationHeader())
@@ -196,25 +216,25 @@ func (p *Provider) createHTTPRequestWithBody(ctx context.Context, httpEndpointPa
 // CreatePostRequest returns a validated POST HTTP request for the
 // provided inputs map.
 func (p *Provider) CreatePostRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
-	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPost, reqBody, inputs)
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPost, reqBody, nil, inputs)
 }
 
 // CreatePutRequest returns a validated PUT HTTP request for the
 // provided inputs map.
 func (p *Provider) CreatePutRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
-	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, reqBody, inputs)
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPut, reqBody, nil, inputs)
 }
 
 // CreatePatchRequest returns a validated PATCH HTTP request for the
 // provided inputs map.
 func (p *Provider) CreatePatchRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
-	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, reqBody, inputs)
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodPatch, reqBody, nil, inputs)
 }
 
 // CreateDeleteRequest returns a validated DELETE HTTP request for the
 // provided inputs map.
 func (p *Provider) CreateDeleteRequest(ctx context.Context, httpEndpointPath string, reqBody []byte, inputs resource.PropertyMap) (*http.Request, error) {
-	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, reqBody, inputs)
+	return p.createHTTPRequestWithBody(ctx, httpEndpointPath, http.MethodDelete, reqBody, nil, inputs)
 }
 
 func (p *Provider) validateRequest(ctx context.Context, httpReq *http.Request, pathParams map[string]string) error {

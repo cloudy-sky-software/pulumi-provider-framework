@@ -9,12 +9,12 @@ import (
 
 	pschema "github.com/pulumi/pulumi/pkg/v3/codegen/schema"
 
-	openapigen "github.com/cloudy-sky-software/pulschema/pkg"
+	pulschemaPkg "github.com/cloudy-sky-software/pulschema/pkg"
 )
 
 var packageName = "generic"
 
-func genericPulumiSchema(openapiDoc *openapi3.T) (pschema.PackageSpec, openapigen.ProviderMetadata, openapi3.T) {
+func genericPulumiSchema(openapiDoc *openapi3.T) (pschema.PackageSpec, pulschemaPkg.ProviderMetadata, openapi3.T) {
 	pkg := pschema.PackageSpec{
 		Name:        packageName,
 		Description: "A Pulumi package for creating and managing Generic Provider resources.",
@@ -80,7 +80,7 @@ func genericPulumiSchema(openapiDoc *openapi3.T) (pschema.PackageSpec, openapige
 		"": "Provider",
 	}
 
-	openAPICtx := &openapigen.OpenAPIContext{
+	openAPICtx := &pulschemaPkg.OpenAPIContext{
 		Doc: *openapiDoc,
 		Pkg: &pkg,
 	}
@@ -90,7 +90,7 @@ func genericPulumiSchema(openapiDoc *openapi3.T) (pschema.PackageSpec, openapige
 		contract.Failf("generating resources from OpenAPI spec: %v", err)
 	}
 
-	metadata := openapigen.ProviderMetadata{
+	metadata := pulschemaPkg.ProviderMetadata{
 		ResourceCRUDMap:  providerMetadata.ResourceCRUDMap,
 		AutoNameMap:      providerMetadata.AutoNameMap,
 		SDKToAPINameMap:  providerMetadata.SDKToAPINameMap,

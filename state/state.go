@@ -23,8 +23,14 @@ func GetResourceState(outputs map[string]interface{}, inputs resource.PropertyMa
 	state := resource.NewPropertyMapFromMap(outputs)
 	// Capture the inputs as they were during the creation of the resource
 	// so that we can use them during diff if the resource is updated.
-	state[stateKeyInputs] = resource.MakeSecret(resource.NewObjectProperty(inputs))
+	SetOldInputs(state, inputs)
 	return state
+}
+
+// SetOldInputs stores the provided inputs in an existing state map
+// for later retrieval with GetOldInputs.
+func SetOldInputs(state resource.PropertyMap, inputs resource.PropertyMap) {
+	state[stateKeyInputs] = resource.MakeSecret(resource.NewObjectProperty(inputs))
 }
 
 // GetOldInputs returns the previously-stored inputs map from an outputs map.

@@ -52,6 +52,12 @@ paths:
   /v2/fakeresource:
     post:
       operationId: create_fake_resource
+      parameters:
+        - name: dry_run
+          in: query
+          required: false
+          schema:
+            type: boolean
       requestBody:
         content:
           application/json:
@@ -74,6 +80,18 @@ paths:
           required: true
           schema:
             type: string
+        - name: expand
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: include_fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         "200":
           description: The request has succeeded.
@@ -81,6 +99,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/response_object_type"
+    delete:
+      operationId: delete_fake_resource
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: force
+          in: query
+          required: true
+          schema:
+            type: boolean
+      responses:
+        "204":
+          description: The resource was deleted.
     patch:
       operationId: update_fake_resource
       parameters:

@@ -1036,6 +1036,7 @@ func (p *Provider) Delete(ctx context.Context, req *pulumirpc.DeleteRequest) (*p
 		return nil, errors.Errorf("unknown resource type %s", resourceTypeToken)
 	}
 	if crudMap.D == nil {
+		logging.V(3).Infof("Resource %s does not have a DELETE endpoint. Nothing to execute.", resourceTypeToken)
 		// Nothing to do to delete this resource,
 		// simply drop it from the state.
 		return &pbempty.Empty{}, nil

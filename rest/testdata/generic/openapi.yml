@@ -118,7 +118,7 @@ paths:
     patch:
       operationId: update_fake_resource
       parameters:
-        - name: id
+        - name: resourceId
           in: path
           required: true
           schema:
@@ -233,7 +233,7 @@ paths:
     patch:
       operationId: update_discriminated_resource
       parameters:
-        - name: id
+        - name: resourceId
           in: path
           required: true
           schema:

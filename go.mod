@@ -3,8 +3,8 @@ module github.com/cloudy-sky-software/pulumi-provider-framework
 go 1.27
 
 require (
-	github.com/cloudy-sky-software/pulschema v0.0.0-20261021200424-ee7a56e6051d
-	github.com/getkin/kin-openapi v0.151.0
+	github.com/cloudy-sky-software/pulschema v0.0.0-20261022160401-e6808fff879f
+	github.com/getkin/kin-openapi v0.152.0
 	github.com/golang/protobuf v1.5.4
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi/pkg/v3 v3.271.0
@@ -88,8 +88,8 @@ require (
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
 	github.com/pulumi/inflector v0.2.1 // indirect
-	github.com/pulumi/pulumi-cloud-sdk/go v1.20260928.1311 // indirect
-	github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.114.2 // indirect
+	github.com/pulumi/pulumi-cloud-sdk/go v1.20261019.1659 // indirect
+	github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.115.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect

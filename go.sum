@@ -158,6 +158,8 @@ github.com/cloudy-sky-software/pulschema v0.0.0-20261028211248-888197bdbf95 h1:g
 github.com/cloudy-sky-software/pulschema v0.0.0-20261028211248-888197bdbf95/go.mod h1:Wyp0cg3R7KsZoq/m5E6v5AiU/mmj+84CXTzanbU/mhw=
 github.com/cloudy-sky-software/pulschema v0.0.0-20261029151911-4320fbde6a11 h1:KpZr19mhwpgBnauXPE7sL0wjBi8X4jIw6Oq6j+mgEaM=
 github.com/cloudy-sky-software/pulschema v0.0.0-20261029151911-4320fbde6a11/go.mod h1:zn3XmRKIsHtoNLpSHPmCDeyvj8uXzfxV3OCIhmVwXNE=
+github.com/cloudy-sky-software/pulschema v0.0.0-20261102164949-43503c150480 h1:ScWOAunGDLj6Ph1ECt4aZ1rtoKi8S7A9Bg/a8qryKKo=
+github.com/cloudy-sky-software/pulschema v0.0.0-20261102164949-43503c150480/go.mod h1:QIETLjb69U4NQMVEznKhSaPPURpHFpFcgc3ikTInYmE=
 github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 h1:aBangftG7EVZoUb69Os8IaYg++6uMOdKK83QtkkvJik=
 github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2/go.mod h1:qwXFYgsP6T7XnJtbKlf1HP8AjxZZyzxMmc+Lq5GjlU4=
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
@@ -396,6 +398,8 @@ github.com/pulumi/pulumi-cloud-sdk/go v1.20261023.0 h1:ktztW03U2HxEzh2/phKEcNr2B
 github.com/pulumi/pulumi-cloud-sdk/go v1.20261023.0/go.mod h1:NPA79X6Wmyr5zNKd+N+RiVJN8duwIrRmIaed8HCL9EM=
 github.com/pulumi/pulumi-cloud-sdk/go v1.20261027.1310 h1:nYCOZXdNoM3f6uXZb8jypR82LRZSZizdvEkjh45FCZw=
 github.com/pulumi/pulumi-cloud-sdk/go v1.20261027.1310/go.mod h1:NPA79X6Wmyr5zNKd+N+RiVJN8duwIrRmIaed8HCL9EM=
+github.com/pulumi/pulumi-cloud-sdk/go v1.20261030.0 h1:oBotCKvb++toi2fsNTDHISHVCwZaGnstGSZVtb11y/I=
+github.com/pulumi/pulumi-cloud-sdk/go v1.20261030.0/go.mod h1:NPA79X6Wmyr5zNKd+N+RiVJN8duwIrRmIaed8HCL9EM=
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.114.2 h1:7GweJh+w/ft9sAjhHLSow3KF8IYqHv/Z+azCZSZq7bs=
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.114.2/go.mod h1:hEMnRKGnXkT6S6Q+o7STPTSUlZCX/V41rlkqTLWSkcU=
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.115.0 h1:QseP3G/+g4Ymu1B8dwiwbbw2FlNcVC5ZjvU8qvkv7bY=
@@ -404,6 +408,8 @@ github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.116.1 h1:vHUq7Kay7O
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.116.1/go.mod h1:AuU2PuG0QaAa5QC94vPbB/+aPUQYZ++m6yJKzhWZk8A=
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.116.2 h1:MnVAGVxUIzdqCRgWDam0qQGLYKXie/0JBUZnl64QOHo=
 github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.116.2/go.mod h1:oMDjthv4h/PfoFaL/q3TsMWQaJ5uFdjopZV7MUOcz+8=
+github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.117.0 h1:jlIMsGAn8ZzqLJKJ4G32m73oAx945UBCVMrgL7e4Dw4=
+github.com/pulumi/pulumi-dotnet/pulumi-language-dotnet/v3 v3.117.0/go.mod h1:g84QZQkfRpghbUFVGNlkFEmlmeZsqOUrVGMZZ9RcPdA=
 github.com/pulumi/pulumi/pkg/v3 v3.268.0 h1:8l5w5cMakmndyGuiJ4zvtqwAN3bikfNq86vwtQSNkYE=
 github.com/pulumi/pulumi/pkg/v3 v3.268.0/go.mod h1:dx502XfNvWUqvSStxoCKA7QeEVh6+Q7jg/p+kHiCyos=
 github.com/pulumi/pulumi/pkg/v3 v3.269.0 h1:Xmtk9wTechV+IrF6grIVrrLfAQbDGcAip4alpSH+UXY=
